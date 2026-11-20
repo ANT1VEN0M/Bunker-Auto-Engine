@@ -5,10 +5,11 @@
 
 ---
 
-### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac)
-Для быстрого подключения без ручного ввода ссылок используйте наш официальный портал:  
+### 🌐 Портал подключения в 1 клик & Telegram Mini App (TMA)
+Для быстрого подключения без ручного ввода ссылок используйте официальный веб-портал или запускайте его прямо внутри Telegram как Mini App:  
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
+* 📲 **Telegram Mini App (TMA):** встроенный интерфейс в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*) и быстрой отправкой друзьям.
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
