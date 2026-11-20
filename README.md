@@ -1,7 +1,7 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждые 6 часов на GitHub Actions. **25 проверенных источников** (включая глобальный агрегатор **mehdirzfx** на 1125+ фидов), глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> Обновляется каждые 6 часов на GitHub Actions. **28 проверенных источников** (включая зеркала AeryxVPN, незаблокируемый GitLab `hub.mos.ru` и глобальный агрегатор **mehdirzfx** на 1125+ фидов), глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
 
 ---
 
