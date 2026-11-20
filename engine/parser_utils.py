@@ -91,6 +91,19 @@ def parse_config(uri: str) -> dict | None:
                     "remark": unquote(remark)
                 }
 
+        # WDTT / qWDTT (VK-Voice WebRTC Tunnel)
+        elif uri.startswith("wdtt://") or uri.startswith("qwdtt://"):
+            from engine.npv_parser import decode_wdtt
+            w_res = decode_wdtt(uri)
+            if w_res and w_res.get("host") and not (w_res["host"].lower() in DUMMY_HOSTS):
+                return {
+                    "proto": w_res["proto"],
+                    "host": w_res["host"].lower(),
+                    "port": int(w_res["port"]),
+                    "raw": uri,
+                    "remark": w_res.get("name", "")
+                }
+
         # VLESS, Trojan, Hysteria2, Tuic
         else:
             match = re.match(r"^([a-z0-9]+)://(?:[^@]+@)?(\[[a-fA-F0-9:]+\]|[^:/?#]+):(\d+)(.*)$", uri)

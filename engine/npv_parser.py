@@ -603,14 +603,118 @@ def parse_ovpn(content_or_link: str, default_name: str = "Bunker-OpenVPN") -> Op
 
 
 # ============================================================================
-# 4. UNIVERSAL DETECTOR & EXTRACTOR
+# 4. WDTT & qWDTT PARSER (wdtt://, qwdtt://, VK-Voice TURN Tunnel)
+# ============================================================================
+
+def decode_wdtt(content_or_link: str) -> Optional[Dict[str, Any]]:
+    """
+    Decodes WDTT and qWDTT connection links.
+    Supported formats:
+      1. wdtt://<base64_json> (standard payload: ip, dtls, raw, pass, name/ps/vpn, hash, did)
+      2. wdtt://host:dtls:wg:local:pass:hash#name (colon format)
+      3. qwdtt://config?name=...&peer=...&hashes=...&port=...&workers=...&pass=...
+    """
+    content = content_or_link.strip()
+    if not content:
+        return None
+
+    # Format 3: qwdtt://config?...
+    if content.startswith("qwdtt://"):
+        try:
+            parsed_url = urllib.parse.urlparse(content)
+            qs = urllib.parse.parse_qs(parsed_url.query)
+            password = qs.get("pass", [""])[0]
+            if not password and "pass=" in parsed_url.query:
+                password = parsed_url.query.split("pass=")[-1]
+            host = qs.get("peer", [""])[0] or qs.get("host", [""])[0]
+            port = int(qs.get("port", [9000])[0])
+            name = qs.get("name", ["Bunker-qWDTT"])[0]
+            hashes = qs.get("hashes", [""])[0]
+            workers = int(qs.get("workers", [18])[0])
+            if host and password:
+                return {
+                    "proto": "qwdtt",
+                    "host": host,
+                    "port": port,
+                    "pass": password,
+                    "name": name,
+                    "hashes": hashes,
+                    "workers": workers,
+                    "uri": content
+                }
+        except Exception:
+            pass
+
+    # Format 1 & 2: wdtt://...
+    if content.startswith("wdtt://"):
+        raw = content[7:].strip()
+        remark = "Bunker-WDTT"
+        if "#" in raw:
+            raw, remark = raw.split("#", 1)
+            remark = urllib.parse.unquote(remark)
+
+        # Format 2: colon format host:dtls:wg:local:pass:hash
+        if ":" in raw and not "=" in raw and len(raw) < 200:
+            parts = raw.split(":")
+            if len(parts) >= 5:
+                host = parts[0]
+                dtls_port = int(parts[1]) if parts[1].isdigit() else 56000
+                wg_port = int(parts[2]) if parts[2].isdigit() else 56001
+                local_port = int(parts[3]) if parts[3].isdigit() else 9000
+                password = parts[4]
+                vkhash = parts[5] if len(parts) > 5 else ""
+                return {
+                    "proto": "wdtt",
+                    "host": host,
+                    "port": dtls_port,
+                    "wg_port": wg_port,
+                    "local_port": local_port,
+                    "pass": password,
+                    "hashes": vkhash,
+                    "name": remark,
+                    "uri": content
+                }
+
+        # Format 1: Base64 JSON
+        pad = len(raw) % 4
+        if pad:
+            raw += "=" * (4 - pad)
+        try:
+            data_str = base64.b64decode(raw).decode("utf-8", errors="ignore")
+            data = json.loads(data_str)
+            host = data.get("ip") or data.get("add") or data.get("host", "")
+            dtls = int(data.get("dtls") or 56000)
+            password = data.get("pass") or data.get("password", "")
+            name = data.get("name") or data.get("ps") or data.get("vpn") or remark
+            vkhash = data.get("hash", "")
+            if host and password:
+                return {
+                    "proto": "wdtt",
+                    "host": host,
+                    "port": dtls,
+                    "raw_port": data.get("raw", 0),
+                    "pass": password,
+                    "hashes": vkhash,
+                    "name": name,
+                    "did": data.get("did", ""),
+                    "sub": data.get("sub", ""),
+                    "uri": content
+                }
+        except Exception:
+            pass
+
+    return None
+
+
+# ============================================================================
+# 5. UNIVERSAL DETECTOR & EXTRACTOR
 # ============================================================================
 
 def extract_all_custom_protocols(text_or_url: str) -> List[str]:
     """
     Scans any input string or downloaded payload for NapsternetV (.npvt, npv://),
-    Dark Tunnel (.dark, .dt, darktunnel://), or OpenVPN (.ovpn, ovpn://)
-    and returns a normalized list of standard proxy URIs.
+    Dark Tunnel (.dark, .dt, darktunnel://), OpenVPN (.ovpn, ovpn://),
+    or WDTT / qWDTT (wdtt://, qwdtt://) and returns a normalized list of proxy URIs.
     """
     text = text_or_url.strip()
     if not text:
@@ -635,5 +739,14 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
         parsed_ovpn = parse_ovpn(text)
         if parsed_ovpn and parsed_ovpn.get("uri"):
             collected.append(parsed_ovpn["uri"])
+
+    # 4. WDTT / qWDTT check
+    if "wdtt://" in text or "qwdtt://" in text:
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("wdtt://") or line.startswith("qwdtt://"):
+                w_parsed = decode_wdtt(line)
+                if w_parsed and w_parsed.get("uri"):
+                    collected.append(w_parsed["uri"])
 
     return collected

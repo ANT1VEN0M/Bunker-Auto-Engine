@@ -9,7 +9,7 @@
 Для быстрого подключения без ручного ввода ссылок используйте официальный веб-портал или запускайте его прямо внутри Telegram как Mini App:  
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
-* 📲 **Telegram Mini App (TMA):** нативный интерфейс прямо в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*), встроенным **замером пинга (Live Ping Meter)**, кнопкой **аварийного MTProto прокси** и **QR-кодами** для сканирования камерой.
+* 📲 **Telegram Mini App (TMA):** нативный интерфейс прямо в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*), встроенным **замером пинга (Live Ping Meter)**, кнопкой **аварийного MTProto прокси**, **инспектором-конвертером любых форматов** и **QR-кодами** для сканирования камерой.
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
@@ -120,6 +120,7 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **NapsternetV & NPV Tunnel:** встроенный автоматический декодер `.npvt`, `.npvs`, токенов `npvs1:` и JSON outbounds.
 - **Dark Tunnel:** поддержка расшифровки контейнеров `.dark`, `.dt` и протокола `darktunnel://` (AES-GCM PBKDF2).
 - **OpenVPN:** парсер `.ovpn` и генератор кроссплатформенных ссылок `ovpn://`.
+- **WDTT & qWDTT:** парсинг и валидация ссылок `wdtt://` (Base64 JSON и Colon) и `qwdtt://` для WebRTC звонков VKontakte.
 
 ---
 

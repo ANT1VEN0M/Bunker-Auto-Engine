@@ -478,17 +478,20 @@
     </div>
 
     <!-- Quick Action Bar -->
-    <div style="display:flex; gap:6px;">
-      <button onclick="scrollToPing()" class="btn btn-secondary" style="font-size:11px; padding:9px 6px; flex:1; border-color:rgba(56,189,248,0.3);">
+    <div style="display:flex; gap:5px;">
+      <button onclick="scrollToPing()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(56,189,248,0.3);">
         ⚡ Пинг
       </button>
-      <a href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" onclick="connectMTProto(event)" class="btn btn-secondary" style="font-size:11px; padding:9px 6px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
+      <a href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" onclick="connectMTProto(event)" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
         💬 TG Прокси
       </a>
-      <button onclick="scrollToRouters()" class="btn btn-secondary" style="font-size:11px; padding:9px 6px; flex:1; border-color:rgba(16,185,129,0.3); color:#10b981;">
+      <button onclick="scrollToRouters()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(16,185,129,0.3); color:#10b981;">
         📡 Роутеры
       </button>
-      <button onclick="openQrModal()" class="btn btn-secondary" style="font-size:11px; padding:9px 6px; flex:1;">
+      <button onclick="openConverterModal()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(168,85,247,0.35); color:#c084fc;">
+        🔄 Конвертер
+      </button>
+      <button onclick="openQrModal()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1;">
         📷 QR-код
       </button>
     </div>
@@ -749,6 +752,61 @@
       <button onclick="closeQrModal()" class="btn btn-secondary" style="padding:10px 16px; font-size:12px;">
         ✕ Закрыть
       </button>
+    </div>
+  </div>
+
+  <!-- FEATURE 4: MODAL UNIVERSAL PROTOCOL INSPECTOR & CONVERTER -->
+  <div id="converter-modal" class="modal-overlay" onclick="closeConverterModal(event)">
+    <div class="modal-card" style="max-width:390px; text-align:left;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="font-size:14px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:6px;">
+          <span>🔄</span> Инспектор & Конвертер
+        </div>
+        <button onclick="closeConverterModal()" style="background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer; padding:4px;">✕</button>
+      </div>
+
+      <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:10px;">
+        Вставьте любую ссылку или конфиг: <b>VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, NapsternetV (.npvt), Dark Tunnel (.dt), OpenVPN (.ovpn) или qWDTT/WDTT (VK-Voice)</b>.
+      </p>
+
+      <textarea id="converter-input" placeholder="Вставьте vless://, vmess://, qwdtt://, npv:// или текст конфига..." style="width:100%; height:75px; background:#0c1017; border:1px solid var(--card-border); border-radius:10px; color:var(--text-main); font-family:monospace; font-size:11px; padding:8px; resize:none; outline:none; margin-bottom:10px; box-sizing:border-box;"></textarea>
+
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <button onclick="inspectAndConvertConfig()" class="btn btn-primary" style="flex:1; padding:10px; font-size:12px;">
+          ⚡ Распознать и разобрать
+        </button>
+        <button onclick="pasteClipboardToConverter()" class="btn btn-secondary" style="padding:10px 12px; font-size:12px;">
+          📋 Вставить
+        </button>
+      </div>
+
+      <!-- Result Card -->
+      <div id="converter-result-box" style="display:none; background:#0c1017; border:1px solid var(--card-border); border-radius:12px; padding:12px; margin-bottom:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span class="tag" id="conv-proto-badge" style="color:var(--accent); font-weight:700;">VLESS</span>
+          <span style="font-size:11px; color:var(--text-muted);" id="conv-sec-badge">Reality XTLS</span>
+        </div>
+        
+        <div style="font-size:12px; font-weight:700; margin-bottom:4px;" id="conv-name">Имя узла</div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:monospace; word-break:break-all; margin-bottom:10px;" id="conv-host-port">1.2.3.4 : 443</div>
+
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600;">ОЧИЩЕННЫЙ УНИВЕРСАЛЬНЫЙ URI:</div>
+        <div style="background:#07090e; border:1px solid #1a2234; border-radius:8px; padding:8px; font-family:monospace; font-size:10px; max-height:50px; overflow-y:auto; word-break:break-all; color:#94a3b8; margin-bottom:10px;" id="conv-output-uri">
+          vless://...
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button onclick="copyConvertedUri()" class="btn btn-secondary" style="font-size:11px; padding:8px 8px; flex:1;">
+            📋 Копировать
+          </button>
+          <button onclick="showConvertedQr()" class="btn btn-secondary" style="font-size:11px; padding:8px 8px; flex:1;">
+            📷 QR-код
+          </button>
+          <a id="conv-btn-karing" href="#" class="btn btn-primary" style="font-size:11px; padding:8px 8px; flex:1; text-align:center;">
+            🍏 В Karing
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1088,6 +1146,282 @@ PersistentKeepalive = 25`;
       triggerHaptic('selection');
       const modal = document.getElementById("qr-modal");
       modal.classList.remove("active");
+    }
+
+    // --- FEATURE 4: UNIVERSAL CONFIG INSPECTOR & CONVERTER ---
+    let lastConvertedUri = "";
+
+    function openConverterModal() {
+      triggerHaptic('impact');
+      const modal = document.getElementById("converter-modal");
+      if (modal) modal.classList.add("active");
+    }
+
+    function closeConverterModal(e) {
+      triggerHaptic('selection');
+      const modal = document.getElementById("converter-modal");
+      if (modal) modal.classList.remove("active");
+    }
+
+    async function pasteClipboardToConverter() {
+      triggerHaptic('impact');
+      const input = document.getElementById("converter-input");
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            input.value = text.trim();
+            inspectAndConvertConfig();
+            return;
+          }
+        }
+      } catch (err) {}
+      showToast("Вставьте ссылку вручную в поле");
+      input.focus();
+    }
+
+    function safeB64Decode(str) {
+      str = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (str.length % 4) str += '=';
+      try {
+        return decodeURIComponent(escape(atob(str)));
+      } catch (e) {
+        try {
+          return atob(str);
+        } catch (e2) {
+          return "";
+        }
+      }
+    }
+
+    function inspectAndConvertConfig() {
+      triggerHaptic('impact');
+      let raw = document.getElementById("converter-input").value.trim();
+      if (!raw) {
+        showToast("Пожалуйста, вставьте ссылку или конфиг");
+        return;
+      }
+
+      let parsed = null;
+
+      try {
+        // 1. VMess
+        if (raw.startsWith("vmess://")) {
+          const b64 = raw.substring(8).trim();
+          const jsonStr = safeB64Decode(b64);
+          const j = JSON.parse(jsonStr);
+          parsed = {
+            proto: "VMess",
+            sec: j.tls ? "TLS / " + (j.net || "ws") : (j.net || "TCP"),
+            host: (j.add || "host") + ":" + (j.port || 443),
+            name: j.ps || "VMess Server",
+            cleanUri: raw
+          };
+        }
+        // 2. VLESS
+        else if (raw.startsWith("vless://")) {
+          const m = raw.match(/^vless:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
+          if (m) {
+            const rest = m[4] || "";
+            const isReality = rest.includes("security=reality");
+            const isTls = rest.includes("security=tls");
+            let name = "VLESS Node";
+            if (rest.includes("#")) {
+              name = decodeURIComponent(rest.split("#")[1]);
+            }
+            parsed = {
+              proto: "VLESS",
+              sec: isReality ? "Reality XTLS" : (isTls ? "TLS" : "Direct"),
+              host: m[2] + ":" + m[3],
+              name: name,
+              cleanUri: raw
+            };
+          }
+        }
+        // 3. Trojan
+        else if (raw.startsWith("trojan://")) {
+          const m = raw.match(/^trojan:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
+          if (m) {
+            let name = "Trojan Server";
+            if (m[4] && m[4].includes("#")) {
+              name = decodeURIComponent(m[4].split("#")[1]);
+            }
+            parsed = {
+              proto: "Trojan",
+              sec: "TLS 1.3",
+              host: m[2] + ":" + m[3],
+              name: name,
+              cleanUri: raw
+            };
+          }
+        }
+        // 4. Shadowsocks
+        else if (raw.startsWith("ss://")) {
+          let main = raw.substring(5);
+          let name = "Shadowsocks";
+          if (main.includes("#")) {
+            const parts = main.split("#");
+            main = parts[0];
+            name = decodeURIComponent(parts[1]);
+          }
+          let host = "Server";
+          if (main.includes("@")) {
+            host = main.split("@")[1];
+          }
+          parsed = {
+            proto: "Shadowsocks",
+            sec: "AEAD 2022",
+            host: host,
+            name: name,
+            cleanUri: raw
+          };
+        }
+        // 5. Hysteria 2
+        else if (raw.startsWith("hy2://") || raw.startsWith("hysteria2://")) {
+          const cleanRaw = raw.replace("hysteria2://", "hy2://");
+          const m = cleanRaw.match(/^hy2:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
+          let name = "Hysteria 2 Discord/Gaming";
+          if (m && m[4] && m[4].includes("#")) {
+            name = decodeURIComponent(m[4].split("#")[1]);
+          }
+          parsed = {
+            proto: "Hysteria 2",
+            sec: "QUIC (Full-Cone UDP)",
+            host: m ? (m[2] + ":" + m[3]) : "UDP Host",
+            name: name,
+            cleanUri: cleanRaw
+          };
+        }
+        // 6. qWDTT
+        else if (raw.startsWith("qwdtt://")) {
+          const u = new URL(raw);
+          const p = u.searchParams;
+          const host = p.get("peer") || p.get("host") || "Relay";
+          const port = p.get("port") || 9000;
+          parsed = {
+            proto: "qWDTT (VK-Voice)",
+            sec: "DTLS / Opus TURN Relay",
+            host: host + ":" + port,
+            name: p.get("name") || "qWDTT Node",
+            cleanUri: raw
+          };
+        }
+        // 7. WDTT
+        else if (raw.startsWith("wdtt://")) {
+          let host = "Relay Host";
+          let port = 56000;
+          let name = "WDTT Voice Tunnel";
+          const subRaw = raw.substring(7);
+          if (subRaw.includes(":") && !subRaw.includes("=")) {
+            const parts = subRaw.split("#")[0].split(":");
+            host = parts[0] || host;
+            port = parts[1] || port;
+            if (subRaw.includes("#")) name = decodeURIComponent(subRaw.split("#")[1]);
+          } else {
+            const dec = safeB64Decode(subRaw.split("#")[0]);
+            try {
+              const j = JSON.parse(dec);
+              host = j.ip || host;
+              port = j.dtls || port;
+              name = j.name || j.ps || name;
+            } catch (e) {}
+          }
+          parsed = {
+            proto: "WDTT (VK-Voice)",
+            sec: "WRAP AEAD / RTP DTLS",
+            host: host + ":" + port,
+            name: name,
+            cleanUri: raw
+          };
+        }
+        // 8. OpenVPN
+        else if (raw.startsWith("ovpn://") || (raw.includes("client") && raw.includes("remote "))) {
+          let host = "OpenVPN Server";
+          let port = "1194";
+          let name = "Bunker OpenVPN";
+          if (raw.startsWith("ovpn://")) {
+            const parts = raw.substring(7).split("#");
+            if (parts[1]) name = decodeURIComponent(parts[1]);
+            const dec = safeB64Decode(parts[0]);
+            const m = dec.match(/^\s*remote\s+([^\s]+)(?:\s+(\d+))?/m);
+            if (m) {
+              host = m[1];
+              port = m[2] || "1194";
+            }
+          } else {
+            const m = raw.match(/^\s*remote\s+([^\s]+)(?:\s+(\d+))?/m);
+            if (m) {
+              host = m[1];
+              port = m[2] || "1194";
+            }
+            raw = "ovpn://" + btoa(raw) + "#" + encodeURIComponent("OpenVPN Node");
+          }
+          parsed = {
+            proto: "OpenVPN",
+            sec: "AES-GCM (TUN)",
+            host: host + ":" + port,
+            name: name,
+            cleanUri: raw
+          };
+        }
+        // 9. NapsternetV npv://
+        else if (raw.startsWith("npv://") || raw.includes("v2rayProfile") || raw.includes("npvs1:")) {
+          parsed = {
+            proto: "NapsternetV (NPVT)",
+            sec: "Multi-Format Core",
+            host: "NPV Encrypted Node",
+            name: "NPVT Import",
+            cleanUri: raw
+          };
+        }
+        // 10. Dark Tunnel
+        else if (raw.startsWith("darktunnel://") || raw.startsWith("DARKTUNNEL:")) {
+          parsed = {
+            proto: "Dark Tunnel (.dt)",
+            sec: "AES-GCM / PBKDF2",
+            host: "DarkTunnel Host",
+            name: "Dark Tunnel Node",
+            cleanUri: raw
+          };
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+
+      if (!parsed) {
+        showToast("Формат не распознан. Проверьте ссылку.");
+        return;
+      }
+
+      lastConvertedUri = parsed.cleanUri;
+      document.getElementById("conv-proto-badge").innerText = parsed.proto;
+      document.getElementById("conv-sec-badge").innerText = parsed.sec;
+      document.getElementById("conv-name").innerText = parsed.name;
+      document.getElementById("conv-host-port").innerText = parsed.host;
+      document.getElementById("conv-output-uri").innerText = parsed.cleanUri;
+
+      const karingBtn = document.getElementById("conv-btn-karing");
+      if (karingBtn) {
+        karingBtn.href = "karing://install-config?url=" + encodeURIComponent(parsed.cleanUri);
+      }
+
+      document.getElementById("converter-result-box").style.display = "block";
+      showToast("✅ Конфиг успешно распознан!");
+    }
+
+    function copyConvertedUri() {
+      if (!lastConvertedUri) return;
+      copyText(lastConvertedUri, "✅ Конфиг скопирован!");
+    }
+
+    function showConvertedQr() {
+      if (!lastConvertedUri) return;
+      closeConverterModal();
+      document.getElementById("qr-title").innerText = document.getElementById("conv-name").innerText || "Bunker Node";
+      const target = document.getElementById("qr-target");
+      target.innerHTML = "";
+      renderFallbackQr(target, lastConvertedUri);
+      document.getElementById("qr-modal").classList.add("active");
     }
 
     // --- SHARE & UTILITIES ---
