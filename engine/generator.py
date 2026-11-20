@@ -61,13 +61,13 @@ def generate_subscriptions(alive_nodes: list[dict]):
         port = node.get("port", 0)
         proto = node.get("proto", "unknown")
         
-        # White list (RU / BY)
-        if c in ["RU", "BY"]:
+        # White list (Bypass restrictive Wi-Fi / enterprise firewall: standard ports 443, 80, 53, 8080, 8443)
+        if port in [443, 80, 53, 8080, 8443] and proto in ["vless", "trojan", "vmess", "hy2"]:
             bs_nodes.append(node)
             if port in [443, 53]:
                 factory_nodes.append(node)
-        else:
-            mix_nodes.append(node)
+        
+        mix_nodes.append(node)
             
         # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
         if port in [443, 80, 53] and c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"]:
@@ -79,17 +79,18 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Sort BS nodes: 443 & 53 first, then by ping
     def bs_sort_key(node):
         p = node.get("port", 0)
-        priority = 0 if p == 443 else (1 if p == 53 else 2)
+        priority = 0 if p == 443 else (1 if p == 53 else (2 if p == 80 else 3))
         return (priority, node.get("ping_ms", 9999))
     
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
+    mix_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
     tg_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
 
     # Limit lists
     limit_mix = mix_nodes[:250]
-    limit_bs = bs_nodes[:100]
-    limit_factory = factory_nodes[:50]
+    limit_bs = bs_nodes[:120]
+    limit_factory = factory_nodes[:80]
     limit_fast = sorted(alive_nodes, key=lambda x: x.get("ping_ms", 9999))[:50]
     limit_tg = tg_nodes[:60]
 
@@ -105,8 +106,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     bs_uris = []
     for idx, node in enumerate(limit_bs, 1):
-        flag = get_flag_emoji(node.get("country", "RU"))
-        c = node.get("country", "RU")
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
         port = node.get("port", 0)
         ping = node.get("ping_ms", 0)
         port_tag = "53 DNS" if port == 53 else ("443" if port == 443 else f":{port}")
@@ -115,8 +116,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     factory_uris = []
     for idx, node in enumerate(limit_factory, 1):
-        flag = get_flag_emoji(node.get("country", "RU"))
-        c = node.get("country", "RU")
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
         port = node.get("port", 0)
         ping = node.get("ping_ms", 0)
         tag = "53 DNS" if port == 53 else "443"

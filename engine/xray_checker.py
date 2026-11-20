@@ -56,6 +56,17 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
             sid = q.get("sid", [""])[0]
             path = q.get("path", ["/"])[0]
             host_header = q.get("host", [""])[0]
+            service_name = q.get("serviceName", [""])[0]
+
+            if sec == "reality":
+                # Xray REALITY only supports tcp/raw, h2, grpc, xhttp
+                if net not in ["tcp", "raw", "grpc", "h2", "xhttp"]:
+                    return None
+                if not pbk:
+                    return None
+
+            if flow == "xtls-rprx-vision" and net not in ["tcp", "raw"]:
+                flow = ""
 
             stream = {"network": net, "security": sec}
             if sec == "reality":
@@ -67,11 +78,21 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                     "shortId": sid,
                     "spiderX": ""
                 }
+                if net == "grpc":
+                    stream["grpcSettings"] = {
+                        "serviceName": service_name,
+                        "multiMode": False
+                    }
             elif sec == "tls":
                 stream["tlsSettings"] = {
                     "serverName": sni or host,
                     "allowInsecure": True
                 }
+                if net == "grpc":
+                    stream["grpcSettings"] = {
+                        "serviceName": service_name,
+                        "multiMode": False
+                    }
 
             if net == "ws":
                 stream["wsSettings"] = {
@@ -250,7 +271,7 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
         json.dump(config, f)
 
     proc = subprocess.Popen([XRAY_BIN, "run", "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(0.3)
+    time.sleep(0.5)
 
     verified_nodes = []
 
@@ -259,8 +280,7 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
         proxy_handler = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{local_port}"})
         opener = urllib.request.build_opener(proxy_handler)
         
-        is_ru = c.get("country", "") in ["RU", "BY"]
-        test_url = "http://ya.ru" if is_ru else "http://www.google.com/generate_204"
+        test_url = "http://cp.cloudflare.com/generate_204"
 
         try:
             t0 = time.perf_counter()

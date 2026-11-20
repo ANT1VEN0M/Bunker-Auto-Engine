@@ -3,6 +3,8 @@ import base64
 import re
 from urllib.parse import urlparse, unquote, quote
 
+BLOCKED_PORTS = {445, 135, 137, 138, 139, 25, 23}
+
 def parse_config(uri: str) -> dict | None:
     uri = uri.strip()
     if not uri:
@@ -18,7 +20,7 @@ def parse_config(uri: str) -> dict | None:
             data = json.loads(data_str)
             host = data.get("add", "").strip()
             port = int(data.get("port", 0))
-            if not host or not (1 <= port <= 65535):
+            if not host or not (1 <= port <= 65535) or port in BLOCKED_PORTS:
                 return None
             return {
                 "proto": "vmess",
@@ -54,7 +56,7 @@ def parse_config(uri: str) -> dict | None:
                 parts = hostport.split(":")
                 host = parts[0].strip("[]")
                 port = int(re.sub(r"\D", "", parts[1]) or 0)
-                if not host or not (1 <= port <= 65535):
+                if not host or not (1 <= port <= 65535) or port in BLOCKED_PORTS:
                     return None
                 return {
                     "proto": "ss",
@@ -70,7 +72,7 @@ def parse_config(uri: str) -> dict | None:
             if match:
                 proto, host, port_str, rest = match.groups()
                 port = int(port_str)
-                if not (1 <= port <= 65535):
+                if not (1 <= port <= 65535) or port in BLOCKED_PORTS:
                     return None
                 host = host.strip("[]")
                 remark = ""
