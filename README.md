@@ -9,7 +9,7 @@
 Для быстрого подключения без ручного ввода ссылок используйте официальный веб-портал или запускайте его прямо внутри Telegram как Mini App:  
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
-* 📲 **Telegram Mini App (TMA):** встроенный интерфейс в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*) и быстрой отправкой друзьям.
+* 📲 **Telegram Mini App (TMA):** нативный интерфейс прямо в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*), встроенным **замером пинга (Live Ping Meter)**, кнопкой **аварийного MTProto прокси** и **QR-кодами** для сканирования камерой.
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
