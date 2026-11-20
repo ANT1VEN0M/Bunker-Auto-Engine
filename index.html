@@ -2,22 +2,30 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bunker VPN — Подключение для iPhone, ПК и Android</title>
-  <meta name="description" content="Бесплатное подключение к серверам Bunker VPN для iOS (iPhone/iPad), Windows, macOS и Android в 1 клик.">
-  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Бесплатный VPN-клиент и универсальный генератор подписок Bunker VPN для iOS, Windows, macOS и Android.">
+  <meta name="theme-color" content="#07090e">
   <link rel="icon" href="https://raw.githubusercontent.com/ANT1VEN0M/BunkerVPN/main/V2rayNG/app/src/main/res/drawable/ic_lock_24dp.xml">
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     :root {
       --bg: #07090e;
-      --card-bg: #0f131a;
-      --card-border: #1e2638;
+      --card-bg: #0d121c;
+      --card-border: #1a2333;
       --accent: #38bdf8;
       --accent-hover: #0284c7;
+      --discord: #a855f7;
+      --discord-hover: #9333ea;
       --success: #10b981;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --radius: 14px;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -25,6 +33,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
+
     body {
       background-color: var(--bg);
       color: var(--text-main);
@@ -33,19 +42,52 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 24px 16px 40px;
+      padding: 16px 14px 40px;
     }
+
     .container {
       width: 100%;
       max-width: 480px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
+
+    /* Telegram user greeting banner */
+    .tg-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .tg-banner.active {
+      display: flex;
+    }
+    .tg-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .tg-app-tag {
+      font-size: 10px;
+      font-weight: 700;
+      background: #0088cc;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
     .header {
       text-align: center;
-      padding: 12px 0 8px;
+      padding: 6px 0 4px;
     }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -57,7 +99,7 @@
       font-weight: 600;
       padding: 4px 10px;
       border-radius: 20px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -67,29 +109,75 @@
       border-radius: 50%;
       background: var(--success);
       box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
     }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+    }
+
     h1 {
       font-size: 24px;
       font-weight: 800;
       letter-spacing: -0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .subtitle {
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-muted);
       line-height: 1.4;
     }
+
+    /* Feed Selector Pills */
+    .feed-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .feed-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .feed-pill {
+      background: #121824;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .feed-pill.active {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+    .feed-pill.active.discord-pill {
+      background: rgba(168, 85, 247, 0.16);
+      border-color: var(--discord);
+    }
+
+    /* Cards */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 18px 16px;
+      border-radius: var(--radius);
+      padding: 16px 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
+      position: relative;
     }
     .card-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       color: var(--text-main);
       display: flex;
@@ -105,20 +193,23 @@
       padding: 2px 7px;
       border-radius: 6px;
     }
+
+    /* Buttons */
     .btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
-      padding: 13px 16px;
-      border-radius: 12px;
-      font-size: 13.5px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
       border: none;
       transition: all 0.15s ease;
+      text-align: center;
     }
     .btn-primary {
       background: var(--accent);
@@ -126,6 +217,14 @@
     }
     .btn-primary:active {
       background: var(--accent-hover);
+      transform: scale(0.98);
+    }
+    .btn-discord {
+      background: var(--discord);
+      color: #ffffff;
+    }
+    .btn-discord:active {
+      background: var(--discord-hover);
       transform: scale(0.98);
     }
     .btn-secondary {
@@ -137,22 +236,12 @@
       background: #1a2333;
       transform: scale(0.98);
     }
-    .btn-outline {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px dashed var(--card-border);
-      font-size: 12px;
-      padding: 10px 14px;
-    }
-    .btn-outline:active {
-      color: var(--text-main);
-      border-color: var(--text-muted);
-    }
+
     .sub-box {
       background: #080b11;
       border: 1px solid #1a2130;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 8px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -160,7 +249,7 @@
     }
     .sub-url {
       font-family: monospace;
-      font-size: 10.5px;
+      font-size: 10px;
       color: #64748b;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -182,13 +271,14 @@
     .copy-btn:active {
       background: #334155;
     }
+
     .steps {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       font-size: 12px;
       color: var(--text-muted);
-      line-height: 1.45;
+      line-height: 1.4;
     }
     .step-item {
       display: flex;
@@ -196,8 +286,8 @@
       gap: 8px;
     }
     .step-num {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       border-radius: 50%;
       background: #1e293b;
       color: var(--accent);
@@ -209,17 +299,24 @@
       flex-shrink: 0;
       margin-top: 1px;
     }
+
+    .share-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .footer {
       text-align: center;
-      font-size: 11.5px;
+      font-size: 11px;
       color: #475569;
-      padding-top: 10px;
+      padding-top: 8px;
       line-height: 1.6;
     }
     .footer a {
       color: var(--accent);
       text-decoration: none;
     }
+
     #toast {
       position: fixed;
       bottom: 24px;
@@ -227,11 +324,11 @@
       transform: translateX(-50%) translateY(100px);
       background: #10b981;
       color: #041019;
-      padding: 10px 20px;
-      border-radius: 24px;
-      font-size: 13px;
+      padding: 9px 18px;
+      border-radius: 20px;
+      font-size: 12.5px;
       font-weight: 700;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 999;
       pointer-events: none;
@@ -244,38 +341,74 @@
 <body>
 
   <div class="container">
+    <!-- Telegram Mini App Greeting -->
+    <div id="tg-banner" class="tg-banner">
+      <div class="tg-user">
+        <span>🐈‍⬛</span>
+        <span id="tg-greeting">Привет, Боец Бункера!</span>
+      </div>
+      <span class="tg-app-tag">Mini App</span>
+    </div>
+
     <div class="header">
       <div class="badge">
-        <span class="dot"></span> 470+ серверов • WARP+ порт 880
+        <span class="dot"></span> 470+ нод • 20 источников • WARP+
       </div>
       <h1>Бункер VPN</h1>
-      <p class="subtitle">Универсальное бесплатное подключение без рекламы для всех устройств.</p>
+      <p class="subtitle">Универсальный портал авто-подключения без рекламы и ограничений.</p>
+    </div>
+
+    <!-- Feed Selector Pills -->
+    <div>
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">
+        Выберите конфигурацию:
+      </div>
+      <div class="feed-tabs">
+        <button class="feed-pill active" onclick="selectFeed('mix', this)">
+          🌍 Мировой Микс
+        </button>
+        <button class="feed-pill discord-pill" onclick="selectFeed('discord', this)">
+          🎮 Discord Voice
+        </button>
+        <button class="feed-pill" onclick="selectFeed('whitelist', this)">
+          🤍 Белый список (РФ/РБ)
+        </button>
+        <button class="feed-pill" onclick="selectFeed('factory', this)">
+          🏭 Завод 443/53
+        </button>
+        <button class="feed-pill" onclick="selectFeed('fast', this)">
+          ⚡ Турбо
+        </button>
+        <button class="feed-pill" onclick="selectFeed('tg', this)">
+          💬 Telegram SOS
+        </button>
+      </div>
     </div>
 
     <!-- 1. iOS (iPhone / iPad) -->
     <div class="card" id="card-ios">
       <div class="card-title">
         <span>🍏 Apple iOS (iPhone & iPad)</span>
-        <span class="tag">Рекомендуем</span>
+        <span class="tag">1 Клик</span>
       </div>
 
-      <a id="btn-karing" href="#" class="btn btn-primary">
-        ⚡ Подключить в 1 клик (Karing)
+      <a id="btn-karing" href="#" class="btn btn-primary" onclick="handleFeedClick()">
+        ⚡ Подключить в Karing (1 клик)
       </a>
 
       <div class="steps">
         <div class="step-item">
           <div class="step-num">1</div>
-          <div>Установите бесплатный клиент <b><a href="https://apps.apple.com/app/karing/id6472431552" target="_blank" style="color:var(--accent);">Karing из App Store</a></b> (если еще не установлен).</div>
+          <div>Установите <b><a href="https://apps.apple.com/app/karing/id6472431552" target="_blank" style="color:var(--accent);">Karing из App Store</a></b> (бесплатно, без рекламы).</div>
         </div>
         <div class="step-item">
           <div class="step-num">2</div>
-          <div>Нажмите синюю кнопку выше — подписка добавится автоматически. В приложении нажмите <b>Подключить</b>.</div>
+          <div>Нажмите кнопку выше — подписка добавится сама. Нажмите <b>Подключить</b>.</div>
         </div>
       </div>
 
-      <a id="btn-hiddify-ios" href="#" class="btn btn-secondary">
-        🔗 Открыть в Hiddify / V2Box
+      <a id="btn-v2box" href="#" class="btn btn-secondary" onclick="handleFeedClick()">
+        🔗 Открыть в V2Box / Streisand
       </a>
     </div>
 
@@ -286,112 +419,213 @@
         <span class="tag">ПК & Ноутбуки</span>
       </div>
 
-      <a id="btn-hiddify-pc" href="#" class="btn btn-primary">
+      <a id="btn-hiddify" href="#" class="btn btn-primary" onclick="handleFeedClick()">
         ⚡ Добавить подписку в Hiddify
       </a>
 
       <div class="steps">
         <div class="step-item">
           <div class="step-num">1</div>
-          <div>Скачайте <b><a href="https://github.com/hiddify/hiddify-app/releases" target="_blank" style="color:var(--accent);">Hiddify Next</a></b>, <b><a href="https://github.com/2dust/v2rayN/releases" target="_blank" style="color:var(--accent);">v2rayN</a></b> или <b><a href="https://github.com/KaringX/karing/releases" target="_blank" style="color:var(--accent);">Karing Desktop</a></b>.</div>
+          <div>Скачайте <b><a href="https://github.com/hiddify/hiddify-app/releases" target="_blank" style="color:var(--accent);">Hiddify</a></b>, <b><a href="https://github.com/2dust/v2rayN/releases" target="_blank" style="color:var(--accent);">v2rayN</a></b> или <b><a href="https://github.com/KaringX/karing/releases" target="_blank" style="color:var(--accent);">Karing Desktop</a></b>.</div>
         </div>
         <div class="step-item">
           <div class="step-num">2</div>
-          <div>Нажмите кнопку выше или скопируйте ссылку подписки вручную.</div>
+          <div>Нажмите кнопку выше или скопируйте прямую ссылку ниже.</div>
         </div>
       </div>
     </div>
 
-    <!-- 3. Android Custom App -->
+    <!-- 3. Android Client -->
     <div class="card" id="card-android">
       <div class="card-title">
         <span>🤖 Android</span>
-        <span class="tag">Фирменный клиент</span>
+        <span class="tag">v1.3.9 Stealth</span>
       </div>
 
-      <a href="https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN/releases/download/v1.3.9/BunkerVPN-arm64-v8a.apk" class="btn btn-primary">
+      <a href="https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN/releases/download/v1.3.9/BunkerVPN-arm64-v8a.apk" class="btn btn-primary" onclick="triggerHaptic('impact')">
         ⬇️ Скачать BunkerVPN v1.3.9 (APK)
       </a>
 
-      <p style="font-size:12px; color:var(--text-muted); line-height:1.4;">
-        Фирменное приложение со Stealth-режимом, авточекингом пинга и встроенным обходом блокировок Cloudflare WARP+.
-      </p>
-    </div>
-
-    <!-- 4. Discord Voice & Gaming -->
-    <div class="card" style="border-color: rgba(168, 85, 247, 0.35);">
-      <div class="card-title">
-        <span>🎮 Discord Voice & Gaming</span>
-        <span class="tag" style="color:#c084fc; background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.25);">Full-Cone UDP</span>
-      </div>
-
-      <div class="sub-box">
-        <div class="sub-url" id="sub-discord-text">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt</div>
-        <button class="copy-btn" onclick="copyDiscordSubscription()">Копировать</button>
-      </div>
-
-      <a id="btn-karing-discord" href="#" class="btn btn-secondary" style="border-color:rgba(168,85,247,0.3); color:#e9d5ff;">
-        🎙️ Подключить Discord Voice в Karing (1 клик)
-      </a>
-
       <p style="font-size:11.5px; color:var(--text-muted); line-height:1.4;">
-        Специальный пул серверов (Hysteria 2 + WireGuard WARP+) для стабильного войса и стримов в Discord без зависания на «Подключение к RTC».
+        Фирменное приложение: Stealth OLED-режим, Fail-Safe Cloudflare WARP+ (порт 880), Kill-Switch и встроенные фильтры.
       </p>
     </div>
 
-    <!-- 5. Manual Subscription Link -->
+    <!-- 4. Selected Feed Link Box -->
     <div class="card">
       <div class="card-title">
-        <span>📋 Прямая ссылка на подписку</span>
+        <span id="active-feed-label">📋 Ссылка активной подписки</span>
+        <span class="tag" id="active-feed-tag">Мировой Микс</span>
       </div>
 
       <div class="sub-box">
-        <div class="sub-url" id="sub-url-text">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt</div>
-        <button class="copy-btn" onclick="copySubscription()">Копировать</button>
+        <div class="sub-url" id="active-sub-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt</div>
+        <button class="copy-btn" onclick="copyCurrentFeed()">Копировать</button>
       </div>
 
-      <p style="font-size:11.5px; color:var(--text-muted);">
-        Подходит для любых сторонних клиентов: Streisand, Shadowrocket, Sing-box, Clash, Nekobox, Loon, Quantumult X.
+      <p style="font-size:11px; color:var(--text-muted);" id="active-feed-desc">
+        Универсальный глобальный пул серверов для YouTube 4K, Instagram, X (Twitter) и обхода любых блокировок ТСПУ.
       </p>
+    </div>
+
+    <!-- 5. Share with Friends & Telegram Support -->
+    <div class="card" style="background:#090d14; border-color:#182232;">
+      <div class="card-title">
+        <span>💬 Сообщество и Помощь</span>
+      </div>
+
+      <div class="share-row">
+        <button onclick="shareBunker()" class="btn btn-secondary" style="font-size:12px;">
+          🚀 Поделиться Бункером
+        </button>
+        <a href="https://t.me/BUNKER_K0TA" target="_blank" class="btn btn-secondary" style="font-size:12px;">
+          💬 Чат помощи
+        </a>
+      </div>
     </div>
 
     <div class="footer">
-      Бункер Кота • Защита и скорость 24/7<br>
-      <a href="https://t.me/BUNKER_KOTA" target="_blank">Канал в Telegram</a> • 
-      <a href="https://t.me/BUNKER_K0TA" target="_blank">Чат помощи</a> • 
-      <a href="https://t.me/BunkerCatOSBot" target="_blank">Telegram Бот</a>
+      Бункер Кота • 2026 • Свободный и быстрый интернет<br>
+      <a href="https://t.me/BUNKER_KOTA" target="_blank">Канал @BUNKER_KOTA</a> • 
+      <a href="https://t.me/BunkerCatOSBot" target="_blank">Telegram Бот</a> • 
+      <a href="https://github.com/ANT1VEN0M/BunkerVPN" target="_blank">GitHub</a>
     </div>
   </div>
 
   <div id="toast">✅ Ссылка скопирована!</div>
 
   <script>
-    const SUB_URL = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt";
-    const SUB_NAME = "Bunker VPN | Микс";
+    // --- FEEDS DICTIONARY ---
+    const BASE_MIRROR = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/";
+    
+    const FEEDS = {
+      mix: {
+        name: "Bunker VPN | Микс",
+        label: "Мировой Микс",
+        file: "mix_b64.txt",
+        desc: "Универсальный пул серверов для YouTube 4K, Instagram, X (Twitter) и обхода любых блокировок ТСПУ."
+      },
+      discord: {
+        name: "Bunker VPN | Discord Voice",
+        label: "Discord Voice & Gaming",
+        file: "discord_b64.txt",
+        desc: "Выделенный пул Full-Cone UDP (Hysteria 2 + Cloudflare WARP+) для стабильного войса и стримов в Discord без RTC-зависания."
+      },
+      whitelist: {
+        name: "Bunker VPN | Белый список",
+        label: "Белый список (RU/BY)",
+        file: "bs_b64.txt",
+        desc: "Маршрутизация для Госуслуг, банков РФ, Кинопоиска и сайтов зоны .ru/.by без отключения VPN."
+      },
+      factory: {
+        name: "Bunker VPN | Завод 443/53",
+        label: "Завод 443/53",
+        file: "factory_b64.txt",
+        desc: "Серверы на портах 443 (HTTPS) и 53 (DNS) для пробива жестких корпоративных сетей и публичных Wi-Fi."
+      },
+      fast: {
+        name: "Bunker VPN | Турбо",
+        label: "Турбо (Минимум пинг)",
+        file: "fast_b64.txt",
+        desc: "Серверы с ультранизким пингом для онлайн-игр и чувствительного к задержкам трафика."
+      },
+      tg: {
+        name: "Bunker VPN | Telegram SOS",
+        label: "Telegram SOS",
+        file: "tg_b64.txt",
+        desc: "Аварийные каналы связи для мгновенного доступа в Telegram даже при полном шторме ТСПУ."
+      }
+    };
 
-    const DISCORD_SUB_URL = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt";
-    const DISCORD_SUB_NAME = "Bunker VPN | Discord Voice";
+    let currentFeedKey = "mix";
 
-    const karingUrl = `karing://install-config?url=${encodeURIComponent(SUB_URL)}&name=${encodeURIComponent(SUB_NAME)}`;
-    const hiddifyUrl = `hiddify://install-sub?url=${encodeURIComponent(SUB_URL)}#${encodeURIComponent(SUB_NAME)}`;
-    const v2boxUrl = `v2box://install-sub?url=${encodeURIComponent(SUB_URL)}&name=${encodeURIComponent(SUB_NAME)}`;
+    // --- TELEGRAM WEBAPP INTEGRATION ---
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      try {
+        tg.setHeaderColor('#07090e');
+        tg.setBackgroundColor('#07090e');
+      } catch (e) {}
 
-    const karingDiscordUrl = `karing://install-config?url=${encodeURIComponent(DISCORD_SUB_URL)}&name=${encodeURIComponent(DISCORD_SUB_NAME)}`;
-
-    document.getElementById("btn-karing").href = karingUrl;
-    document.getElementById("btn-hiddify-ios").href = v2boxUrl;
-    document.getElementById("btn-hiddify-pc").href = hiddifyUrl;
-    document.getElementById("btn-karing-discord").href = karingDiscordUrl;
-
-    function copySubscription() {
-      copyText(SUB_URL, "✅ Ссылка Микс скопирована!");
+      // Personalization
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        const tgBanner = document.getElementById("tg-banner");
+        const tgGreeting = document.getElementById("tg-greeting");
+        const name = user.first_name || user.username || "Боец Бункера";
+        tgGreeting.innerText = `Привет, ${name}! 🐈‍⬛`;
+        tgBanner.classList.add("active");
+      }
     }
 
-    function copyDiscordSubscription() {
-      copyText(DISCORD_SUB_URL, "✅ Ссылка Discord Voice скопирована!");
+    function triggerHaptic(type) {
+      if (!tg?.HapticFeedback) return;
+      if (type === 'impact') {
+        tg.HapticFeedback.impactOccurred('medium');
+      } else if (type === 'success') {
+        tg.HapticFeedback.notificationOccurred('success');
+      } else if (type === 'selection') {
+        tg.HapticFeedback.selectionChanged();
+      }
+    }
+
+    function selectFeed(key, element) {
+      currentFeedKey = key;
+      triggerHaptic('selection');
+
+      // Update pill classes
+      document.querySelectorAll('.feed-pill').forEach(btn => btn.classList.remove('active'));
+      if (element) element.classList.add('active');
+
+      updateUI();
+    }
+
+    function updateUI() {
+      const feed = FEEDS[currentFeedKey];
+      const url = BASE_MIRROR + feed.file;
+
+      document.getElementById("active-feed-label").innerText = `📋 Ссылка: ${feed.label}`;
+      document.getElementById("active-feed-tag").innerText = feed.label;
+      document.getElementById("active-sub-url").innerText = url;
+      document.getElementById("active-feed-desc").innerText = feed.desc;
+
+      // Update Deep Links
+      const karingUrl = `karing://install-config?url=${encodeURIComponent(url)}&name=${encodeURIComponent(feed.name)}`;
+      const hiddifyUrl = `hiddify://install-sub?url=${encodeURIComponent(url)}#${encodeURIComponent(feed.name)}`;
+      const v2boxUrl = `v2box://install-sub?url=${encodeURIComponent(url)}&name=${encodeURIComponent(feed.name)}`;
+
+      document.getElementById("btn-karing").href = karingUrl;
+      document.getElementById("btn-v2box").href = v2boxUrl;
+      document.getElementById("btn-hiddify").href = hiddifyUrl;
+    }
+
+    function handleFeedClick() {
+      triggerHaptic('impact');
+    }
+
+    function copyCurrentFeed() {
+      const feed = FEEDS[currentFeedKey];
+      const url = BASE_MIRROR + feed.file;
+      copyText(url, `✅ Ссылка «${feed.label}» скопирована!`);
+    }
+
+    function shareBunker() {
+      triggerHaptic('impact');
+      const shareUrl = "https://ant1ven0m.github.io/Bunker-Auto-Engine/";
+      const text = "🔥 Бесплатный Бункер VPN: подключение в 1 клик для iPhone, ПК и Android без рекламы!";
+      const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+      
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(tgShareUrl);
+      } else {
+        window.open(tgShareUrl, '_blank');
+      }
     }
 
     function copyText(text, msg) {
+      triggerHaptic('success');
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
       } else {
@@ -415,6 +649,9 @@
       toast.classList.add("show");
       setTimeout(() => toast.classList.remove("show"), 2200);
     }
+
+    // Initialize UI on load
+    updateUI();
   </script>
 </body>
 </html>
