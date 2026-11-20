@@ -18,7 +18,7 @@ def parse_config(uri: str) -> dict | None:
             data = json.loads(data_str)
             host = data.get("add", "").strip()
             port = int(data.get("port", 0))
-            if not host or port <= 0:
+            if not host or not (1 <= port <= 65535):
                 return None
             return {
                 "proto": "vmess",
@@ -54,7 +54,7 @@ def parse_config(uri: str) -> dict | None:
                 parts = hostport.split(":")
                 host = parts[0].strip("[]")
                 port = int(re.sub(r"\D", "", parts[1]) or 0)
-                if not host or port <= 0:
+                if not host or not (1 <= port <= 65535):
                     return None
                 return {
                     "proto": "ss",
@@ -70,6 +70,8 @@ def parse_config(uri: str) -> dict | None:
             if match:
                 proto, host, port_str, rest = match.groups()
                 port = int(port_str)
+                if not (1 <= port <= 65535):
+                    return None
                 host = host.strip("[]")
                 remark = ""
                 if "#" in rest:
