@@ -787,12 +787,27 @@
           <span style="font-size:11px; color:var(--text-muted);" id="conv-sec-badge">Reality XTLS</span>
         </div>
         
-        <div style="font-size:12px; font-weight:700; margin-bottom:4px;" id="conv-name">Имя узла</div>
-        <div style="font-size:11px; color:var(--text-muted); font-family:monospace; word-break:break-all; margin-bottom:10px;" id="conv-host-port">1.2.3.4 : 443</div>
+        <div style="font-size:13px; font-weight:700; margin-bottom:2px;" id="conv-name">Имя узла</div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:monospace; word-break:break-all; margin-bottom:8px;" id="conv-host-port">1.2.3.4 : 443</div>
 
-        <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600;">ОЧИЩЕННЫЙ УНИВЕРСАЛЬНЫЙ URI:</div>
-        <div style="background:#07090e; border:1px solid #1a2234; border-radius:8px; padding:8px; font-family:monospace; font-size:10px; max-height:50px; overflow-y:auto; word-break:break-all; color:#94a3b8; margin-bottom:10px;" id="conv-output-uri">
+        <!-- Inspector details grid -->
+        <div id="conv-details-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; background:#07090e; border:1px solid #1a2234; border-radius:8px; padding:8px; margin-bottom:10px; font-size:10.5px;">
+        </div>
+
+        <!-- Format switch buttons -->
+        <div id="conv-format-row" style="display:none; margin-bottom:10px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:5px; font-weight:600;">ФОРМАТ ЭКСПОРТА / КОНВЕРТАЦИИ:</div>
+          <div style="display:flex; gap:5px; flex-wrap:wrap;" id="conv-format-pills">
+          </div>
+        </div>
+
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600;">РЕЗУЛЬТАТ (URI):</div>
+        <div style="background:#07090e; border:1px solid #1a2234; border-radius:8px; padding:8px; font-family:monospace; font-size:10px; max-height:55px; overflow-y:auto; word-break:break-all; color:#38bdf8; margin-bottom:10px;" id="conv-output-uri">
           vless://...
+        </div>
+
+        <!-- Compatibility note -->
+        <div id="conv-compat-note" style="font-size:10.5px; color:#f59e0b; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:6px 8px; margin-bottom:10px; line-height:1.3; display:none;">
         </div>
 
         <div style="display:flex; gap:6px;">
@@ -1150,6 +1165,7 @@ PersistentKeepalive = 25`;
 
     // --- FEATURE 4: UNIVERSAL CONFIG INSPECTOR & CONVERTER ---
     let lastConvertedUri = "";
+    let currentFormats = {};
 
     function openConverterModal() {
       triggerHaptic('impact');
@@ -1194,6 +1210,26 @@ PersistentKeepalive = 25`;
       }
     }
 
+    function switchConvertedFormat(fmtKey) {
+      if (!currentFormats[fmtKey]) return;
+      triggerHaptic('selection');
+      lastConvertedUri = currentFormats[fmtKey];
+      document.getElementById("conv-output-uri").innerText = lastConvertedUri;
+      
+      document.querySelectorAll('#conv-format-pills button').forEach(b => {
+        b.style.borderColor = 'var(--card-border)';
+        b.style.color = 'var(--text-muted)';
+        b.style.background = '#121824';
+      });
+      const activeBtn = document.getElementById("conv-pill-" + fmtKey);
+      if (activeBtn) {
+        activeBtn.style.borderColor = 'var(--accent)';
+        activeBtn.style.color = '#fff';
+        activeBtn.style.background = 'rgba(56, 189, 248, 0.2)';
+      }
+      showToast("Формат изменен!");
+    }
+
     function inspectAndConvertConfig() {
       triggerHaptic('impact');
       let raw = document.getElementById("converter-input").value.trim();
@@ -1203,10 +1239,94 @@ PersistentKeepalive = 25`;
       }
 
       let parsed = null;
+      currentFormats = {};
 
       try {
-        // 1. VMess
-        if (raw.startsWith("vmess://")) {
+        // 1. qWDTT / WDTT (VK-Voice WebRTC Tunnel)
+        if (raw.startsWith("qwdtt://") || raw.startsWith("wdtt://")) {
+          let host = "", dtls = 56000, wg = 56001, local = 9000, pass = "", hash = "", name = "WDTT Voice Tunnel";
+          
+          if (raw.startsWith("qwdtt://")) {
+            try {
+              const u = new URL(raw);
+              const p = u.searchParams;
+              host = p.get("peer") || p.get("host") || "";
+              local = parseInt(p.get("port")) || 9000;
+              name = p.get("name") || name;
+              hash = p.get("hashes") || "";
+              pass = p.get("pass") || (raw.includes("pass=") ? raw.split("pass=")[1] : "");
+            } catch (e) {}
+          } else {
+            // wdtt://
+            let sub = raw.substring(7).trim();
+            if (sub.includes("#")) {
+              const p = sub.split("#");
+              sub = p[0];
+              name = decodeURIComponent(p[1]);
+            }
+            if (sub.includes(":") && !sub.includes("=") && sub.length < 250) {
+              // Colon format host:dtls:wg:local:pass:hash
+              const parts = sub.split(":");
+              host = parts[0] || "";
+              dtls = parts[1] || 56000;
+              wg = parts[2] || 56001;
+              local = parts[3] || 0;
+              pass = parts[4] || "";
+              hash = parts[5] || "";
+            } else {
+              // Base64 JSON
+              try {
+                const j = JSON.parse(safeB64Decode(sub));
+                host = j.ip || j.add || "";
+                dtls = j.dtls || 56000;
+                pass = j.pass || "";
+                hash = j.hash || "";
+                name = j.name || j.ps || j.vpn || name;
+              } catch (e) {}
+            }
+          }
+
+          if (host && pass) {
+            const colonFmt = `wdtt://${host}:${dtls}:${wg}:${local}:${pass}:${hash}#${encodeURIComponent(name)}`;
+            const jsonPl = { ip: host, dtls: parseInt(dtls), pass: pass, name: name };
+            if (hash) jsonPl.hash = hash;
+            const b64JsonFmt = `wdtt://${btoa(JSON.stringify(jsonPl))}`;
+            const qP = new URLSearchParams({ name: name, peer: host, port: String(local || 9000), workers: '18', hashes: hash });
+            const qwdttFmt = `qwdtt://config?${qP.toString()}&pass=${pass}`;
+
+            currentFormats = {
+              'qwdtt': qwdttFmt,
+              'json': b64JsonFmt,
+              'colon': colonFmt
+            };
+
+            // If user passed colon, default converted URI to qwdtt:// to show the real conversion!
+            const chosenDefault = raw.startsWith("qwdtt://") ? colonFmt : (raw.includes(":") && !raw.includes("=") ? qwdttFmt : qwdttFmt);
+
+            parsed = {
+              proto: "qWDTT / WDTT (VK-Voice)",
+              sec: "WRAP AEAD / DTLS TURN",
+              host: host + ":" + dtls,
+              name: name,
+              cleanUri: chosenDefault,
+              activeFormat: raw.startsWith("qwdtt://") ? 'colon' : 'qwdtt',
+              details: [
+                { k: "🌐 IP Сервера", v: host },
+                { k: "🔌 Порты (DTLS/WG)", v: dtls + " / " + wg },
+                { k: "🔑 Пароль", v: pass.substring(0, 10) + "..." },
+                { k: "📞 VK Hash звонка", v: hash ? (hash.substring(0, 10) + "...") : "не задан" }
+              ],
+              formats: [
+                { id: "qwdtt", label: "qwdtt:// (Android)" },
+                { id: "json", label: "wdtt:// Base64" },
+                { id: "colon", label: "wdtt:// Colon" }
+              ],
+              isWdtt: true
+            };
+          }
+        }
+        // 2. VMess
+        else if (raw.startsWith("vmess://")) {
           const b64 = raw.substring(8).trim();
           const jsonStr = safeB64Decode(b64);
           const j = JSON.parse(jsonStr);
@@ -1215,10 +1335,16 @@ PersistentKeepalive = 25`;
             sec: j.tls ? "TLS / " + (j.net || "ws") : (j.net || "TCP"),
             host: (j.add || "host") + ":" + (j.port || 443),
             name: j.ps || "VMess Server",
-            cleanUri: raw
+            cleanUri: raw,
+            details: [
+              { k: "🌐 Сервер", v: j.add || "host" },
+              { k: "🔌 Порт", v: String(j.port || 443) },
+              { k: "🆔 UUID", v: (j.id || "").substring(0, 8) + "..." },
+              { k: "📡 Сеть / TLS", v: (j.net || "tcp") + " / " + (j.tls || "none") }
+            ]
           };
         }
-        // 2. VLESS
+        // 3. VLESS
         else if (raw.startsWith("vless://")) {
           const m = raw.match(/^vless:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
           if (m) {
@@ -1229,16 +1355,25 @@ PersistentKeepalive = 25`;
             if (rest.includes("#")) {
               name = decodeURIComponent(rest.split("#")[1]);
             }
+            let sni = "не задан";
+            const sniMatch = rest.match(/sni=([^&]+)/);
+            if (sniMatch) sni = sniMatch[1];
             parsed = {
               proto: "VLESS",
               sec: isReality ? "Reality XTLS" : (isTls ? "TLS" : "Direct"),
               host: m[2] + ":" + m[3],
               name: name,
-              cleanUri: raw
+              cleanUri: raw,
+              details: [
+                { k: "🌐 Сервер", v: m[2] },
+                { k: "🔌 Порт", v: m[3] },
+                { k: "🆔 UUID", v: m[1].substring(0, 8) + "..." },
+                { k: "🎯 SNI Маскировка", v: sni }
+              ]
             };
           }
         }
-        // 3. Trojan
+        // 4. Trojan
         else if (raw.startsWith("trojan://")) {
           const m = raw.match(/^trojan:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
           if (m) {
@@ -1251,11 +1386,16 @@ PersistentKeepalive = 25`;
               sec: "TLS 1.3",
               host: m[2] + ":" + m[3],
               name: name,
-              cleanUri: raw
+              cleanUri: raw,
+              details: [
+                { k: "🌐 Сервер", v: m[2] },
+                { k: "🔌 Порт", v: m[3] },
+                { k: "🔒 Шифрование", v: "TLS 1.3" }
+              ]
             };
           }
         }
-        // 4. Shadowsocks
+        // 5. Shadowsocks
         else if (raw.startsWith("ss://")) {
           let main = raw.substring(5);
           let name = "Shadowsocks";
@@ -1273,10 +1413,14 @@ PersistentKeepalive = 25`;
             sec: "AEAD 2022",
             host: host,
             name: name,
-            cleanUri: raw
+            cleanUri: raw,
+            details: [
+              { k: "🌐 Сервер", v: host },
+              { k: "🔒 Шифр", v: "AEAD (2022)" }
+            ]
           };
         }
-        // 5. Hysteria 2
+        // 6. Hysteria 2
         else if (raw.startsWith("hy2://") || raw.startsWith("hysteria2://")) {
           const cleanRaw = raw.replace("hysteria2://", "hy2://");
           const m = cleanRaw.match(/^hy2:\/\/([^@]+)@([^:/?#]+):(\d+)(.*)$/);
@@ -1289,56 +1433,20 @@ PersistentKeepalive = 25`;
             sec: "QUIC (Full-Cone UDP)",
             host: m ? (m[2] + ":" + m[3]) : "UDP Host",
             name: name,
-            cleanUri: cleanRaw
+            cleanUri: cleanRaw,
+            details: [
+              { k: "🌐 Сервер", v: m ? m[2] : "UDP" },
+              { k: "🔌 Порт", v: m ? m[3] : "UDP" },
+              { k: "🎮 Назначение", v: "Discord Voice & Стримы" }
+            ]
           };
         }
-        // 6. qWDTT
-        else if (raw.startsWith("qwdtt://")) {
-          const u = new URL(raw);
-          const p = u.searchParams;
-          const host = p.get("peer") || p.get("host") || "Relay";
-          const port = p.get("port") || 9000;
-          parsed = {
-            proto: "qWDTT (VK-Voice)",
-            sec: "DTLS / Opus TURN Relay",
-            host: host + ":" + port,
-            name: p.get("name") || "qWDTT Node",
-            cleanUri: raw
-          };
-        }
-        // 7. WDTT
-        else if (raw.startsWith("wdtt://")) {
-          let host = "Relay Host";
-          let port = 56000;
-          let name = "WDTT Voice Tunnel";
-          const subRaw = raw.substring(7);
-          if (subRaw.includes(":") && !subRaw.includes("=")) {
-            const parts = subRaw.split("#")[0].split(":");
-            host = parts[0] || host;
-            port = parts[1] || port;
-            if (subRaw.includes("#")) name = decodeURIComponent(subRaw.split("#")[1]);
-          } else {
-            const dec = safeB64Decode(subRaw.split("#")[0]);
-            try {
-              const j = JSON.parse(dec);
-              host = j.ip || host;
-              port = j.dtls || port;
-              name = j.name || j.ps || name;
-            } catch (e) {}
-          }
-          parsed = {
-            proto: "WDTT (VK-Voice)",
-            sec: "WRAP AEAD / RTP DTLS",
-            host: host + ":" + port,
-            name: name,
-            cleanUri: raw
-          };
-        }
-        // 8. OpenVPN
+        // 7. OpenVPN
         else if (raw.startsWith("ovpn://") || (raw.includes("client") && raw.includes("remote "))) {
           let host = "OpenVPN Server";
           let port = "1194";
           let name = "Bunker OpenVPN";
+          let outUri = raw;
           if (raw.startsWith("ovpn://")) {
             const parts = raw.substring(7).split("#");
             if (parts[1]) name = decodeURIComponent(parts[1]);
@@ -1354,34 +1462,33 @@ PersistentKeepalive = 25`;
               host = m[1];
               port = m[2] || "1194";
             }
-            raw = "ovpn://" + btoa(raw) + "#" + encodeURIComponent("OpenVPN Node");
+            outUri = "ovpn://" + btoa(raw) + "#" + encodeURIComponent("OpenVPN Node");
           }
           parsed = {
             proto: "OpenVPN",
             sec: "AES-GCM (TUN)",
             host: host + ":" + port,
             name: name,
-            cleanUri: raw
+            cleanUri: outUri,
+            details: [
+              { k: "🌐 Сервер", v: host },
+              { k: "🔌 Порт", v: port },
+              { k: "🔒 Шифр", v: "AES-256-GCM" }
+            ]
           };
         }
-        // 9. NapsternetV npv://
-        else if (raw.startsWith("npv://") || raw.includes("v2rayProfile") || raw.includes("npvs1:")) {
+        // 8. NapsternetV / Dark Tunnel
+        else if (raw.startsWith("npv://") || raw.startsWith("darktunnel://") || raw.includes("v2rayProfile") || raw.includes("npvs1:")) {
           parsed = {
-            proto: "NapsternetV (NPVT)",
-            sec: "Multi-Format Core",
-            host: "NPV Encrypted Node",
-            name: "NPVT Import",
-            cleanUri: raw
-          };
-        }
-        // 10. Dark Tunnel
-        else if (raw.startsWith("darktunnel://") || raw.startsWith("DARKTUNNEL:")) {
-          parsed = {
-            proto: "Dark Tunnel (.dt)",
-            sec: "AES-GCM / PBKDF2",
-            host: "DarkTunnel Host",
-            name: "Dark Tunnel Node",
-            cleanUri: raw
+            proto: raw.startsWith("darktunnel://") ? "Dark Tunnel (.dt)" : "NapsternetV (NPVT)",
+            sec: "Распакованный контейнер",
+            host: "Custom Relay",
+            name: "Bunker Import Node",
+            cleanUri: raw,
+            details: [
+              { k: "📦 Тип", v: "Контейнер туннеля" },
+              { k: "⚙️ Состояние", v: "Готов к импорту в BunkerVPN" }
+            ]
           };
         }
       } catch (err) {
@@ -1400,13 +1507,68 @@ PersistentKeepalive = 25`;
       document.getElementById("conv-host-port").innerText = parsed.host;
       document.getElementById("conv-output-uri").innerText = parsed.cleanUri;
 
+      // Populate details grid
+      const grid = document.getElementById("conv-details-grid");
+      grid.innerHTML = "";
+      if (parsed.details && parsed.details.length) {
+        parsed.details.forEach(d => {
+          const item = document.createElement("div");
+          item.style.lineHeight = "1.3";
+          item.innerHTML = `<span style="color:var(--text-muted);">${d.k}:</span> <b style="color:#fff;">${d.v}</b>`;
+          grid.appendChild(item);
+        });
+        grid.style.display = "grid";
+      } else {
+        grid.style.display = "none";
+      }
+
+      // Populate formats switch row
+      const formatRow = document.getElementById("conv-format-row");
+      const formatPills = document.getElementById("conv-format-pills");
+      formatPills.innerHTML = "";
+      if (parsed.formats && parsed.formats.length) {
+        parsed.formats.forEach(f => {
+          const btn = document.createElement("button");
+          btn.id = "conv-pill-" + f.id;
+          btn.className = "feed-pill";
+          btn.style.fontSize = "11px";
+          btn.style.padding = "6px 10px";
+          btn.style.borderRadius = "8px";
+          btn.style.cursor = "pointer";
+          if (f.id === (parsed.activeFormat || 'qwdtt')) {
+            btn.style.borderColor = "var(--accent)";
+            btn.style.color = "#fff";
+            btn.style.background = "rgba(56, 189, 248, 0.2)";
+          } else {
+            btn.style.borderColor = "var(--card-border)";
+            btn.style.color = "var(--text-muted)";
+            btn.style.background = "#121824";
+          }
+          btn.innerText = f.label;
+          btn.onclick = () => switchConvertedFormat(f.id);
+          formatPills.appendChild(btn);
+        });
+        formatRow.style.display = "block";
+      } else {
+        formatRow.style.display = "none";
+      }
+
+      // Compatibility & Karing button logic
       const karingBtn = document.getElementById("conv-btn-karing");
-      if (karingBtn) {
+      const compatNote = document.getElementById("conv-compat-note");
+
+      if (parsed.isWdtt) {
+        karingBtn.style.display = "none";
+        compatNote.style.display = "block";
+        compatNote.innerHTML = "⚠️ <b>Протокол звонков VK (qWDTT):</b> поддерживается в <b>BunkerVPN</b>, <b>qWDTT</b> и <b>Rawline</b>. Karing не поддерживает звонки VK.";
+      } else {
+        karingBtn.style.display = "inline-flex";
         karingBtn.href = "karing://install-config?url=" + encodeURIComponent(parsed.cleanUri);
+        compatNote.style.display = "none";
       }
 
       document.getElementById("converter-result-box").style.display = "block";
-      showToast("✅ Конфиг успешно распознан!");
+      showToast("✅ Конфиг успешно разобран и конвертирован!");
     }
 
     function copyConvertedUri() {
