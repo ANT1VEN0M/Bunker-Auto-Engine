@@ -5,6 +5,12 @@ import base64
 import logging
 import concurrent.futures
 import re
+from engine.npv_parser import (
+    extract_all_custom_protocols,
+    decode_napsternetv,
+    decode_darktunnel,
+    parse_ovpn
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -154,7 +160,7 @@ def decode_stream(raw_text: str) -> str:
         return ""
     
     # Check if raw lines already have protocols
-    if any(proto in raw_text for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
+    if any(proto in raw_text for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "npv://", "darktunnel://", "DARKTUNNEL:", "ovpn://"]):
         # If it contains protocols directly, it may also have some base64 blocks
         # Return as is for line-by-line parsing
         return raw_text
@@ -164,7 +170,7 @@ def decode_stream(raw_text: str) -> str:
         pad = len(raw_text) % 4
         padded = raw_text + ("=" * (4 - pad) if pad else "")
         decoded = base64.b64decode(padded).decode("utf-8", errors="ignore")
-        if any(proto in decoded for proto in ["://"]):
+        if any(proto in decoded for proto in ["://", "npvs1:", "DARKTUNNEL:"]):
             return decoded
     except Exception:
         pass
@@ -222,7 +228,12 @@ def fetch_single_source(url: str) -> list[str]:
         with urllib.request.urlopen(req, timeout=10) as resp:
             content = resp.read().decode("utf-8", errors="ignore").strip()
             
-            # Check if JSON config array (e.g. StekloVPN / Xray configs)
+            # 1. Custom container check (NapsternetV, Dark Tunnel, OpenVPN)
+            custom_uris = extract_all_custom_protocols(content)
+            if custom_uris:
+                configs.extend(custom_uris)
+
+            # 2. Check if JSON config array (e.g. StekloVPN / Xray configs)
             if content.startswith("[") or content.startswith("{"):
                 json_uris = parse_json_configs(content)
                 if json_uris:
@@ -234,18 +245,30 @@ def fetch_single_source(url: str) -> list[str]:
                     line = line.strip()
                     if not line or line.startswith("#"):
                         continue
+                    
+                    # Direct check for custom schemes
+                    if line.startswith("darktunnel://") or line.startswith("DARKTUNNEL:"):
+                        dt_parsed = decode_darktunnel(line)
+                        if dt_parsed:
+                            configs.extend(dt_parsed)
+                    elif line.startswith("npv://") or "npvs1:" in line:
+                        npv_parsed = decode_napsternetv(line)
+                        if npv_parsed:
+                            configs.extend(npv_parsed)
+                    elif line.startswith("ovpn://"):
+                        configs.append(line)
                     # If a line itself is base64
-                    if not "://" in line and len(line) > 30:
+                    elif not "://" in line and len(line) > 30:
                         try:
                             p = len(line) % 4
                             sub_dec = base64.b64decode(line + ("=" * (4 - p) if p else "")).decode("utf-8", errors="ignore")
                             for sub_l in sub_dec.splitlines():
                                 sub_l = sub_l.strip()
-                                if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
+                                if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
                                     configs.append(sub_l)
                         except Exception:
                             pass
-                    elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
+                    elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
                         configs.append(line)
         logging.info(f"Fetched {len(configs)} configs from {url[:50]}...")
     except Exception as e:

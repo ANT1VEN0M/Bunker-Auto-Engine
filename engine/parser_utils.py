@@ -67,6 +67,30 @@ def parse_config(uri: str) -> dict | None:
                     "remark": unquote(remark)
                 }
 
+        # OpenVPN URI
+        elif uri.startswith("ovpn://"):
+            main = uri[7:]
+            remark = ""
+            if "#" in main:
+                main, remark = main.split("#", 1)
+            pad = len(main) % 4
+            if pad != 0:
+                main += "=" * (4 - pad)
+            dec = base64.b64decode(main).decode("utf-8", errors="ignore")
+            remote_m = re.search(r"^\s*remote\s+([^\s]+)(?:\s+(\d+))?", dec, re.MULTILINE | re.IGNORECASE)
+            if remote_m:
+                host = remote_m.group(1).strip().lower()
+                port = int(remote_m.group(2) or 1194)
+                if not host or host in DUMMY_HOSTS or not (1 <= port <= 65535) or port in BLOCKED_PORTS:
+                    return None
+                return {
+                    "proto": "ovpn",
+                    "host": host,
+                    "port": port,
+                    "raw": uri,
+                    "remark": unquote(remark)
+                }
+
         # VLESS, Trojan, Hysteria2, Tuic
         else:
             match = re.match(r"^([a-z0-9]+)://(?:[^@]+@)?(\[[a-fA-F0-9:]+\]|[^:/?#]+):(\d+)(.*)$", uri)

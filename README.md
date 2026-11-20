@@ -117,6 +117,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Trojan:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/trojan_b64.txt`
 - **Shadowsocks:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/ss_b64.txt`
 - **Hysteria 2:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/hy2_b64.txt`
+- **NapsternetV & NPV Tunnel:** встроенный автоматический декодер `.npvt`, `.npvs`, токенов `npvs1:` и JSON outbounds.
+- **Dark Tunnel:** поддержка расшифровки контейнеров `.dark`, `.dt` и протокола `darktunnel://` (AES-GCM PBKDF2).
+- **OpenVPN:** парсер `.ovpn` и генератор кроссплатформенных ссылок `ovpn://`.
 
 ---
 
