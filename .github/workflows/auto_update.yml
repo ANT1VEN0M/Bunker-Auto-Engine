@@ -44,3 +44,17 @@ jobs:
             git commit -m "🚀 Auto-update Bunker subscriptions [$(date -u +'%Y-%m-%d %H:%M:%S UTC')] [skip ci]"
             git push origin main
           fi
+
+      - name: Purge jsDelivr CDN Cache
+        if: always()
+        run: |
+          python -c "
+          import urllib.request
+          files = ['mix_b64.txt', 'mix.txt', 'bs_b64.txt', 'bs.txt', 'fast_b64.txt', 'fast.txt', 'tg_b64.txt', 'tg.txt', 'factory_b64.txt', 'factory.txt', 'warp_pool.json', 'warp.txt', 'warp_b64.txt']
+          for f in files:
+              try:
+                  urllib.request.urlopen(f'https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/{f}', timeout=10)
+                  print(f'Purged {f}')
+              except Exception as e:
+                  print(f'Error purging {f}: {e}')
+          "
