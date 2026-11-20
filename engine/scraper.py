@@ -1,4 +1,6 @@
 import urllib.request
+import urllib.parse
+import json
 import base64
 import logging
 import concurrent.futures
@@ -23,8 +25,67 @@ SOURCES = [
     # 8. Aviamasters Free Russia - RU CIDR whitelist configs
     "https://raw.githubusercontent.com/aviamastersgh/vpn-free-russia/main/ru_configs.txt",
     # 9. Solovyov Community Workers Anti-Censorship Aggregator
-    "https://random.solovyov-jenya2004.workers.dev/"
+    "https://random.solovyov-jenya2004.workers.dev/",
+    # 10. H1Clayd Dedicated Private Anti-Censorship Feed
+    "https://s-25562.nl2.h1clayd.click/sub/d92038b6-b470-4267-9c69-2c649bf3f4a4",
+    # 11. OceaniaVPN / StekloVPN Auto-Updated Reality Matrix
+    "https://raw.githubusercontent.com/OceaniaVPN/StekloVPN/refs/heads/main/configs/okeania_auto.txt",
+    # 12. HappCluchi Community Workers Free VPN
+    "https://freevpn.happcluchi.workers.dev/",
+    # 13. VlessForU Daily Working Anti-Censorship Configurations
+    "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
 ]
+
+def parse_json_configs(content: str) -> list[str]:
+    uris = []
+    try:
+        data = json.loads(content)
+        items = data if isinstance(data, list) else [data]
+        for item in items:
+            remarks = item.get("remarks", "")
+            for o in item.get("outbounds", []):
+                proto = o.get("protocol")
+                settings = o.get("settings", {})
+                stream = o.get("streamSettings", {})
+                if proto == "vless":
+                    vnext = settings.get("vnext", [{}])[0]
+                    addr = vnext.get("address")
+                    port = vnext.get("port")
+                    user = vnext.get("users", [{}])[0]
+                    uuid = user.get("id")
+                    flow = user.get("flow", "")
+                    if not addr or not port or not uuid:
+                        continue
+                    network = stream.get("network", "tcp")
+                    security = stream.get("security", "none")
+                    params = [f"type={network}"]
+                    if security: params.append(f"security={security}")
+                    if flow: params.append(f"flow={flow}")
+                    if security == "reality":
+                        real = stream.get("realitySettings", {})
+                        if real.get("serverName"): params.append(f"sni={real['serverName']}")
+                        if real.get("publicKey"): params.append(f"pbk={real['publicKey']}")
+                        if real.get("shortId"): params.append(f"sid={real['shortId']}")
+                        if real.get("fingerprint"): params.append(f"fp={real['fingerprint']}")
+                    elif security == "tls":
+                        tls = stream.get("tlsSettings", {})
+                        if tls.get("serverName"): params.append(f"sni={tls['serverName']}")
+                        if tls.get("fingerprint"): params.append(f"fp={tls['fingerprint']}")
+                    if network == "xhttp":
+                        xh = stream.get("xhttpSettings", {})
+                        if xh.get("path"): params.append(f"path={urllib.parse.quote(xh['path'])}")
+                        if xh.get("host"): params.append(f"host={xh['host']}")
+                        if xh.get("mode"): params.append(f"mode={xh['mode']}")
+                    elif network == "ws":
+                        ws = stream.get("wsSettings", {})
+                        if ws.get("path"): params.append(f"path={urllib.parse.quote(ws['path'])}")
+                        if ws.get("headers", {}).get("Host"): params.append(f"host={ws['headers']['Host']}")
+                    query = "&".join(params)
+                    tag = f"#{urllib.parse.quote(remarks)}" if remarks else ""
+                    uris.append(f"vless://{uuid}@{addr}:{port}?{query}{tag}")
+    except Exception:
+        pass
+    return uris
 
 def decode_stream(raw_text: str) -> str:
     raw_text = raw_text.strip()
@@ -60,25 +121,33 @@ def fetch_single_source(url: str) -> list[str]:
             }
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            content = resp.read().decode("utf-8", errors="ignore")
-            decoded = decode_stream(content)
-            for line in decoded.splitlines():
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                # If a line itself is base64
-                if not "://" in line and len(line) > 30:
-                    try:
-                        p = len(line) % 4
-                        sub_dec = base64.b64decode(line + ("=" * (4 - p) if p else "")).decode("utf-8", errors="ignore")
-                        for sub_l in sub_dec.splitlines():
-                            sub_l = sub_l.strip()
-                            if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
-                                configs.append(sub_l)
-                    except Exception:
-                        pass
-                elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
-                    configs.append(line)
+            content = resp.read().decode("utf-8", errors="ignore").strip()
+            
+            # Check if JSON config array (e.g. StekloVPN / Xray configs)
+            if content.startswith("[") or content.startswith("{"):
+                json_uris = parse_json_configs(content)
+                if json_uris:
+                    configs.extend(json_uris)
+            
+            if not configs:
+                decoded = decode_stream(content)
+                for line in decoded.splitlines():
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    # If a line itself is base64
+                    if not "://" in line and len(line) > 30:
+                        try:
+                            p = len(line) % 4
+                            sub_dec = base64.b64decode(line + ("=" * (4 - p) if p else "")).decode("utf-8", errors="ignore")
+                            for sub_l in sub_dec.splitlines():
+                                sub_l = sub_l.strip()
+                                if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
+                                    configs.append(sub_l)
+                        except Exception:
+                            pass
+                    elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://"]):
+                        configs.append(line)
         logging.info(f"Fetched {len(configs)} configs from {url[:50]}...")
     except Exception as e:
         logging.warning(f"Failed fetching {url[:50]}: {e}")
