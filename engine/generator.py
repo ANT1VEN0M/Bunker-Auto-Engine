@@ -1,5 +1,6 @@
 import os
 import base64
+import urllib.request
 from datetime import datetime, timezone, timedelta
 from .geo import get_flag_emoji
 from .parser_utils import build_branded_uri
@@ -23,6 +24,21 @@ def write_sub_files(filename_base: str, uris: list[str]):
     with open(b64_path, "w", encoding="utf-8") as f:
         f.write(b64_content + "\n")
 
+def fetch_mtproto_proxies() -> list[str]:
+    mtproto_links = []
+    try:
+        url = "https://raw.githubusercontent.com/0xRadikal/Free-Telegram-Proxy/main/top100.txt"
+        req = urllib.request.Request(url, headers={"User-Agent": "curl/7.88.1"})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            lines = r.read().decode("utf-8").splitlines()
+            for l in lines:
+                l = l.strip()
+                if l.startswith("tg://proxy?"):
+                    mtproto_links.append(l)
+    except Exception:
+        pass
+    return mtproto_links
+
 def generate_subscriptions(alive_nodes: list[dict]):
     # Sort all by ping
     alive_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
@@ -31,6 +47,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     bs_nodes = []
     factory_nodes = []
     mix_nodes = []
+    tg_nodes = []
     proto_nodes = {
         "vless": [],
         "vmess": [],
@@ -52,6 +69,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
         else:
             mix_nodes.append(node)
             
+        # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
+        if port in [443, 80, 53] and c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"]:
+            tg_nodes.append(node)
+
         if proto in proto_nodes:
             proto_nodes[proto].append(node)
 
@@ -63,12 +84,14 @@ def generate_subscriptions(alive_nodes: list[dict]):
     
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
+    tg_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
 
-    # Limit lists to reasonable sizes so apps don't choke
+    # Limit lists
     limit_mix = mix_nodes[:250]
     limit_bs = bs_nodes[:100]
     limit_factory = factory_nodes[:50]
     limit_fast = sorted(alive_nodes, key=lambda x: x.get("ping_ms", 9999))[:50]
+    limit_tg = tg_nodes[:60]
 
     # Build branded URIs
     mix_uris = []
@@ -109,11 +132,28 @@ def generate_subscriptions(alive_nodes: list[dict]):
         remark = f"⚡ {flag} [{c}] Бункер Турбо #{idx:02d} | {p} | {ping}ms"
         fast_uris.append(build_branded_uri(node, remark))
 
+    tg_uris = []
+    for idx, node in enumerate(limit_tg, 1):
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
+        port = node.get("port", 0)
+        ping = node.get("ping_ms", 0)
+        remark = f"💬 {flag} [{c}] Бункер TG-SOS #{idx:02d} | :{port} | ⚡{ping}ms"
+        tg_uris.append(build_branded_uri(node, remark))
+
     # Write files
     write_sub_files("mix", mix_uris)
     write_sub_files("bs", bs_uris)
     write_sub_files("factory", factory_uris)
     write_sub_files("fast", fast_uris)
+    write_sub_files("tg", tg_uris)
+
+    # MTProto
+    mtproto_links = fetch_mtproto_proxies()
+    if mtproto_links:
+        mtproto_path = os.path.join(SUB_DIR, "mtproto.txt")
+        with open(mtproto_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(mtproto_links) + "\n")
 
     # Protocols
     os.makedirs(PROTO_DIR, exist_ok=True)
@@ -136,12 +176,21 @@ def generate_subscriptions(alive_nodes: list[dict]):
             f.write(base64.b64encode(raw.encode("utf-8")).decode("utf-8") + "\n")
 
     # Generate README dashboard
-    generate_readme(len(alive_nodes), len(mix_uris), len(bs_uris), len(factory_uris), len(fast_uris))
+    generate_readme(len(alive_nodes), len(mix_uris), len(bs_uris), len(factory_uris), len(fast_uris), len(tg_uris), mtproto_links)
 
-def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_count: int, fast_count: int):
+def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_count: int, fast_count: int, tg_count: int, mtproto_links: list[str]):
     msk_tz = timezone(timedelta(hours=3))
     now_msk = datetime.now(msk_tz).strftime("%Y-%m-%d %H:%M:%S МСК")
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    mtproto_md_buttons = ""
+    port443_mt = [l for l in mtproto_links if "port=443" in l][:3]
+    if not port443_mt:
+        port443_mt = mtproto_links[:3]
+    
+    for idx, mt in enumerate(port443_mt, 1):
+        tme = mt.replace("tg://proxy?", "https://t.me/proxy?")
+        mtproto_md_buttons += f"- [🔗 Подключить MTProto Прокси #{idx} (в 1 клик прямо в Telegram)]({tme})\n"
 
     readme_content = f"""# 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
@@ -157,6 +206,7 @@ def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_cou
 - 🤍 **Белый список (RU / BY):** `{bs_count}`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `{factory_count}`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `{fast_count}`
+- 💬 **Пожарный канал для Telegram:** `{tg_count}`
 
 ---
 
@@ -200,6 +250,17 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
+
+---
+
+### 5. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+Специальный канал связи для гарантированной работы Telegram (обновление ссылок, чтение постов и связь, когда внешние протоколы душатся вышкой):
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
+```
+
+#### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
+{mtproto_md_buttons}
 
 ---
 

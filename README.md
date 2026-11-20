@@ -6,12 +6,13 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-20 10:04:51 МСК` (`2026-11-20 07:04:51 UTC`)
-- 🟢 **Всего активных проверенных нод:** `1764`
+- 🕒 **Последнее авто-обновление:** `2026-11-20 10:26:26 МСК` (`2026-11-20 07:26:26 UTC`)
+- 🟢 **Всего активных проверенных нод:** `1854`
 - 🌍 **Мировой Микс (YouTube / DPI):** `250`
-- 🤍 **Белый список (RU / BY):** `78`
+- 🤍 **Белый список (RU / BY):** `93`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `50`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
+- 💬 **Пожарный канал для Telegram:** `60`
 
 ---
 
@@ -55,6 +56,20 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
+
+---
+
+### 5. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+Специальный канал связи для гарантированной работы Telegram (обновление ссылок, чтение постов и связь, когда внешние протоколы душатся вышкой):
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
+```
+
+#### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.123&port=443&secret=083fe0c452e2407d835537872f097c54)
+
 
 ---
 
