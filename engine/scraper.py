@@ -6,6 +6,12 @@ import concurrent.futures
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 SOURCES = [
+    # Top Russian Anti-Censorship Sources (didloaa / Roskompozor / Solovyov / Igareck)
+    "https://random.solovyov-jenya2004.workers.dev/",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/wl",
+    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/bl",
+    "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/selected.txt",
     # Barry-Far (updated every 15 min)
     "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Splitted-By-Protocol/vless.txt",
     "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt",
