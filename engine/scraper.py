@@ -6,31 +6,24 @@ import concurrent.futures
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 SOURCES = [
-    # Top Russian Anti-Censorship Sources (didloaa / Roskompozor / Solovyov / Igareck)
-    "https://random.solovyov-jenya2004.workers.dev/",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/wl",
-    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/bl",
-    "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/selected.txt",
-    # Barry-Far (updated every 15 min)
-    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Splitted-By-Protocol/vless.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub2.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub3.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub4.txt",
-    # 4Diana
-    "https://raw.githubusercontent.com/EEvanescence/4Diana/main/AllConfigsSub.txt",
-    # Au1rxx (tested active)
-    "https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/v2ray-base64.txt",
-    # MahdiBland aggregator
-    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt",
-    # Freefq
-    "https://raw.githubusercontent.com/freefq/free/master/v2",
-    # Pawdroid
-    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub",
-    # Telegram collector mirrors
-    "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/mix",
-    "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/all"
+    # 1. Igareck Russian Anti-Censorship (White Lists for Mobile & Restrictive Firewalls)
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
+    # 2. Igareck Russian Anti-Censorship (Black Lists for Wireline ISPs: Rostelecom, etc.)
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
+    # 3. Igareck Russian Anti-Censorship (Black Lists for Mobile ISPs: MTS, MegaFon, Beeline, Tele2)
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
+    # 4. Kizyak VPN 4.0 - Moscow-tested Anti-TSPU Reality Nodes (Hourly updated)
+    "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyakbeta8.txt",
+    # 5. Kizyak VPN 4.0 - Black List bypass nodes
+    "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyakbeta6BL.txt",
+    # 6. Kizyak VPN 4.0 - Test RU verified nodes
+    "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyaktestru.txt",
+    # 7. Aviamasters Free Russia - Verified VLESS/Reality configs
+    "https://raw.githubusercontent.com/aviamastersgh/vpn-free-russia/main/verified_configs.txt",
+    # 8. Aviamasters Free Russia - RU CIDR whitelist configs
+    "https://raw.githubusercontent.com/aviamastersgh/vpn-free-russia/main/ru_configs.txt",
+    # 9. Solovyov Community Workers Anti-Censorship Aggregator
+    "https://random.solovyov-jenya2004.workers.dev/"
 ]
 
 def decode_stream(raw_text: str) -> str:

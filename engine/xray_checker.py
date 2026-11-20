@@ -78,26 +78,27 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                     "shortId": sid,
                     "spiderX": ""
                 }
-                if net == "grpc":
-                    stream["grpcSettings"] = {
-                        "serviceName": service_name,
-                        "multiMode": False
-                    }
-            elif sec == "tls":
-                stream["tlsSettings"] = {
-                    "serverName": sni or host,
-                    "allowInsecure": True
+            if net == "grpc":
+                stream["grpcSettings"] = {
+                    "serviceName": service_name,
+                    "multiMode": False
                 }
-                if net == "grpc":
-                    stream["grpcSettings"] = {
-                        "serviceName": service_name,
-                        "multiMode": False
-                    }
-
-            if net == "ws":
+            elif net in ["xhttp", "splithttp"]:
+                stream["xhttpSettings"] = {
+                    "path": path,
+                    "mode": q.get("mode", ["auto"])[0] or "auto",
+                    "headers": {"Host": host_header or sni or host}
+                }
+            elif net == "ws":
                 stream["wsSettings"] = {
                     "path": path,
                     "headers": {"Host": host_header or sni or host}
+                }
+
+            if sec == "tls":
+                stream["tlsSettings"] = {
+                    "serverName": sni or host,
+                    "allowInsecure": True
                 }
 
             return {
@@ -183,6 +184,49 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                         "password": password
                     }]
                 },
+                "streamSettings": {
+                    "security": "tls",
+                    "tlsSettings": {
+                        "serverName": sni or host,
+                        "allowInsecure": True
+                    }
+                }
+            }
+
+        elif uri.startswith("hy2://") or uri.startswith("hysteria2://"):
+            match = re.match(r"^hysteria2?://([^@]+)@([^:/?#]+):(\d+)(.*)$", uri)
+            if not match:
+                return None
+            password, host, port_str, rest = match.groups()
+            port = int(port_str)
+            if not (1 <= port <= 65535):
+                return None
+
+            query_str = rest.split("#", 1)[0]
+            if query_str.startswith("?"):
+                query_str = query_str[1:]
+            q = parse_qs(query_str)
+            sni = q.get("sni", [""])[0]
+            obfs = q.get("obfs", [""])[0]
+            obfs_pw = q.get("obfs-password", [""])[0]
+
+            hy2_settings = {
+                "servers": [{
+                    "address": host,
+                    "port": port,
+                    "password": password
+                }]
+            }
+            if obfs:
+                hy2_settings["obfs"] = {
+                    "type": obfs,
+                    "password": obfs_pw
+                }
+
+            return {
+                "tag": tag,
+                "protocol": "hysteria2",
+                "settings": hy2_settings,
                 "streamSettings": {
                     "security": "tls",
                     "tlsSettings": {

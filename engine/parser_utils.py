@@ -4,10 +4,11 @@ import re
 from urllib.parse import urlparse, unquote, quote
 
 BLOCKED_PORTS = {445, 135, 137, 138, 139, 25, 23}
+DUMMY_HOSTS = {"127.0.0.1", "localhost", "0.0.0.0", "::1"}
 
 def parse_config(uri: str) -> dict | None:
     uri = uri.strip()
-    if not uri:
+    if not uri or "00000000-0000" in uri:
         return None
     try:
         # VMess (JSON inside base64)
@@ -18,9 +19,9 @@ def parse_config(uri: str) -> dict | None:
                 b64_part += "=" * (4 - pad)
             data_str = base64.b64decode(b64_part).decode("utf-8", errors="ignore")
             data = json.loads(data_str)
-            host = data.get("add", "").strip()
+            host = data.get("add", "").strip().lower()
             port = int(data.get("port", 0))
-            if not host or not (1 <= port <= 65535) or port in BLOCKED_PORTS:
+            if not host or host in DUMMY_HOSTS or not (1 <= port <= 65535) or port in BLOCKED_PORTS:
                 return None
             return {
                 "proto": "vmess",
@@ -74,7 +75,9 @@ def parse_config(uri: str) -> dict | None:
                 port = int(port_str)
                 if not (1 <= port <= 65535) or port in BLOCKED_PORTS:
                     return None
-                host = host.strip("[]")
+                host = host.strip("[]").lower()
+                if not host or host in DUMMY_HOSTS:
+                    return None
                 remark = ""
                 if "#" in rest:
                     _, remark = rest.split("#", 1)

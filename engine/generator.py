@@ -61,8 +61,14 @@ def generate_subscriptions(alive_nodes: list[dict]):
         port = node.get("port", 0)
         proto = node.get("proto", "unknown")
         
-        # White list (Bypass restrictive Wi-Fi / enterprise firewall: standard ports 443, 80, 53, 8080, 8443)
-        if port in [443, 80, 53, 8080, 8443] and proto in ["vless", "trojan", "vmess", "hy2"]:
+        # Plain Shadowsocks is blocked by Russian TSPU (entropy detection)
+        # SS goes strictly into protocol-specific file (protocols/ss.txt), NEVER into general subscriptions!
+        if proto == "ss":
+            proto_nodes["ss"].append(node)
+            continue
+
+        # White list (Bypass restrictive Wi-Fi / enterprise firewall: standard ports 443, 80, 53, 8443)
+        if port in [443, 80, 53, 8443] and proto in ["vless", "trojan", "vmess", "hy2"]:
             bs_nodes.append(node)
             if port in [443, 53]:
                 factory_nodes.append(node)
@@ -87,11 +93,14 @@ def generate_subscriptions(alive_nodes: list[dict]):
     mix_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
     tg_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
 
+    fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
+    fast_candidates.sort(key=lambda x: x.get("ping_ms", 9999))
+
     # Limit lists
     limit_mix = mix_nodes[:250]
     limit_bs = bs_nodes[:120]
     limit_factory = factory_nodes[:80]
-    limit_fast = sorted(alive_nodes, key=lambda x: x.get("ping_ms", 9999))[:50]
+    limit_fast = fast_candidates[:50]
     limit_tg = tg_nodes[:60]
 
     # Build branded URIs

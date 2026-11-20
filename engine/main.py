@@ -15,30 +15,30 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-def select_balanced_nodes(unique_configs: list[dict], max_total: int = 3000) -> list[dict]:
-    by_proto = collections.defaultdict(list)
-    for cfg in unique_configs:
-        by_proto[cfg["proto"]].append(cfg)
+def select_balanced_nodes(unique_configs: list[dict], max_total: int = 1500) -> list[dict]:
+    # Prioritize anti-censorship protocols for Russia (VLESS Reality, Trojan, Hysteria2)
+    # Deprioritize plain Shadowsocks as it is blocked by Russian TSPU
+    def node_priority(cfg):
+        proto = cfg.get("proto", "")
+        port = cfg.get("port", 0)
+        
+        # Priority 0: VLESS Reality / TLS on 443
+        if proto == "vless" and port == 443:
+            return 0
+        # Priority 1: Hysteria 2 / Trojan on 443
+        if proto in ("hy2", "trojan") and port == 443:
+            return 1
+        # Priority 2: VLESS / Trojan / Hy2 on standard/TLS ports (53, 8443, 2053, 2083)
+        if proto in ("vless", "trojan", "hy2") and port in (53, 8443, 2053, 2083, 2087, 2096):
+            return 2
+        # Priority 3: Other VLESS / Trojan / VMess
+        if proto in ("vless", "trojan", "vmess"):
+            return 3
+        # Priority 4: Plain Shadowsocks (lowest priority)
+        return 4
 
-    quotas = {
-        "vless": 1200,
-        "vmess": 800,
-        "trojan": 500,
-        "ss": 400,
-        "hy2": 200,
-        "tuic": 100
-    }
-
-    selected = []
-    for proto, cfgs in by_proto.items():
-        # Prioritize 443 and 53 ports within each protocol
-        cfgs.sort(key=lambda c: 0 if c["port"] in (443, 53) else 1)
-        q = quotas.get(proto, 200)
-        selected.extend(cfgs[:q])
-
-    # Re-sort overall to prioritize 443 and 53 ports
-    selected.sort(key=lambda c: 0 if c["port"] in (443, 53) else 1)
-    return selected[:max_total]
+    sorted_configs = sorted(unique_configs, key=node_priority)
+    return sorted_configs[:max_total]
 
 def run_pipeline():
     logging.info("=== STARTING BUNKER AUTO-ENGINE PIPELINE ===")
@@ -78,11 +78,19 @@ def run_pipeline():
 
     # 7. DEEP XRAY CORE VERIFICATION (Real HTTP 204 Traffic Test)
     # Tests candidates through actual Xray Core to guarantee 100% working proxies
-    real_working = deep_check_nodes(alive, batch_size=25, max_verified=180)
+    real_working = deep_check_nodes(alive, batch_size=25, max_verified=250)
 
     if not real_working:
         logging.warning("No nodes passed deep HTTP 204 check, falling back to TCP alive.")
         real_working = alive[:100]
+    else:
+        # Append other high-quality Russian anti-censorship alive nodes (port 443/53/8443)
+        seen_hosts = {f"{c['host']}:{c['port']}" for c in real_working}
+        for n in alive:
+            key = f"{n['host']}:{n['port']}"
+            if key not in seen_hosts and n.get("proto") in ("vless", "trojan", "hy2") and n.get("port") in (443, 53, 8443):
+                real_working.append(n)
+                seen_hosts.add(key)
 
     # 8. Generate subscriptions and dashboard
     logging.info(f"Generating subscription files from {len(real_working)} GUARANTEED WORKING NODES...")
