@@ -482,9 +482,9 @@
       <button onclick="scrollToPing()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1; border-color:rgba(56,189,248,0.3);">
         ⚡ Замер пинга
       </button>
-      <button onclick="connectMTProto()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
+      <a href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" onclick="connectMTProto(event)" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
         💬 TG Прокси
-      </button>
+      </a>
       <button onclick="openQrModal()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1;">
         📷 QR-код
       </button>
@@ -624,8 +624,12 @@
         Не грузятся кружки, фото или видео в Telegram? Подключите быстрый аварийный MTProto-прокси с FakeTLS в один клик прямо в мессенджере.
       </p>
 
-      <button onclick="connectMTProto()" class="btn btn-telegram">
+      <a id="btn-mtproto-connect" href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" onclick="connectMTProto(event)" class="btn btn-telegram">
         ⚡ Включить Telegram Прокси (1 клик)
+      </a>
+
+      <button onclick="copyMTProto()" class="btn btn-secondary" style="font-size:11.5px; padding:8px;">
+        📋 Скопировать ссылку прокси
       </button>
     </div>
 
@@ -717,12 +721,15 @@
       }
     };
 
-    // Top Verified FakeTLS MTProto Proxy
+    // Top Verified FakeTLS MTProto Proxy (t.me/proxy format for Telegram WebApp)
     const MTPROTO_PROXIES = [
-      "tg://proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d",
-      "tg://proxy?server=45.95.42.23&port=8443&secret=eecb57182154aa2419fd85f568d20cbb837777772e636c6f7564666c6172652e636f6d",
-      "tg://proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70"
+      "https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d",
+      "https://t.me/proxy?server=45.95.42.23&port=8443&secret=eecb57182154aa2419fd85f568d20cbb837777772e636c6f7564666c6172652e636f6d",
+      "https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70",
+      "https://t.me/proxy?server=217.138.215.102&port=443&secret=ee8357954a3df5c26e32a7b8a7978c3f107777772e636974696c696e6b2e7275",
+      "https://t.me/proxy?server=193.26.115.138&port=443&secret=eef200b7138424bb9f8fef33d1b56fba407275747562652e7275"
     ];
+    let proxyIdx = 0;
 
     let currentFeedKey = "mix";
 
@@ -874,16 +881,36 @@
     }
 
     // --- FEATURE 2: MTPROTO PROXY 1-CLICK ---
-    function connectMTProto() {
+    function connectMTProto(e) {
+      if (e && e.preventDefault) e.preventDefault();
       triggerHaptic('impact');
-      const proxyUrl = MTPROTO_PROXIES[0];
+      const proxyUrl = MTPROTO_PROXIES[proxyIdx];
+      proxyIdx = (proxyIdx + 1) % MTPROTO_PROXIES.length;
+
+      showToast("🚀 Открываем Telegram Прокси...");
 
       if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(proxyUrl);
-      } else {
-        window.location.href = proxyUrl;
+        try {
+          tg.openTelegramLink(proxyUrl);
+          return;
+        } catch (err) {
+          console.error("tg.openTelegramLink error:", err);
+        }
       }
-      showToast("🚀 Открываем Telegram Прокси...");
+
+      // Fallback for browsers
+      const tgScheme = proxyUrl.replace("https://t.me/proxy?", "tg://proxy?");
+      try {
+        window.location.href = tgScheme;
+      } catch (err) {
+        window.open(proxyUrl, '_blank');
+      }
+    }
+
+    function copyMTProto() {
+      triggerHaptic('success');
+      const proxyUrl = MTPROTO_PROXIES[proxyIdx];
+      copyText(proxyUrl, "✅ Ссылка Telegram Прокси скопирована!");
     }
 
     // --- FEATURE 3: QR CODE MODAL ---
