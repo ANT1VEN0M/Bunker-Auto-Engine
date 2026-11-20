@@ -749,4 +749,20 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
                 if w_parsed and w_parsed.get("uri"):
                     collected.append(w_parsed["uri"])
 
+    # 5. Happ deep-link check (happ://crypt...)
+    if "happ://crypt" in text:
+        try:
+            from engine.happ_parser import decrypt_happ_link
+            for line in text.splitlines():
+                line = line.strip()
+                if line.startswith("happ://crypt"):
+                    dec = decrypt_happ_link(line)
+                    if dec:
+                        for sub_l in dec.splitlines():
+                            sub_l = sub_l.strip()
+                            if any(sub_l.startswith(p) for p in ("vless://", "vmess://", "trojan://", "ss://", "hy2://", "ovpn://", "wdtt://", "qwdtt://")):
+                                collected.append(sub_l)
+        except Exception:
+            pass
+
     return collected

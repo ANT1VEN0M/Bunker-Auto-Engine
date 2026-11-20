@@ -766,18 +766,22 @@
       </div>
 
       <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:10px;">
-        Вставьте любую ссылку или конфиг: <b>VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, NapsternetV (.npvt), Dark Tunnel (.dt), OpenVPN (.ovpn) или qWDTT/WDTT (VK-Voice)</b>.
+        Вставьте ссылку или <b>загрузите файл (.npvt, .dark, .ovpn)</b>. Поддерживаются: <b>VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, NapsternetV (.npvt), Dark Tunnel (.dt), OpenVPN (.ovpn), Happ (crypt1-4), qWDTT/WDTT</b>.
       </p>
 
-      <textarea id="converter-input" placeholder="Вставьте vless://, vmess://, qwdtt://, npv:// или текст конфига..." style="width:100%; height:75px; background:#0c1017; border:1px solid var(--card-border); border-radius:10px; color:var(--text-main); font-family:monospace; font-size:11px; padding:8px; resize:none; outline:none; margin-bottom:10px; box-sizing:border-box;"></textarea>
+      <textarea id="converter-input" placeholder="Вставьте ссылку, текст конфига или загрузите файл..." style="width:100%; height:75px; background:#0c1017; border:1px solid var(--card-border); border-radius:10px; color:var(--text-main); font-family:monospace; font-size:11px; padding:8px; resize:none; outline:none; margin-bottom:10px; box-sizing:border-box;"></textarea>
 
       <div style="display:flex; gap:6px; margin-bottom:12px;">
-        <button onclick="inspectAndConvertConfig()" class="btn btn-primary" style="flex:1; padding:10px; font-size:12px;">
-          ⚡ Распознать и разобрать
+        <button onclick="inspectAndConvertConfig()" class="btn btn-primary" style="flex:1.2; padding:10px 8px; font-size:12px;">
+          ⚡ Распознать
         </button>
-        <button onclick="pasteClipboardToConverter()" class="btn btn-secondary" style="padding:10px 12px; font-size:12px;">
+        <button onclick="pasteClipboardToConverter()" class="btn btn-secondary" style="padding:10px 8px; font-size:12px;">
           📋 Вставить
         </button>
+        <button onclick="triggerFileInput()" class="btn btn-secondary" style="padding:10px 8px; font-size:12px; border-color:rgba(168,85,247,0.35); color:#c084fc;">
+          📁 Файл
+        </button>
+        <input type="file" id="converter-file-input" style="display:none;" accept=".npvt,.npvs,.dark,.dt,.ovpn,.conf,.json,.txt" onchange="handleConverterFileUpload(event)">
       </div>
 
       <!-- Result Card -->
@@ -1179,6 +1183,42 @@ PersistentKeepalive = 25`;
       if (modal) modal.classList.remove("active");
     }
 
+    function triggerFileInput() {
+      triggerHaptic('impact');
+      const finp = document.getElementById("converter-file-input");
+      if (finp) finp.click();
+    }
+
+    function handleConverterFileUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      triggerHaptic('success');
+
+      const fileName = file.name;
+      const reader = new FileReader();
+
+      reader.onload = function(evt) {
+        let textContent = evt.target.result;
+        if (typeof textContent !== "string") {
+          const bytes = new Uint8Array(textContent);
+          let binStr = "";
+          for (let i = 0; i < bytes.length; i++) binStr += String.fromCharCode(bytes[i]);
+          textContent = btoa(binStr);
+        }
+
+        const input = document.getElementById("converter-input");
+        input.value = textContent.trim();
+        showToast("📄 Загружен: " + fileName);
+        inspectAndConvertConfig(fileName);
+      };
+
+      reader.onerror = function() {
+        showToast("Ошибка чтения файла");
+      };
+
+      reader.readAsText(file);
+    }
+
     async function pasteClipboardToConverter() {
       triggerHaptic('impact');
       const input = document.getElementById("converter-input");
@@ -1477,17 +1517,116 @@ PersistentKeepalive = 25`;
             ]
           };
         }
-        // 8. NapsternetV / Dark Tunnel
-        else if (raw.startsWith("npv://") || raw.startsWith("darktunnel://") || raw.includes("v2rayProfile") || raw.includes("npvs1:")) {
+        // 8. Happ Deep-Link (happ://crypt...)
+        else if (raw.startsWith("happ://")) {
+          const path = raw.substring(7);
+          let ver = "crypt1 (RSA-1024)";
+          if (path.startsWith("crypt4/")) ver = "crypt4 (RSA-4096)";
+          else if (path.startsWith("crypt3/")) ver = "crypt3 (RSA-4096)";
+          else if (path.startsWith("crypt2/")) ver = "crypt2 (RSA-4096)";
+          else if (path.startsWith("crypt5/")) ver = "crypt5 (ChaCha20-Poly1305)";
+
           parsed = {
-            proto: raw.startsWith("darktunnel://") ? "Dark Tunnel (.dt)" : "NapsternetV (NPVT)",
-            sec: "Распакованный контейнер",
-            host: "Custom Relay",
-            name: "Bunker Import Node",
+            proto: "Happ (RSA Encrypted)",
+            sec: ver,
+            host: "happ:// deep-link",
+            name: "Happ Subscription Token",
             cleanUri: raw,
             details: [
-              { k: "📦 Тип", v: "Контейнер туннеля" },
-              { k: "⚙️ Состояние", v: "Готов к импорту в BunkerVPN" }
+              { k: "🔑 Шифрование", v: ver },
+              { k: "📦 Токен", v: path.substring(0, 16) + "..." },
+              { k: "⚡ Декодер", v: "Встроен в Bunker-Auto-Engine" },
+              { k: "📱 Назначение", v: "Прямой запуск в Happ / BunkerVPN" }
+            ]
+          };
+        }
+        // 9. NapsternetV (.npvt, .npvs, npv://, JSON)
+        else if (raw.startsWith("npv://") || raw.includes("v2rayProfile") || raw.includes("npvs1:") || (hintFileName && (hintFileName.endsWith(".npvt") || hintFileName.endsWith(".npvs")))) {
+          let cleanContent = raw;
+          if (cleanContent.startsWith("npv://")) {
+            cleanContent = safeB64Decode(cleanContent.substring(6));
+          }
+          let vlessExtracted = "";
+          let server = "1.2.3.4", port = "443", name = "NapsternetV Node";
+
+          try {
+            const j = JSON.parse(cleanContent);
+            const item = Array.isArray(j) ? j[0] : j;
+            const p = item.v2rayProfile || item;
+            server = p.server || p.address || p.host || server;
+            port = p.serverPort || p.port || port;
+            name = item.name || p.remarks || name;
+            const uuid = p.uuid || p.id || "";
+            const sni = p.sni || p.host || "";
+            const pbk = p.publicKey || p.pbk || "";
+            const sid = p.shortId || p.sid || "";
+            const sec = p.security || (pbk ? "reality" : "tls");
+
+            const q = new URLSearchParams({ type: "tcp", security: sec });
+            if (sni) q.set("sni", sni);
+            if (pbk) q.set("pbk", pbk);
+            if (sid) q.set("sid", sid);
+            vlessExtracted = `vless://${uuid}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+          } catch (e) {
+            vlessExtracted = raw;
+          }
+
+          parsed = {
+            proto: "NapsternetV ➔ VLESS",
+            sec: "Распакован из .npvt",
+            host: server + ":" + port,
+            name: name,
+            cleanUri: vlessExtracted,
+            details: [
+              { k: "📁 Исходный файл", v: hintFileName || ".npvt / .npvs" },
+              { k: "🌐 Извлечённый хост", v: server },
+              { k: "🔌 Порт", v: port },
+              { k: "⚡ Статус", v: "Конвертирован в чистый VLESS Reality" }
+            ]
+          };
+        }
+        // 10. Dark Tunnel (.dark, .dt, darktunnel://, JSON)
+        else if (raw.startsWith("darktunnel://") || raw.startsWith("DARKTUNNEL:") || raw.includes('"serverHost"') || (hintFileName && (hintFileName.endsWith(".dark") || hintFileName.endsWith(".dt")))) {
+          let cleanContent = raw;
+          if (cleanContent.startsWith("darktunnel://")) {
+            cleanContent = safeB64Decode(cleanContent.substring(13));
+          }
+          let converted = raw;
+          let host = "DarkTunnel Host", port = "443", proto = "VLESS", name = "Dark Tunnel Node";
+
+          try {
+            const j = JSON.parse(cleanContent);
+            host = j.serverHost || j.host || host;
+            port = j.serverPort || j.port || port;
+            proto = (j.protocol || "VLESS").toUpperCase();
+            name = j.name || name;
+            const sni = j.sniHost || j.sni || "";
+            const pwd = j.password || "";
+            const uuid = j.uuid || "";
+
+            if (proto.includes("TROJAN")) {
+              converted = `trojan://${pwd}@${host}:${port}?security=tls${sni ? '&sni=' + sni : ''}#${encodeURIComponent(name)}`;
+            } else if (proto.includes("VMESS")) {
+              const vmessPl = { v: "2", ps: name, add: host, port: String(port), id: uuid, tls: "tls", sni: sni };
+              converted = `vmess://${btoa(JSON.stringify(vmessPl))}`;
+            } else {
+              converted = `vless://${uuid}@${host}:${port}?type=tcp&security=tls${sni ? '&sni=' + sni : ''}#${encodeURIComponent(name)}`;
+            }
+          } catch (e) {
+            converted = raw;
+          }
+
+          parsed = {
+            proto: "Dark Tunnel ➔ " + proto,
+            sec: "Распакован из .dark / .dt",
+            host: host + ":" + port,
+            name: name,
+            cleanUri: converted,
+            details: [
+              { k: "📁 Исходный файл", v: hintFileName || ".dark / .dt" },
+              { k: "🌐 Извлечённый хост", v: host },
+              { k: "🔌 Порт", v: port },
+              { k: "⚡ Статус", v: "Конвертирован в стандартный URI" }
             ]
           };
         }

@@ -117,10 +117,11 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Trojan:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/trojan_b64.txt`
 - **Shadowsocks:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/ss_b64.txt`
 - **Hysteria 2:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/hy2_b64.txt`
-- **NapsternetV & NPV Tunnel:** встроенный автоматический декодер `.npvt`, `.npvs`, токенов `npvs1:` и JSON outbounds.
-- **Dark Tunnel:** поддержка расшифровки контейнеров `.dark`, `.dt` и протокола `darktunnel://` (AES-GCM PBKDF2).
-- **OpenVPN:** парсер `.ovpn` и генератор кроссплатформенных ссылок `ovpn://`.
+- **NapsternetV & NPV Tunnel:** встроенный автоматический декодер файлов `.npvt`, `.npvs`, токенов `npvs1:` и JSON outbounds в чистый VLESS Reality.
+- **Dark Tunnel:** поддержка загрузки и расшифровки файлов `.dark`, `.dt` и протокола `darktunnel://` (AES-GCM PBKDF2) в VLESS/Trojan.
+- **OpenVPN:** парсер файлов `.ovpn` и генератор кроссплатформенных ссылок `ovpn://`.
 - **WDTT & qWDTT:** парсинг и валидация ссылок `wdtt://` (Base64 JSON и Colon) и `qwdtt://` для WebRTC звонков VKontakte.
+- **Happ Deep-Links:** автоматический встроенный RSA PKCS#1 v1.5 дешифратор для токенов подписок `happ://crypt`, `crypt2`, `crypt3`, `crypt4`.
 
 ---
 
