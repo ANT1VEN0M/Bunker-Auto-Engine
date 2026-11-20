@@ -4,6 +4,7 @@ import json
 import base64
 import logging
 import concurrent.futures
+import re
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -47,7 +48,17 @@ SOURCES = [
     # 19. GooseTeam FreeVPN Cracks Community Matrix
     "https://raw.githubusercontent.com/gooseteam-hackers/freevpn-cracks/refs/heads/main/subscription_default.txt",
     # 20. VPN Trade Dedicated Russian Bypass
-    "https://v-p-n.trade/sub/for-russia"
+    "https://v-p-n.trade/sub/for-russia",
+    # 21. Mehdirzfx Global Sub Aggregator & Checker (1125+ Verified Feeds)
+    "https://mehdirzfx.github.io/v2ray-sub/sub-checker/index.html",
+    # 22. ByeWhiteLists Matrix - Russian Anti-DPI & White Lists
+    "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
+    # 23. Kort0881 RU Best Verified Backend Pool
+    "https://raw.githubusercontent.com/kort0881/vpn-checker-backend/main/checked/RU_Best/ru_white_part3.txt",
+    # 24. F0rc3Run Best Results High-Speed Proxies
+    "https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/refs/heads/main/Best-Results/proxies.txt",
+    # 25. NiREvil Reality & VLESS Matrix
+    "https://raw.githubusercontent.com/NiREvil/vless/refs/heads/main/sub/SSTime"
 ]
 
 def parse_json_configs(content: str) -> list[str]:
@@ -124,7 +135,45 @@ def decode_stream(raw_text: str) -> str:
     
     return raw_text
 
+def fetch_mehdirzfx_aggregator() -> list[str]:
+    configs = []
+    try:
+        readme_url = "https://raw.githubusercontent.com/mehdirzfx/v2ray-sub/main/README.md"
+        req = urllib.request.Request(readme_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            md = resp.read().decode("utf-8", errors="ignore")
+            blocks = re.findall(r"```[^\n]*\n(.*?)```", md, re.DOTALL)
+            links = []
+            for b in blocks:
+                for l in b.splitlines():
+                    l = l.strip()
+                    if l.startswith("http") and not l.endswith(".yaml") and not l.endswith(".yml"):
+                        links.append(l)
+
+            # Prioritize Russian bypass, VLESS, Reality, and high-yield subscriptions
+            ru_and_vless = [l for l in links if any(k in l.lower() for k in ["ru", "russia", "white", "black", "vless", "hysteria"])]
+            other_good = [l for l in links if l not in ru_and_vless]
+            selected = (ru_and_vless[:15] + other_good[:5])
+
+            logging.info(f"mehdirzfx: Aggregating {len(selected)} sub feeds from 1100+ repository index...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+                future_to_sub = {ex.submit(fetch_single_source, sub_url): sub_url for sub_url in selected}
+                for f in concurrent.futures.as_completed(future_to_sub):
+                    try:
+                        res = f.result()
+                        if res:
+                            configs.extend(res)
+                    except Exception:
+                        pass
+        logging.info(f"mehdirzfx aggregator returned {len(configs)} total configs.")
+    except Exception as e:
+        logging.warning(f"Failed aggregating mehdirzfx: {e}")
+    return configs
+
 def fetch_single_source(url: str) -> list[str]:
+    if "mehdirzfx" in url:
+        return fetch_mehdirzfx_aggregator()
+
     configs = []
     try:
         req = urllib.request.Request(
