@@ -6,6 +6,9 @@
   <title>Bunker VPN — Подключение для iPhone, ПК и Android</title>
   <meta name="description" content="Бесплатный VPN-клиент и универсальный генератор подписок Bunker VPN для iOS, Windows, macOS и Android.">
   <meta name="theme-color" content="#07090e">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" href="https://raw.githubusercontent.com/ANT1VEN0M/BunkerVPN/main/V2rayNG/app/src/main/res/drawable/ic_lock_24dp.xml">
   
   <!-- Telegram WebApp SDK -->
@@ -474,6 +477,19 @@
       </div>
     </div>
 
+    <!-- Quick Action Bar -->
+    <div style="display:flex; gap:8px;">
+      <button onclick="scrollToPing()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1; border-color:rgba(56,189,248,0.3);">
+        ⚡ Замер пинга
+      </button>
+      <button onclick="connectMTProto()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
+        💬 TG Прокси
+      </button>
+      <button onclick="openQrModal()" class="btn btn-secondary" style="font-size:11.5px; padding:9px 10px; flex:1;">
+        📷 QR-код
+      </button>
+    </div>
+
     <!-- 1. iOS (iPhone / iPad) -->
     <div class="card" id="card-ios">
       <div class="card-title">
@@ -572,7 +588,7 @@
     </div>
 
     <!-- 5. FEATURE 1: LIVE PING & NETWORK CHECKER -->
-    <div class="card" style="border-color: rgba(56, 189, 248, 0.35);">
+    <div class="card" id="card-ping" style="border-color: rgba(56, 189, 248, 0.35);">
       <div class="card-title">
         <span>⚡ Замер пинга и качества сети</span>
         <span class="tag" style="color:var(--accent);">Live Test</span>
@@ -785,6 +801,12 @@
     }
 
     // --- FEATURE 1: LIVE PING TEST ---
+    function scrollToPing() {
+      triggerHaptic('impact');
+      const el = document.getElementById("card-ping");
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
     async function runPingTest() {
       triggerHaptic('impact');
       const btn = document.getElementById("btn-run-ping");
