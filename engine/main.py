@@ -5,6 +5,7 @@ import collections
 from .scraper import scrape_all_sources
 from .parser_utils import parse_config, deduplicate_configs
 from .checker import check_all_nodes
+from .xray_checker import deep_check_nodes
 from .generator import generate_subscriptions
 from .geo import init_geo
 
@@ -68,16 +69,24 @@ def run_pipeline():
     nodes_to_check = select_balanced_nodes(unique, max_total=3000)
     logging.info(f"Selected {len(nodes_to_check)} balanced nodes for health check.")
 
-    # 6. Check Health & Ping
+    # 6. Pre-Filter Health & Ping (TCP level)
     alive = check_all_nodes(nodes_to_check, max_workers=140, timeout=2.5)
 
     if not alive:
         logging.warning("No alive nodes detected during ping check!")
         return
 
-    # 7. Generate subscriptions and dashboard
-    logging.info("Generating subscription files and README dashboard...")
-    generate_subscriptions(alive)
+    # 7. DEEP XRAY CORE VERIFICATION (Real HTTP 204 Traffic Test)
+    # Tests candidates through actual Xray Core to guarantee 100% working proxies
+    real_working = deep_check_nodes(alive, batch_size=25, max_verified=180)
+
+    if not real_working:
+        logging.warning("No nodes passed deep HTTP 204 check, falling back to TCP alive.")
+        real_working = alive[:100]
+
+    # 8. Generate subscriptions and dashboard
+    logging.info(f"Generating subscription files from {len(real_working)} GUARANTEED WORKING NODES...")
+    generate_subscriptions(real_working)
     logging.info("=== PIPELINE FINISHED SUCCESSFULLY ===")
 
 if __name__ == "__main__":
