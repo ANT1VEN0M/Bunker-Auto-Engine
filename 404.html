@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>404 — Аварийный Протокол Бункера | Bunker VPN</title>
+  <meta name="theme-color" content="#05070a">
+  <link rel="icon" href="https://raw.githubusercontent.com/ANT1VEN0M/BunkerVPN/main/V2rayNG/app/src/main/res/drawable/ic_lock_24dp.xml">
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #05070a;
+      --card-bg: #0a0e17;
+      --border: #1a2333;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --accent: #38bdf8;
+      --success: #10b981;
+      --text: #f8fafc;
+      --muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Fira Code", monospace, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle CRT Scanline overlay */
+    body::before {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 10;
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .terminal-card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card-bg);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.15), inset 0 0 20px rgba(239, 68, 68, 0.05);
+      position: relative;
+      z-index: 20;
+    }
+
+    .badge-danger {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      align-self: flex-start;
+    }
+    .badge-danger .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .glitch-text {
+      color: var(--danger);
+      font-family: monospace;
+      font-weight: 900;
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    }
+
+    .terminal-window {
+      background: #020407;
+      border: 1px solid #141b26;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: "Fira Code", monospace;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #94a3b8;
+    }
+    .term-line-err { color: #f87171; }
+    .term-line-warn { color: #fbbf24; }
+    .term-line-ok { color: #34d399; }
+    .term-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: var(--accent);
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .countdown-bar {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .countdown-timer {
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #030a12;
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+      background: #0284c7;
+    }
+    .btn-secondary {
+      background: #111723;
+      color: var(--text);
+      border: 1px solid #1e293b;
+    }
+    .btn-secondary:active {
+      background: #1a2333;
+      transform: scale(0.98);
+    }
+    .btn-telegram {
+      background: #0088cc;
+      color: #ffffff;
+    }
+
+    .sos-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .footer {
+      font-size: 11px;
+      color: #475569;
+      text-align: center;
+      margin-top: 14px;
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #041019;
+      padding: 9px 18px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 999;
+      pointer-events: none;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="terminal-card">
+    <div class="badge-danger">
+      <span class="pulse-dot"></span> Сигнал перехвачен ТСПУ
+    </div>
+
+    <h1>
+      <span class="glitch-text">404</span>
+      <span>Сбой маршрута</span>
+    </h1>
+
+    <div class="terminal-window">
+      <div>[ERR_01] REQUESTED_URL: UNREACHABLE</div>
+      <div class="term-line-err">[ALERT] DPI_FILTER: INTERCEPT_DETECTED</div>
+      <div class="term-line-warn">[SYS] ENGAGING_BUNKER_FAILOVER...</div>
+      <div class="term-line-ok">[SECURE] TUNNEL_PORT_880: READY</div>
+      <div>[ROUTE] REDIRECTING_TO_MAIN_PORTAL...<span class="term-cursor"></span></div>
+    </div>
+
+    <!-- Countdown Bar -->
+    <div class="countdown-bar">
+      <span>Авто-перенаправление в Бункер:</span>
+      <span class="countdown-timer" id="countdown">5 сек</span>
+    </div>
+
+    <a href="https://ant1ven0m.github.io/Bunker-Auto-Engine/" id="btn-redirect" class="btn btn-primary" onclick="cancelTimer()">
+      ⚡ Перейти в Бункер прямо сейчас
+    </a>
+
+    <!-- Emergency Survival Kit -->
+    <div class="sos-title">Аварийная связь на месте (SOS):</div>
+
+    <a href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" class="btn btn-telegram" onclick="handleTgProxy(event)">
+      💬 Включить Telegram Прокси (1 клик)
+    </a>
+
+    <button onclick="copyEmergencySub()" class="btn btn-secondary" style="font-size:12px;">
+      📋 Скопировать аварийную подписку
+    </button>
+
+    <div class="footer">
+      Бункер Кота • Защита и скорость 24/7<br>
+      <a href="https://t.me/BUNKER_KOTA" target="_blank">Канал @BUNKER_KOTA</a> • 
+      <a href="https://t.me/BunkerCatOSBot" target="_blank">Telegram Бот</a>
+    </div>
+  </div>
+
+  <div id="toast">✅ Ссылка скопирована!</div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      try {
+        tg.setHeaderColor('#05070a');
+        tg.setBackgroundColor('#05070a');
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+      } catch (e) {}
+    }
+
+    let timeLeft = 5;
+    let timerRunning = true;
+    const countdownEl = document.getElementById("countdown");
+    const targetUrl = "https://ant1ven0m.github.io/Bunker-Auto-Engine/";
+
+    const interval = setInterval(() => {
+      if (!timerRunning) return;
+      timeLeft--;
+      if (countdownEl) countdownEl.innerText = `${timeLeft} сек`;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        window.location.href = targetUrl;
+      }
+    }, 1000);
+
+    function cancelTimer() {
+      timerRunning = false;
+      clearInterval(interval);
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function handleTgProxy(e) {
+      if (e) e.preventDefault();
+      cancelTimer();
+      const proxyUrl = "https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d";
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(proxyUrl);
+      } else {
+        window.location.href = proxyUrl;
+      }
+      showToast("🚀 Открываем Telegram Прокси...");
+    }
+
+    function copyEmergencySub() {
+      cancelTimer();
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt";
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast("✅ Аварийная подписка скопирована!"));
+      } else {
+        showToast("✅ Аварийная подписка скопирована!");
+      }
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById("toast");
+      toast.innerText = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+  </script>
+</body>
+</html>
