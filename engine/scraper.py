@@ -33,7 +33,13 @@ SOURCES = [
     # 12. HappCluchi Community Workers Free VPN
     "https://freevpn.happcluchi.workers.dev/",
     # 13. VlessForU Daily Working Anti-Censorship Configurations
-    "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
+    "https://sub.vlessfo.ru/vlessforu/working_configs.txt",
+    # 14. Telegram Alt VPN Obxod (White & Black Lists)
+    "https://codeberg.org/telegram-alt_vpn_obxod/obxod_white-black_list/raw/branch/main/subs.txt",
+    # 15. OceaniaVPN / StekloVPN User Pool
+    "https://raw.githubusercontent.com/OceaniaVPN/StekloVPN/refs/heads/main/configs/user_5512307834_eab99a6c-a05b-48ee-b7a7-729b760e.txt",
+    # 16. Wepogp HWID Bypass Feed (Auto location reality)
+    "https://is.wepogp.gay/bypass-hwid-lock-3z5O6BFAaJQzGlamvtSo?payload=nB6WFdc033pP4/nQclqdVvlQzxtVyf3foOMtnfl/MMPP4UJtJ1LdUha8hHnFXIOVXTkBVQ2ju2FDRejIa%2BWvNPTjB1V0Ic52FHGcG0HfF%2Bn/27HIfPKA95ILu11jRpSBr9FiHdHNs9ragsAo6/d5qQ%3D%3D"
 ]
 
 def parse_json_configs(content: str) -> list[str]:

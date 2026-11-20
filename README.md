@@ -6,8 +6,8 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-20 21:18:22 МСК` (`2026-11-20 18:18:22 UTC`)
-- 🟢 **Всего активных проверенных нод:** `402`
+- 🕒 **Последнее авто-обновление:** `2026-11-20 22:19:43 МСК` (`2026-11-20 19:19:43 UTC`)
+- 🟢 **Всего активных проверенных нод:** `442`
 - 🌍 **Мировой Микс (YouTube / DPI):** `255`
 - 🤍 **Белый список (RU / BY):** `124`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `80`
@@ -66,9 +66,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.123&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.123&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=146.103.109.134&port=443&secret=a4bc6821c58eee9b48038b104950504a)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
 
 
 ---
