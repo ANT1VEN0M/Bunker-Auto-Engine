@@ -50,7 +50,7 @@ jobs:
         run: |
           python -c "
           import urllib.request
-          files = ['mix_b64.txt', 'mix.txt', 'bs_b64.txt', 'bs.txt', 'fast_b64.txt', 'fast.txt', 'tg_b64.txt', 'tg.txt', 'factory_b64.txt', 'factory.txt', 'warp_pool.json', 'warp.txt', 'warp_b64.txt']
+          files = ['mix_b64.txt', 'mix.txt', 'discord_b64.txt', 'discord.txt', 'bs_b64.txt', 'bs.txt', 'fast_b64.txt', 'fast.txt', 'tg_b64.txt', 'tg.txt', 'factory_b64.txt', 'factory.txt', 'warp_pool.json', 'warp.txt', 'warp_b64.txt']
           for f in files:
               try:
                   urllib.request.urlopen(f'https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/{f}', timeout=10)

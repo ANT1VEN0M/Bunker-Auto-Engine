@@ -16,9 +16,10 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-20 22:54:21 МСК` (`2026-11-20 19:54:21 UTC`)
-- 🟢 **Всего активных проверенных нод:** `471`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 00:20:48 МСК` (`2026-11-20 21:20:48 UTC`)
+- 🟢 **Всего активных проверенных нод:** `468`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `80`
 - 🌍 **Мировой Микс (YouTube / DPI):** `255`
 - 🤍 **Белый список (RU / BY):** `124`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `80`
@@ -31,8 +32,24 @@
 
 Добавь эти ссылки в своё приложение один раз. При обновлении подписки ты всегда будешь получать самые свежие и быстрые серверы!
 
-### 1. 🌍 Мировой Микс (YouTube, Discord, Instagram, Обход ТСПУ/DPI)
-Рекомендуется для повседневного сёрфинга и тяжёлого видео. Только зарубежные серверы (Нидерланды, Германия, Финляндия, США, Швеция).
+### 1. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
+*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/discord_b64.txt
+```
+
+---
+
+### 2. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
+Рекомендуется для повседневного сёрфинга и тяжёлого видео в 4K.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
 ```
@@ -47,7 +64,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/mix_b64.txt
 
 ---
 
-### 2. 🤍 Белый список «БС» (Работа в условиях локального глушения)
+### 3. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
 Серверы в России и Беларуси. Трафик идёт как внутрироссийский, вышки сотовой связи его не трогают.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
@@ -63,7 +80,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/bs_b64.txt
 
 ---
 
-### 3. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
+### 4. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
 Строго серверы на портах `443` (стандартный HTTPS) и `53` (DNS), спасающие возле режимных объектов, проходных и заводов, где глушат нестандартные порты.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_b64.txt
@@ -71,23 +88,23 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 
 ---
 
-### 4. ⚡ Турбо (Топ самых низкопинговых серверов)
+### 5. ⚡ Турбо (Топ самых низкопинговых серверов)
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
 
 ---
 
-### 5. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
-Специальный канал связи для гарантированной работы Telegram (обновление ссылок, чтение постов и связь, когда внешние протоколы душатся вышкой):
+### 6. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+Специальный канал связи для гарантированной работы Telegram:
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=92.246.87.243&port=443&secret=dd79e7010200010007f0030386e24c3add)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=dl.aapks.app&port=443&secret=eeb9368cadbd8a756073e33cd2598dbef2646c2e6161706b732e617070)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
 
 
 ---
@@ -104,16 +121,16 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 ## 📲 Как подключить подписку?
 
-### В приложении v2rayNG (Android):
-1. Скопируй ссылку выше.
-2. Открой **v2rayNG** -> нажми `☰` (боковое меню) -> **Группы подписок**.
-3. Нажми `+`, в поле «URL подписки» вставь скопированную ссылку.
-4. Нажми галочку сохранения.
-5. Вернись на главный экран -> нажми три точки справа вверху -> **«Обновить подписку»**.
+### В приложении Karing (iOS / Windows / Mac / Android):
+1. Скопируй ссылку на подписку.
+2. В приложении перейди в **Settings** ➔ **My Subscriptions** ➔ `+ Add`.
+3. Вставь ссылку, нажми **Save** и включи VPN.
 
-### В приложении BunkerVPN:
-1. Перейди в раздел подписок или настроек.
-2. Вставь ссылку в поле «URL подписки» и нажми **Обновить**.
+### В приложении v2rayNG / BunkerVPN (Android):
+1. Скопируй ссылку выше.
+2. Открой **BunkerVPN** / **v2rayNG** ➔ меню `☰` ➔ **Группы подписок**.
+3. Нажми `+`, вставь ссылку и сохрани.
+4. В меню выбери **«Обновить подписку»**.
 
 ---
 

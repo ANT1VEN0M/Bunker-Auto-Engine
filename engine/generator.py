@@ -1,4 +1,5 @@
 import os
+import re
 import base64
 import urllib.request
 from datetime import datetime, timezone, timedelta
@@ -49,6 +50,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     factory_nodes = []
     mix_nodes = []
     tg_nodes = []
+    discord_nodes = []
     proto_nodes = {
         "vless": [],
         "vmess": [],
@@ -61,9 +63,9 @@ def generate_subscriptions(alive_nodes: list[dict]):
         c = node.get("country", "UN")
         port = node.get("port", 0)
         proto = node.get("proto", "unknown")
+        ping = node.get("ping_ms", 9999)
         
         # Plain Shadowsocks is blocked by Russian TSPU (entropy detection)
-        # SS goes strictly into protocol-specific file (protocols/ss.txt), NEVER into general subscriptions!
         if proto == "ss":
             proto_nodes["ss"].append(node)
             continue
@@ -80,6 +82,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
         if port in [443, 80, 53] and c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"]:
             tg_nodes.append(node)
 
+        # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Europe / US on 443/UDP)
+        if (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (c in ["NL", "DE", "FI", "SE", "GB", "PL", "FR", "AT", "CH", "US"] or ping < 110)):
+            discord_nodes.append(node)
+
         if proto in proto_nodes:
             proto_nodes[proto].append(node)
 
@@ -89,10 +95,17 @@ def generate_subscriptions(alive_nodes: list[dict]):
         priority = 0 if p == 443 else (1 if p == 53 else (2 if p == 80 else 3))
         return (priority, node.get("ping_ms", 9999))
     
+    # Sort Discord Voice nodes: Hysteria 2 (native UDP) first, then lowest ping
+    def discord_sort_key(node):
+        p = node.get("proto", "")
+        priority = 0 if p == "hy2" else (1 if p == "vless" else 2)
+        return (priority, node.get("ping_ms", 9999))
+    
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
     mix_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
     tg_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
+    discord_nodes.sort(key=discord_sort_key)
 
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
     fast_candidates.sort(key=lambda x: x.get("ping_ms", 9999))
@@ -103,6 +116,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     limit_factory = factory_nodes[:80]
     limit_fast = fast_candidates[:50]
     limit_tg = tg_nodes[:60]
+    limit_discord = discord_nodes[:75]
 
     # Build branded URIs
     mix_uris = []
@@ -152,6 +166,15 @@ def generate_subscriptions(alive_nodes: list[dict]):
         remark = f"💬 {flag} [{c}] Бункер TG-SOS #{idx:02d} | :{port} | ⚡{ping}ms"
         tg_uris.append(build_branded_uri(node, remark))
 
+    discord_uris = []
+    for idx, node in enumerate(limit_discord, 1):
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
+        p = node.get("proto", "").upper()
+        ping = node.get("ping_ms", 0)
+        remark = f"🎮 {flag} [{c}] Бункер Discord Voice #{idx:02d} | {p} | ⚡{ping}ms"
+        discord_uris.append(build_branded_uri(node, remark))
+
     # Generate Cloudflare WARP+ WireGuard ultra-fast pool
     try:
         warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR)
@@ -161,11 +184,18 @@ def generate_subscriptions(alive_nodes: list[dict]):
         warp_uris = []
 
     # Inject ultra-low-latency WARP+ WireGuard nodes at the top of subscriptions
+    # For Discord, WireGuard is the #1 protocol (Layer-3 UDP encapsulation, WebRTC connects in <1s)
     if warp_uris:
         mix_uris = warp_uris[:5] + mix_uris
         bs_uris = warp_uris[:4] + bs_uris
         fast_uris = warp_uris[:5] + fast_uris
         tg_uris = warp_uris[:3] + tg_uris
+
+        discord_warp = []
+        for i, w in enumerate(warp_uris[:5], 1):
+            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | WireGuard WARP+ (880) | ⚡45ms', w)
+            discord_warp.append(w_disc)
+        discord_uris = discord_warp + discord_uris
 
     # Write files
     write_sub_files("mix", mix_uris)
@@ -173,6 +203,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     write_sub_files("factory", factory_uris)
     write_sub_files("fast", fast_uris)
     write_sub_files("tg", tg_uris)
+    write_sub_files("discord", discord_uris)
 
     # MTProto
     mtproto_links = fetch_mtproto_proxies()
@@ -202,9 +233,27 @@ def generate_subscriptions(alive_nodes: list[dict]):
             f.write(base64.b64encode(raw.encode("utf-8")).decode("utf-8") + "\n")
 
     # Generate README dashboard
-    generate_readme(len(alive_nodes), len(mix_uris), len(bs_uris), len(factory_uris), len(fast_uris), len(tg_uris), mtproto_links)
+    generate_readme(
+        len(alive_nodes),
+        len(mix_uris),
+        len(bs_uris),
+        len(factory_uris),
+        len(fast_uris),
+        len(tg_uris),
+        len(discord_uris),
+        mtproto_links
+    )
 
-def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_count: int, fast_count: int, tg_count: int, mtproto_links: list[str]):
+def generate_readme(
+    total_alive: int,
+    mix_count: int,
+    bs_count: int,
+    factory_count: int,
+    fast_count: int,
+    tg_count: int,
+    discord_count: int,
+    mtproto_links: list[str]
+):
     msk_tz = timezone(timedelta(hours=3))
     now_msk = datetime.now(msk_tz).strftime("%Y-%m-%d %H:%M:%S МСК")
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -220,14 +269,26 @@ def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_cou
 
     readme_content = f"""# 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
-> **Автоматический генератор подписок для BunkerVPN, v2rayNG, Happ, NekoBox, Shadowrocket и v2rayN.**  
-> Обновляется каждые 6 часов на GitHub Actions. Только живые, проверенные ноды с дедупликацией, очисткой от рекламы и разделением по режимам.
+> **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
+> Обновляется каждые 6 часов на GitHub Actions. **20 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+
+---
+
+### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac)
+Для быстрого подключения без ручного ввода ссылок используйте наш официальный портал:  
+👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
+
+* 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
+* 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
 
 ---
 
 ### 📊 Статус системы (Real-Time)
 - 🕒 **Последнее авто-обновление:** `{now_msk}` (`{now_utc}`)
 - 🟢 **Всего активных проверенных нод:** `{total_alive}`
+- 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `{discord_count}`
 - 🌍 **Мировой Микс (YouTube / DPI):** `{mix_count}`
 - 🤍 **Белый список (RU / BY):** `{bs_count}`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `{factory_count}`
@@ -240,31 +301,55 @@ def generate_readme(total_alive: int, mix_count: int, bs_count: int, factory_cou
 
 Добавь эти ссылки в своё приложение один раз. При обновлении подписки ты всегда будешь получать самые свежие и быстрые серверы!
 
-### 1. 🌍 Мировой Микс (YouTube, Discord, Instagram, Обход ТСПУ/DPI)
-Рекомендуется для повседневного сёрфинга и тяжёлого видео. Только зарубежные серверы (Нидерланды, Германия, Финляндия, США, Швеция).
+### 1. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
+*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
 ```text
-https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
 ```
-*Зеркало jsDelivr (если GitHub заблокирован провайдером):*
+*Зеркало для РФ без блокировок (ghfast.top):*
 ```text
-https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@main/sub/mix_b64.txt
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/discord_b64.txt
 ```
 
 ---
 
-### 2. 🤍 Белый список «БС» (Работа в условиях локального глушения)
+### 2. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
+Рекомендуется для повседневного сёрфинга и тяжёлого видео в 4K.
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/mix_b64.txt
+```
+
+---
+
+### 3. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
 Серверы в России и Беларуси. Трафик идёт как внутрироссийский, вышки сотовой связи его не трогают.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
 ```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
+```
 *Зеркало jsDelivr:*
 ```text
-https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@main/sub/bs_b64.txt
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/bs_b64.txt
 ```
 
 ---
 
-### 3. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
+### 4. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
 Строго серверы на портах `443` (стандартный HTTPS) и `53` (DNS), спасающие возле режимных объектов, проходных и заводов, где глушат нестандартные порты.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_b64.txt
@@ -272,15 +357,15 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 
 ---
 
-### 4. ⚡ Турбо (Топ самых низкопинговых серверов)
+### 5. ⚡ Турбо (Топ самых низкопинговых серверов)
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
 
 ---
 
-### 5. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
-Специальный канал связи для гарантированной работы Telegram (обновление ссылок, чтение постов и связь, когда внешние протоколы душатся вышкой):
+### 6. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+Специальный канал связи для гарантированной работы Telegram:
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
 ```
@@ -302,16 +387,16 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 ## 📲 Как подключить подписку?
 
-### В приложении v2rayNG (Android):
-1. Скопируй ссылку выше.
-2. Открой **v2rayNG** -> нажми `☰` (боковое меню) -> **Группы подписок**.
-3. Нажми `+`, в поле «URL подписки» вставь скопированную ссылку.
-4. Нажми галочку сохранения.
-5. Вернись на главный экран -> нажми три точки справа вверху -> **«Обновить подписку»**.
+### В приложении Karing (iOS / Windows / Mac / Android):
+1. Скопируй ссылку на подписку.
+2. В приложении перейди в **Settings** ➔ **My Subscriptions** ➔ `+ Add`.
+3. Вставь ссылку, нажми **Save** и включи VPN.
 
-### В приложении BunkerVPN:
-1. Перейди в раздел подписок или настроек.
-2. Вставь ссылку в поле «URL подписки» и нажми **Обновить**.
+### В приложении v2rayNG / BunkerVPN (Android):
+1. Скопируй ссылку выше.
+2. Открой **BunkerVPN** / **v2rayNG** ➔ меню `☰` ➔ **Группы подписок**.
+3. Нажми `+`, вставь ссылку и сохрани.
+4. В меню выбери **«Обновить подписку»**.
 
 ---
 
