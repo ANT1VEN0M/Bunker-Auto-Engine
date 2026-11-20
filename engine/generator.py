@@ -205,6 +205,26 @@ def generate_subscriptions(alive_nodes: list[dict]):
     write_sub_files("tg", tg_uris)
     write_sub_files("discord", discord_uris)
 
+    # Generate router WireGuard config (Keenetic / OpenWrt / MikroTik)
+    if warp_profiles:
+        p0 = warp_profiles[0]
+        keenetic_conf = f"""[Interface]
+# Bunker VPN — WireGuard для Keenetic / OpenWrt / MikroTik
+# Порт 880 обходит любые блокировки ТСПУ РКН
+PrivateKey = {p0['private_key']}
+Address = {p0['local_address']}
+DNS = 1.1.1.1, 77.88.8.8
+
+[Peer]
+PublicKey = {p0['public_key']}
+Endpoint = {p0['server']}:{p0['server_port']}
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+"""
+        keenetic_path = os.path.join(SUB_DIR, "keenetic_warp880.conf")
+        with open(keenetic_path, "w", encoding="utf-8") as f:
+            f.write(keenetic_conf)
+
     # MTProto
     mtproto_links = fetch_mtproto_proxies()
     if mtproto_links:

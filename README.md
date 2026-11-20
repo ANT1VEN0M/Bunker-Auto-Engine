@@ -133,6 +133,15 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 3. Нажми `+`, вставь ссылку и сохрани.
 4. В меню выбери **«Обновить подписку»**.
 
+### 📡 Настройка на роутере (Keenetic & OpenWrt):
+- **Keenetic (WireGuard порт 880):**
+  1. Скачайте готовый `.conf` файл: `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf`
+  2. В панели роутера (192.168.1.1): **Сетевые правила** ➔ **Интернет-подключения** ➔ **Другие подключения** ➔ **WireGuard** ➔ **Загрузить из файла**.
+  3. В **Приоритетах подключений** распределите свои Smart TV, ПК и консоли в политику WireGuard. YouTube 4K и Discord будут работать на всех домашних устройствах без VPN-клиентов!
+- **OpenWrt (Passwall / OpenClash / v2rayA):**
+  1. Скопируйте ссылку на подписку: `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt`
+  2. Добавьте её в раздел «Подписки» плагина с авто-обновлением раз в 12 часов.
+
 ---
 
 ## 👑 Сообщество Бункера Кота
