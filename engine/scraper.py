@@ -58,7 +58,13 @@ SOURCES = [
     # 24. F0rc3Run Best Results High-Speed Proxies
     "https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/refs/heads/main/Best-Results/proxies.txt",
     # 25. NiREvil Reality & VLESS Matrix
-    "https://raw.githubusercontent.com/NiREvil/vless/refs/heads/main/sub/SSTime"
+    "https://raw.githubusercontent.com/NiREvil/vless/refs/heads/main/sub/SSTime",
+    # 26. AeryxVPN Official Workers Cloudflare Relay (VLESS & Hysteria2)
+    "https://aeryxvpn-sub.aeryxvpn.workers.dev",
+    # 27. AeryxVPN Mos.ru Unblockable Russian GitLab Mirror
+    "https://hub.mos.ru/cheesyx/aeryx-mirror/raw/main/mirror.json",
+    # 28. AeryxVPN Pozor Bond Direct Feed
+    "https://pozor.bond/sub/aeryxvpn"
 ]
 
 def parse_json_configs(content: str) -> list[str]:
@@ -72,6 +78,8 @@ def parse_json_configs(content: str) -> list[str]:
                 proto = o.get("protocol")
                 settings = o.get("settings", {})
                 stream = o.get("streamSettings", {})
+                tag = o.get("tag", remarks)
+
                 if proto == "vless":
                     vnext = settings.get("vnext", [{}])[0]
                     addr = vnext.get("address")
@@ -106,8 +114,36 @@ def parse_json_configs(content: str) -> list[str]:
                         if ws.get("path"): params.append(f"path={urllib.parse.quote(ws['path'])}")
                         if ws.get("headers", {}).get("Host"): params.append(f"host={ws['headers']['Host']}")
                     query = "&".join(params)
-                    tag = f"#{urllib.parse.quote(remarks)}" if remarks else ""
-                    uris.append(f"vless://{uuid}@{addr}:{port}?{query}{tag}")
+                    t = f"#{urllib.parse.quote(tag)}" if tag else ""
+                    uris.append(f"vless://{uuid}@{addr}:{port}?{query}{t}")
+
+                elif proto in ("hysteria", "hysteria2", "hy2"):
+                    addr = settings.get("address")
+                    port = settings.get("port")
+                    hy_set = stream.get("hysteriaSettings", {})
+                    auth = hy_set.get("auth", "") or settings.get("auth", "")
+                    tls = stream.get("tlsSettings", {})
+                    sni = tls.get("serverName", "")
+                    if addr and port and auth:
+                        params = []
+                        if sni: params.append(f"sni={sni}")
+                        q = ("?" + "&".join(params)) if params else ""
+                        t = f"#{urllib.parse.quote(tag)}" if tag else ""
+                        uris.append(f"hy2://{auth}@{addr}:{port}{q}{t}")
+
+                elif proto == "trojan":
+                    servers = settings.get("servers", [{}])[0]
+                    addr = servers.get("address")
+                    port = servers.get("port")
+                    password = servers.get("password")
+                    if addr and port and password:
+                        tls = stream.get("tlsSettings", {})
+                        sni = tls.get("serverName", "")
+                        params = []
+                        if sni: params.append(f"sni={sni}")
+                        q = ("?" + "&".join(params)) if params else ""
+                        t = f"#{urllib.parse.quote(tag)}" if tag else ""
+                        uris.append(f"trojan://{password}@{addr}:{port}{q}{t}")
     except Exception:
         pass
     return uris
