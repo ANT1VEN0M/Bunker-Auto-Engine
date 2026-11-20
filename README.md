@@ -1,13 +1,24 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
-> **Автоматический генератор подписок для BunkerVPN, v2rayNG, Happ, NekoBox, Shadowrocket и v2rayN.**  
-> Обновляется каждые 6 часов на GitHub Actions. Только живые, проверенные ноды с дедупликацией, очисткой от рекламы и разделением по режимам.
+> **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
+> Обновляется каждые 6 часов на GitHub Actions. **20 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+
+---
+
+### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac)
+Для быстрого подключения без ручного ввода ссылок используйте наш официальный портал:  
+👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
+
+* 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
+* 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
 
 ---
 
 ### 📊 Статус системы (Real-Time)
 - 🕒 **Последнее авто-обновление:** `2026-11-20 22:54:21 МСК` (`2026-11-20 19:54:21 UTC`)
-- 🟢 **Всего активных проверенных нод:** `445`
+- 🟢 **Всего активных проверенных нод:** `471`
+- 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
 - 🌍 **Мировой Микс (YouTube / DPI):** `255`
 - 🤍 **Белый список (RU / BY):** `124`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `80`
@@ -25,9 +36,13 @@
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
 ```
-*Зеркало jsDelivr (если GitHub заблокирован провайдером):*
+*Зеркало для РФ без блокировок (ghfast.top):*
 ```text
-https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@main/sub/mix_b64.txt
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/mix_b64.txt
 ```
 
 ---
@@ -37,9 +52,13 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@main/sub/mix_b64.txt
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
 ```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
+```
 *Зеркало jsDelivr:*
 ```text
-https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@main/sub/bs_b64.txt
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/bs_b64.txt
 ```
 
 ---
