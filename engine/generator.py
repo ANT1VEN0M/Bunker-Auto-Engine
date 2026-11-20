@@ -4,6 +4,7 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 from .geo import get_flag_emoji
 from .parser_utils import build_branded_uri
+from .warp_generator import generate_warp_pool
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SUB_DIR = os.path.join(BASE_DIR, "sub")
@@ -150,6 +151,21 @@ def generate_subscriptions(alive_nodes: list[dict]):
         ping = node.get("ping_ms", 0)
         remark = f"💬 {flag} [{c}] Бункер TG-SOS #{idx:02d} | :{port} | ⚡{ping}ms"
         tg_uris.append(build_branded_uri(node, remark))
+
+    # Generate Cloudflare WARP+ WireGuard ultra-fast pool
+    try:
+        warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR)
+        print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP+ WireGuard nodes (port 880)")
+    except Exception as e:
+        print(f"[-] WARP Generator error: {e}")
+        warp_uris = []
+
+    # Inject ultra-low-latency WARP+ WireGuard nodes at the top of subscriptions
+    if warp_uris:
+        mix_uris = warp_uris[:5] + mix_uris
+        bs_uris = warp_uris[:4] + bs_uris
+        fast_uris = warp_uris[:5] + fast_uris
+        tg_uris = warp_uris[:3] + tg_uris
 
     # Write files
     write_sub_files("mix", mix_uris)
