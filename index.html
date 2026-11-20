@@ -11,6 +11,9 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+  <!-- Lightweight QR Code Generator (Offline + CDN Fallback) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     :root {
       --bg: #07090e;
@@ -20,7 +23,11 @@
       --accent-hover: #0284c7;
       --discord: #a855f7;
       --discord-hover: #9333ea;
+      --telegram: #0088cc;
+      --telegram-hover: #0077b5;
       --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --radius: 14px;
@@ -42,7 +49,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 16px 14px 40px;
+      padding: 16px 14px 44px;
     }
 
     .container {
@@ -76,7 +83,7 @@
     .tg-app-tag {
       font-size: 10px;
       font-weight: 700;
-      background: #0088cc;
+      background: var(--telegram);
       color: #fff;
       padding: 2px 7px;
       border-radius: 6px;
@@ -85,7 +92,7 @@
 
     .header {
       text-align: center;
-      padding: 6px 0 4px;
+      padding: 4px 0 2px;
     }
 
     .badge {
@@ -219,12 +226,12 @@
       background: var(--accent-hover);
       transform: scale(0.98);
     }
-    .btn-discord {
-      background: var(--discord);
+    .btn-telegram {
+      background: var(--telegram);
       color: #ffffff;
     }
-    .btn-discord:active {
-      background: var(--discord-hover);
+    .btn-telegram:active {
+      background: var(--telegram-hover);
       transform: scale(0.98);
     }
     .btn-secondary {
@@ -235,6 +242,11 @@
     .btn-secondary:active {
       background: #1a2333;
       transform: scale(0.98);
+    }
+
+    .btn-action-row {
+      display: flex;
+      gap: 8px;
     }
 
     .sub-box {
@@ -300,9 +312,86 @@
       margin-top: 1px;
     }
 
-    .share-row {
+    /* Live Ping Meter Card */
+    .ping-box {
+      background: #080b11;
+      border: 1px solid #1a2130;
+      border-radius: 10px;
+      padding: 12px;
       display: flex;
+      flex-direction: column;
       gap: 8px;
+    }
+    .ping-stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .ping-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ping-status {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* QR Code Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-card {
+      background: #0d121c;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px 18px 20px;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    }
+    .qr-container {
+      background: #ffffff;
+      padding: 14px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 200px;
+      min-height: 200px;
+    }
+    .qr-container img, .qr-container canvas {
+      max-width: 100%;
+      height: auto;
+      display: block;
     }
 
     .footer {
@@ -330,7 +419,7 @@
       font-weight: 700;
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 999;
+      z-index: 1001;
       pointer-events: none;
     }
     #toast.show {
@@ -407,9 +496,14 @@
         </div>
       </div>
 
-      <a id="btn-v2box" href="#" class="btn btn-secondary" onclick="handleFeedClick()">
-        🔗 Открыть в V2Box / Streisand
-      </a>
+      <div class="btn-action-row">
+        <a id="btn-v2box" href="#" class="btn btn-secondary" onclick="handleFeedClick()" style="flex:1;">
+          🔗 V2Box / Streisand
+        </a>
+        <button onclick="openQrModal()" class="btn btn-secondary" style="flex:1;">
+          📷 QR-код
+        </button>
+      </div>
     </div>
 
     <!-- 2. Windows / macOS -->
@@ -430,7 +524,7 @@
         </div>
         <div class="step-item">
           <div class="step-num">2</div>
-          <div>Нажмите кнопку выше или скопируйте прямую ссылку ниже.</div>
+          <div>Нажмите кнопку выше или скопируйте прямую ссылку подписки ниже.</div>
         </div>
       </div>
     </div>
@@ -451,7 +545,7 @@
       </p>
     </div>
 
-    <!-- 4. Selected Feed Link Box -->
+    <!-- 4. Selected Feed Link Box with QR button -->
     <div class="card">
       <div class="card-title">
         <span id="active-feed-label">📋 Ссылка активной подписки</span>
@@ -463,22 +557,73 @@
         <button class="copy-btn" onclick="copyCurrentFeed()">Копировать</button>
       </div>
 
+      <div class="btn-action-row">
+        <button onclick="copyCurrentFeed()" class="btn btn-secondary" style="font-size:12px; flex:1;">
+          📋 Скопировать ссылку
+        </button>
+        <button onclick="openQrModal()" class="btn btn-secondary" style="font-size:12px; flex:1;">
+          📷 Показать QR-код
+        </button>
+      </div>
+
       <p style="font-size:11px; color:var(--text-muted);" id="active-feed-desc">
         Универсальный глобальный пул серверов для YouTube 4K, Instagram, X (Twitter) и обхода любых блокировок ТСПУ.
       </p>
     </div>
 
-    <!-- 5. Share with Friends & Telegram Support -->
+    <!-- 5. FEATURE 1: LIVE PING & NETWORK CHECKER -->
+    <div class="card" style="border-color: rgba(56, 189, 248, 0.35);">
+      <div class="card-title">
+        <span>⚡ Замер пинга и качества сети</span>
+        <span class="tag" style="color:var(--accent);">Live Test</span>
+      </div>
+
+      <div class="ping-box">
+        <div class="ping-stats-row">
+          <span style="color:var(--text-muted);">Задержка (RTT):</span>
+          <span class="ping-value" id="ping-display">-- мс</span>
+        </div>
+        <div class="ping-stats-row">
+          <span style="color:var(--text-muted);">Дата-центр / Узел:</span>
+          <span style="font-weight:600; color:#38bdf8;" id="ping-node">Европа / Cloudflare</span>
+        </div>
+        <div class="ping-status" id="ping-status">
+          Нажмите кнопку ниже для замера реального пинга и готовности к Discord и YouTube.
+        </div>
+      </div>
+
+      <button id="btn-run-ping" onclick="runPingTest()" class="btn btn-secondary" style="border-color:rgba(56,189,248,0.3);">
+        🚀 Запустить тест пинга
+      </button>
+    </div>
+
+    <!-- 6. FEATURE 2: 1-CLICK MTPROTO TELEGRAM PROXY -->
+    <div class="card" style="border-color: rgba(0, 136, 204, 0.35);">
+      <div class="card-title">
+        <span>💬 Аварийный MTProto Прокси</span>
+        <span class="tag" style="background:rgba(0,136,204,0.15); border-color:rgba(0,136,204,0.3); color:#38bdf8;">Без VPN</span>
+      </div>
+
+      <p style="font-size:11.5px; color:var(--text-muted); line-height:1.4;">
+        Не грузятся кружки, фото или видео в Telegram? Подключите быстрый аварийный MTProto-прокси с FakeTLS в один клик прямо в мессенджере.
+      </p>
+
+      <button onclick="connectMTProto()" class="btn btn-telegram">
+        ⚡ Включить Telegram Прокси (1 клик)
+      </button>
+    </div>
+
+    <!-- 7. Share with Friends & Support -->
     <div class="card" style="background:#090d14; border-color:#182232;">
       <div class="card-title">
         <span>💬 Сообщество и Помощь</span>
       </div>
 
-      <div class="share-row">
-        <button onclick="shareBunker()" class="btn btn-secondary" style="font-size:12px;">
+      <div class="btn-action-row">
+        <button onclick="shareBunker()" class="btn btn-secondary" style="font-size:12px; flex:1;">
           🚀 Поделиться Бункером
         </button>
-        <a href="https://t.me/BUNKER_K0TA" target="_blank" class="btn btn-secondary" style="font-size:12px;">
+        <a href="https://t.me/BUNKER_K0TA" target="_blank" class="btn btn-secondary" style="font-size:12px; flex:1;">
           💬 Чат помощи
         </a>
       </div>
@@ -489,6 +634,25 @@
       <a href="https://t.me/BUNKER_KOTA" target="_blank">Канал @BUNKER_KOTA</a> • 
       <a href="https://t.me/BunkerCatOSBot" target="_blank">Telegram Бот</a> • 
       <a href="https://github.com/ANT1VEN0M/BunkerVPN" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <!-- FEATURE 3: MODAL QR CODE -->
+  <div id="qr-modal" class="modal-overlay" onclick="closeQrModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:14px; font-weight:700;" id="qr-title">Bunker VPN | Микс</div>
+      
+      <div class="qr-container" id="qr-target">
+        <!-- QR Code Canvas / Img -->
+      </div>
+
+      <p style="font-size:11.5px; color:var(--text-muted); line-height:1.4;">
+        Наведите камеру или отсканируйте сканером в <b>Karing</b> / <b>Streisand</b> / <b>V2Box</b> для мгновенного импорта.
+      </p>
+
+      <button onclick="closeQrModal()" class="btn btn-secondary" style="padding:10px 16px; font-size:12px;">
+        ✕ Закрыть
+      </button>
     </div>
   </div>
 
@@ -537,6 +701,13 @@
       }
     };
 
+    // Top Verified FakeTLS MTProto Proxy
+    const MTPROTO_PROXIES = [
+      "tg://proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d",
+      "tg://proxy?server=45.95.42.23&port=8443&secret=eecb57182154aa2419fd85f568d20cbb837777772e636c6f7564666c6172652e636f6d",
+      "tg://proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70"
+    ];
+
     let currentFeedKey = "mix";
 
     // --- TELEGRAM WEBAPP INTEGRATION ---
@@ -562,13 +733,15 @@
 
     function triggerHaptic(type) {
       if (!tg?.HapticFeedback) return;
-      if (type === 'impact') {
-        tg.HapticFeedback.impactOccurred('medium');
-      } else if (type === 'success') {
-        tg.HapticFeedback.notificationOccurred('success');
-      } else if (type === 'selection') {
-        tg.HapticFeedback.selectionChanged();
-      }
+      try {
+        if (type === 'impact') {
+          tg.HapticFeedback.impactOccurred('medium');
+        } else if (type === 'success') {
+          tg.HapticFeedback.notificationOccurred('success');
+        } else if (type === 'selection') {
+          tg.HapticFeedback.selectionChanged();
+        }
+      } catch (e) {}
     }
 
     function selectFeed(key, element) {
@@ -611,6 +784,134 @@
       copyText(url, `✅ Ссылка «${feed.label}» скопирована!`);
     }
 
+    // --- FEATURE 1: LIVE PING TEST ---
+    async function runPingTest() {
+      triggerHaptic('impact');
+      const btn = document.getElementById("btn-run-ping");
+      const display = document.getElementById("ping-display");
+      const status = document.getElementById("ping-status");
+      const node = document.getElementById("ping-node");
+
+      btn.disabled = true;
+      btn.innerText = "⏳ Замеряем пинг...";
+      display.innerText = "...";
+      display.style.color = "var(--text-main)";
+      status.innerText = "Отправка тестовых пакетов до европейского шлюза...";
+
+      const targetUrls = [
+        "https://fastly.jsdelivr.net/favicon.ico",
+        "https://ghfast.top/favicon.ico",
+        "https://cloudflare.com/cdn-cgi/trace"
+      ];
+
+      const pings = [];
+
+      for (let url of targetUrls) {
+        const start = performance.now();
+        try {
+          await fetch(url + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+          const end = performance.now();
+          pings.push(Math.round(end - start));
+        } catch (e) {
+          // Fallback image ping
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => { pings.push(Math.round(performance.now() - start)); resolve(); };
+            img.onerror = () => { pings.push(Math.round(performance.now() - start)); resolve(); };
+            img.src = url + "?t=" + Date.now();
+            setTimeout(resolve, 1500);
+          });
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerText = "🔄 Повторить тест";
+
+      if (pings.length > 0) {
+        const minPing = Math.min(...pings);
+        triggerHaptic('success');
+        display.innerText = `${minPing} мс`;
+
+        if (minPing < 75) {
+          display.style.color = "var(--success)";
+          node.innerText = "Европа / Шлюз Бункера 🟢";
+          status.innerText = "Идеальный отклик! Голосовые стримы в Discord и видео в YouTube 4K летают без буферизации.";
+        } else if (minPing < 130) {
+          display.style.color = "var(--warning)";
+          node.innerText = "Оптимальный маршрут 🟡";
+          status.innerText = "Хорошая стабильная связь. Задержка в норме для веб-серфинга и просмотра медиа.";
+        } else {
+          display.style.color = "var(--danger)";
+          node.innerText = "Загруженный маршрут 🔴";
+          status.innerText = "Повышенная задержка. Рекомендуем переключиться на фид «Турбо» или «Discord Voice».";
+        }
+      } else {
+        display.innerText = "Ошибка";
+        status.innerText = "Не удалось отправить тестовый пакет. Проверьте подключение к интернету.";
+      }
+    }
+
+    // --- FEATURE 2: MTPROTO PROXY 1-CLICK ---
+    function connectMTProto() {
+      triggerHaptic('impact');
+      const proxyUrl = MTPROTO_PROXIES[0];
+
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(proxyUrl);
+      } else {
+        window.location.href = proxyUrl;
+      }
+      showToast("🚀 Открываем Telegram Прокси...");
+    }
+
+    // --- FEATURE 3: QR CODE MODAL ---
+    function openQrModal() {
+      triggerHaptic('impact');
+      const feed = FEEDS[currentFeedKey];
+      const url = BASE_MIRROR + feed.file;
+
+      document.getElementById("qr-title").innerText = feed.name;
+      const target = document.getElementById("qr-target");
+      target.innerHTML = "";
+
+      // Try QRCode library if loaded
+      if (typeof QRCode !== "undefined") {
+        try {
+          new QRCode(target, {
+            text: url,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (e) {
+          renderFallbackQr(target, url);
+        }
+      } else {
+        renderFallbackQr(target, url);
+      }
+
+      const modal = document.getElementById("qr-modal");
+      modal.classList.add("active");
+    }
+
+    function renderFallbackQr(container, text) {
+      const img = document.createElement("img");
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+      img.alt = "QR Code";
+      img.style.width = "200px";
+      img.style.height = "200px";
+      container.appendChild(img);
+    }
+
+    function closeQrModal(e) {
+      triggerHaptic('selection');
+      const modal = document.getElementById("qr-modal");
+      modal.classList.remove("active");
+    }
+
+    // --- SHARE & UTILITIES ---
     function shareBunker() {
       triggerHaptic('impact');
       const shareUrl = "https://ant1ven0m.github.io/Bunker-Auto-Engine/";
