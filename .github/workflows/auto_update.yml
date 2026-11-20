@@ -1,0 +1,46 @@
+name: Bunker Auto-Engine Subscriptions
+
+on:
+  schedule:
+    # Runs every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-subscriptions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Bunker Auto-Engine Pipeline
+        run: |
+          python -m engine.main
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "bot@bunker-engine.local"
+          git config --local user.name "Bunker Auto-Engine Bot 🐈‍⬛"
+          git add sub/ README.md
+          if git diff --staged --quiet; then
+            echo "No subscription updates found. Skipping commit."
+          else
+            git commit -m "🚀 Auto-update Bunker subscriptions [$(date -u +'%Y-%m-%d %H:%M:%S UTC')] [skip ci]"
+            git push origin main
+          fi

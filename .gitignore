@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+*$py.class
+Country.mmdb
+engine/Country.mmdb
+.venv/
+venv/
+.DS_Store
