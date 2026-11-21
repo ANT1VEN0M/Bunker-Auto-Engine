@@ -34,6 +34,8 @@ jobs:
           python -m engine.main
 
       - name: Commit and Push Changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "bot@bunker-engine.local"
           git config --local user.name "Bunker Auto-Engine Bot 🐈‍⬛"
@@ -42,9 +44,11 @@ jobs:
             echo "No subscription updates found. Skipping commit."
           else
             TIMESTAMP=$(date -u +'%Y%m%d%H%M')
+            TAG="v1.1.${TIMESTAMP}"
             git commit -m "🚀 Auto-update Bunker subscriptions [$(date -u +'%Y-%m-%d %H:%M:%S UTC')] [skip ci]"
-            git tag "v1.1.${TIMESTAMP}"
+            git tag "$TAG"
             git push origin main --tags
+            gh release create "$TAG" --title "Bunker Subscriptions $TAG" --notes "Automated anti-censorship update" || echo "Release creation skipped"
           fi
 
       - name: Purge jsDelivr CDN Cache
