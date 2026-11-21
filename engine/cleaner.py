@@ -947,24 +947,35 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         node = PARSERS[proto](s)
 
         # Anti-TSPU / Russia DPI Filtering:
-        # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU
+        # 1. Cloudflare Workers / Pages & disposable spam domains are 100% blocked by RKN TSPU
         host_l = (node.host or "").lower()
         sni_l = (node.sni or "").lower()
         raw_l = s.lower()
-        if "workers.dev" in host_l or "workers.dev" in sni_l or "workers.dev" in raw_l:
-            return None
-        if "pages.dev" in host_l or "pages.dev" in sni_l or "pages.dev" in raw_l:
-            return None
+
+        DISPOSABLE_DOMAINS = (
+            ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
+            ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
+            "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com"
+        )
+        for bad in DISPOSABLE_DOMAINS:
+            if bad in host_l or bad in sni_l or (bad + "/") in raw_l or (bad + ":") in raw_l or (bad + "?") in raw_l or (bad + "&") in raw_l:
+                return None
 
         # 2. Reject unencrypted plain VLESS / VMess (TSPU detects signature and drops immediately)
         if proto in ("vless", "vmess") and node.sec == "none":
             return None
 
-        # 3. For non-Reality standard TLS, reject disposable spam / mass-VPN domains that TSPU blocks on SNI
-        if node.sec != "reality" and node.net != "xhttp":
-            for blocked_tld in (".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site"):
-                if host_l.endswith(blocked_tld) or sni_l.endswith(blocked_tld) or (blocked_tld + "/") in raw_l or (blocked_tld + ":") in raw_l:
-                    return None
+        # 3. For Reality nodes, verify camouflage SNI is a clean, reputable domain
+        if node.sec == "reality":
+            CLEAN_CAMOUFLAGE_SNIS = (
+                "google.", "cloudflare.", "yahoo.", "microsoft.", "apple.", "amazon.", "samsung.", "intel.", "bing.",
+                "speedtest.", "fast.com", "steamstatic.", "steamcommunity.", "playstation.", "nvidia.", "amd.",
+                "cdnguard.", "static-edge.", "mother-earth.", "neverspy.", "videodolina.", "mediaroshcha.", "mediatropa.",
+                "setevoypriliv.", "videobereg.", "pinemetrics.", "static.gcore.", "rbc.ru", "wb.ru", "yandex.", "mail.ru",
+                "vk.com", "okcdn.", "habr.com", "deepl.com", "udemy.com"
+            )
+            if not any(c in sni_l for c in CLEAN_CAMOUFLAGE_SNIS):
+                return None
 
         canon_uri = build_canonical_uri(node, remark)
         fp = node_fingerprint(node, "nekobox")

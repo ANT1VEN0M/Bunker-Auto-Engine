@@ -6,7 +6,7 @@ from .scraper import scrape_all_sources
 from .parser_utils import parse_config, deduplicate_configs
 from .checker import check_all_nodes
 from .xray_checker import deep_check_nodes
-from .generator import generate_subscriptions
+from .generator import generate_subscriptions, is_russia_safe
 from .geo import init_geo
 
 logging.basicConfig(
@@ -108,6 +108,12 @@ def run_pipeline():
         if proto == "vmess":
             return 7
         return 8
+
+    # Pre-filter to Russia-Safe candidates (Russian Hostings, Clean Reality, WARP)
+    russia_safe_alive = [n for n in alive if is_russia_safe(n)]
+    logging.info(f"Russia-Safe candidate filter: {len(alive)} alive -> {len(russia_safe_alive)} anti-TSPU candidates.")
+    if russia_safe_alive:
+        alive = russia_safe_alive
 
     alive.sort(key=deep_candidate_priority)
     logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep Xray testing.")

@@ -61,43 +61,54 @@ def fetch_mtproto_proxies() -> list[str]:
 
 DISPOSABLE_VPN_DOMAINS = (
     ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
-    "workers.dev", "pages.dev"
+    ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
+    "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com"
+)
+
+CLEAN_CAMOUFLAGE_SNIS = (
+    "google.", "cloudflare.", "yahoo.", "microsoft.", "apple.", "amazon.", "samsung.", "intel.", "bing.",
+    "speedtest.", "fast.com", "steamstatic.", "steamcommunity.", "playstation.", "nvidia.", "amd.",
+    "cdnguard.", "static-edge.", "mother-earth.", "neverspy.", "videodolina.", "mediaroshcha.", "mediatropa.",
+    "setevoypriliv.", "videobereg.", "pinemetrics.", "static.gcore.", "rbc.ru", "wb.ru", "yandex.", "mail.ru",
+    "vk.com", "okcdn.", "habr.com", "deepl.com", "udemy.com"
 )
 
 def is_russia_safe(node: dict) -> bool:
     proto = node.get("proto", "")
-    if proto == "wireguard":
+    raw = node.get("raw", "")
+    if proto == "wireguard" or raw.startswith("wireguard://"):
         return True
     
-    raw = node.get("raw", "")
     sni = (node.get("sni") or "").lower()
     host = (node.get("host") or "").lower()
     raw_l = raw.lower()
     
-    # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU in Russia
-    for bad in ("workers.dev", "pages.dev"):
+    # 1. Unconditionally reject any disposable / mass-spam / blocked domains
+    for bad in DISPOSABLE_VPN_DOMAINS:
         if bad in raw_l or bad in sni or bad in host:
             return False
             
     # 2. Blocked / vulnerable protocols in Russia
     if proto in ("ss", "shadowsocks"):
         return False
-    if proto in ("vless", "vmess") and "security=none" in raw_l:
+    if proto in ("vless", "vmess") and ("security=none" in raw_l or node.get("sec") == "none"):
         return False
-        
-    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
-    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
-    
-    # 3. Reality & XHTTP bypass TSPU
-    if is_reality or is_xhttp:
+
+    # 3. Russian Domestic nodes (verified Russian hostings, RU IPs, .ru/.su domains)
+    is_wl = node.get("is_wl_hosting", False)
+    country = (node.get("country") or "").upper()
+    if is_wl or country == "RU" or host.endswith(".ru") or sni.endswith(".ru") or host.endswith(".su") or sni.endswith(".su"):
         return True
         
-    # 4. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
-    for bad in DISPOSABLE_VPN_DOMAINS:
-        if bad in raw_l or bad in sni or bad in host:
-            return False
-            
-    return True
+    # 4. Reality nodes with clean, respected camouflage SNI
+    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
+    if is_reality:
+        if any(c in sni for c in CLEAN_CAMOUFLAGE_SNIS):
+            return True
+        return False
+
+    # 5. Any foreign node without Reality or Russian hosting is dropped by Russian TSPU
+    return False
 
 def generate_subscriptions(alive_nodes: list[dict]):
     # Enforce strict verification invariant: only deeply verified nodes (passing real Xray HTTP 204 traffic)

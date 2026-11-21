@@ -66,45 +66,33 @@ SOURCES = [
     "https://raw.githubusercontent.com/aviamastersgh/vpn-free-russia/main/verified_configs.txt",
     # 8. Aviamasters Free Russia - RU CIDR whitelist configs
     "https://raw.githubusercontent.com/aviamastersgh/vpn-free-russia/main/ru_configs.txt",
-    # 9. Solovyov Community Workers Anti-Censorship Aggregator
-    "https://random.solovyov-jenya2004.workers.dev/",
-    # 10. H1Clayd Dedicated Private Anti-Censorship Feed
-    "https://s-25562.nl2.h1clayd.click/sub/d92038b6-b470-4267-9c69-2c649bf3f4a4",
-    # 11. OceaniaVPN / StekloVPN Auto-Updated Reality Matrix
+    # 9. OceaniaVPN / StekloVPN Auto-Updated Reality Matrix
     "https://raw.githubusercontent.com/OceaniaVPN/StekloVPN/refs/heads/main/configs/okeania_auto.txt",
-    # 12. HappCluchi Community Workers Free VPN
-    "https://freevpn.happcluchi.workers.dev/",
-    # 13. VlessForU Daily Working Anti-Censorship Configurations
+    # 10. VlessForU Daily Working Anti-Censorship Configurations
     "https://sub.vlessfo.ru/vlessforu/working_configs.txt",
-    # 14. Telegram Alt VPN Obxod (White & Black Lists)
+    # 11. Telegram Alt VPN Obxod (White & Black Lists)
     "https://codeberg.org/telegram-alt_vpn_obxod/obxod_white-black_list/raw/branch/main/subs.txt",
-    # 15. OceaniaVPN / StekloVPN User Pool
+    # 12. OceaniaVPN / StekloVPN User Pool
     "https://raw.githubusercontent.com/OceaniaVPN/StekloVPN/refs/heads/main/configs/user_5512307834_eab99a6c-a05b-48ee-b7a7-729b760e.txt",
-    # 16. Wepogp HWID Bypass Feed (Auto location reality)
-    "https://is.wepogp.gay/bypass-hwid-lock-3z5O6BFAaJQzGlamvtSo?payload=nB6WFdc033pP4/nQclqdVvlQzxtVyf3foOMtnfl/MMPP4UJtJ1LdUha8hHnFXIOVXTkBVQ2ju2FDRejIa%2BWvNPTjB1V0Ic52FHGcG0HfF%2Bn/27HIfPKA95ILu11jRpSBr9FiHdHNs9ragsAo6/d5qQ%3D%3D",
-    # 17. FreeUlitka MoonPaw Private Reality Relay
+    # 13. FreeUlitka MoonPaw Private Reality Relay
     "https://p.kfwl.lol/ua=happ/h=FreeUlitka/https://sub.moonpaw.space/api/sub/eTsCzVjgZAmbnj71",
-    # 18. Gidroksi Anti-Blacklist Reality Pool
-    "https://gidroksi.fun/black-list",
-    # 19. GooseTeam FreeVPN Cracks Community Matrix
+    # 14. GooseTeam FreeVPN Cracks Community Matrix
     "https://raw.githubusercontent.com/gooseteam-hackers/freevpn-cracks/refs/heads/main/subscription_default.txt",
-    # 20. VPN Trade Dedicated Russian Bypass
+    # 15. VPN Trade Dedicated Russian Bypass
     "https://v-p-n.trade/sub/for-russia",
-    # 21. Mehdirzfx Global Sub Aggregator & Checker (1125+ Verified Feeds)
+    # 16. Mehdirzfx Global Sub Aggregator & Checker (1125+ Verified Feeds)
     "https://mehdirzfx.github.io/v2ray-sub/sub-checker/index.html",
-    # 22. ByeWhiteLists Matrix - Russian Anti-DPI & White Lists
+    # 17. ByeWhiteLists Matrix - Russian Anti-DPI & White Lists
     "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
-    # 23. Kort0881 RU Best Verified Backend Pool
+    # 18. Kort0881 RU Best Verified Backend Pool
     "https://raw.githubusercontent.com/kort0881/vpn-checker-backend/main/checked/RU_Best/ru_white_part3.txt",
-    # 24. F0rc3Run Best Results High-Speed Proxies
+    # 19. F0rc3Run Best Results High-Speed Proxies
     "https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/refs/heads/main/Best-Results/proxies.txt",
-    # 25. NiREvil Reality & VLESS Matrix
+    # 20. NiREvil Reality & VLESS Matrix
     "https://raw.githubusercontent.com/NiREvil/vless/refs/heads/main/sub/SSTime",
-    # 26. AeryxVPN Official Workers Cloudflare Relay (VLESS & Hysteria2)
-    "https://aeryxvpn-sub.aeryxvpn.workers.dev",
-    # 27. AeryxVPN Mos.ru Unblockable Russian GitLab Mirror
+    # 21. AeryxVPN Mos.ru Unblockable Russian GitLab Mirror
     "https://hub.mos.ru/cheesyx/aeryx-mirror/raw/main/mirror.json",
-    # 28. AeryxVPN Pozor Bond Direct Feed
+    # 22. AeryxVPN Pozor Bond Direct Feed
     "https://pozor.bond/sub/aeryxvpn",
     # 29. Kort0881 Verified Private Poster - Russia Nodes
     "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Russia_part1_sub.txt",
