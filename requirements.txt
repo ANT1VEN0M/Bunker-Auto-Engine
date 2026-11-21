@@ -1,3 +1,4 @@
 maxminddb>=2.6.0
 requests>=2.31.0
 urllib3>=2.0.0
+cryptography>=41.0.0
