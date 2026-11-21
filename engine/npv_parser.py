@@ -23,6 +23,14 @@ try:
 except ImportError:
     CRYPTO_AVAILABLE = False
 
+try:
+    from engine.whitebox_aes import NPVTDecrypter
+except ImportError:
+    try:
+        from whitebox_aes import NPVTDecrypter
+    except ImportError:
+        NPVTDecrypter = None
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 NPV_SENTINEL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=_-"
@@ -84,7 +92,11 @@ def parse_v2ray_outbound(outbound: dict, remark: str = "") -> Optional[str]:
     proto = str(outbound.get("protocol", "")).lower()
     settings = outbound.get("settings", {}) or {}
     stream = outbound.get("streamSettings", {}) or {}
-    tag = outbound.get("tag", remark) or remark or "Bunker-NPV"
+    raw_tag = outbound.get("tag", "")
+    if raw_tag and str(raw_tag).lower() not in ("proxy", "bunker-npv", "direct", "block", ""):
+        tag = raw_tag
+    else:
+        tag = remark or raw_tag or "Bunker-NPV"
     remark_q = urllib.parse.quote(str(tag))
 
     network = stream.get("network", "tcp")
@@ -342,6 +354,27 @@ def decode_napsternetv(content_or_link: str) -> List[str]:
         content = decode_sentinels(content)
 
     results: List[str] = []
+
+    # Check for White-Box AES CTR encrypted NapsternetV (.npvt, .npvs, NPVT1, NPVTSUB1)
+    if NPVTDecrypter and ("NPVT1" in content or "NPVTSUB1" in content or ("," in content and len(content) > 100)):
+        try:
+            dec = NPVTDecrypter()
+            chunks = dec.decrypt_text(content)
+            for chunk in chunks:
+                try:
+                    txt = chunk.decode("utf-8", errors="ignore").strip()
+                    if txt.startswith("{") or txt.startswith("["):
+                        parsed_json = json.loads(txt)
+                        items = parsed_json if isinstance(parsed_json, list) else [parsed_json]
+                        for it in items:
+                            if isinstance(it, dict) and ("v2rayProfile" in it or "v2rayJson" in it or "type" in it or "address" in it or "server" in it):
+                                results.extend(parse_napsternetv_item(it))
+                except Exception:
+                    pass
+            if results:
+                return results
+        except Exception as e:
+            logging.debug("Whitebox NPVT decryption error: %s", e)
 
     # Try parsing JSON
     try:
@@ -728,8 +761,8 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
         if dt_links:
             collected.extend(dt_links)
 
-    # 2. NapsternetV check
-    if "npv://" in text or "npvs1:" in text or "v2rayProfile" in text or "v2rayJson" in text:
+    # 2. NapsternetV check (.npvt, .npvs, NPVT1, npv://)
+    if "NPVT1" in text or "NPVTSUB1" in text or "npv://" in text or "npvs1:" in text or "v2rayProfile" in text or "v2rayJson" in text:
         npv_links = decode_napsternetv(text)
         if npv_links:
             collected.extend(npv_links)

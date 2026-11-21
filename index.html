@@ -1189,6 +1189,364 @@ PersistentKeepalive = 25`;
       if (finp) finp.click();
     }
 
+    // ==========================================
+    // WHITE-BOX AES CTR & HAPP RSA DECRYPTERS
+    // ==========================================
+    let _npvTablesCache = null;
+    let _happKeysCache = null;
+    window._npvNodesList = [];
+
+    async function loadNpvTables() {
+      if (_npvTablesCache) return _npvTablesCache;
+      try {
+        const res = await fetch('./npv_tables.json');
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        _npvTablesCache = await res.json();
+        return _npvTablesCache;
+      } catch (e) {
+        console.warn("Failed to load npv_tables.json", e);
+        return null;
+      }
+    }
+
+    function wbCore(block, tables) {
+      const ty = tables.tyBoxes.data;
+      const mbl = tables.mbl.data;
+      const xt = tables.xorTable.data;
+      const tbl = tables.tboxesLast.data;
+      const SHIFT = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11];
+
+      let buf = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) buf[i] = block[SHIFT[i]];
+
+      for (let i11 = 0; i11 < 4; i11++) {
+        const i13 = i11 * 4;
+        const i14 = i13 + 1, i15 = i13 + 2, i16 = i13 + 3;
+
+        const iC = ty[i13 * 256 + buf[i13]];
+        const iC2 = ty[i14 * 256 + buf[i14]];
+        const iC3 = ty[i15 * 256 + buf[i15]];
+        const iC4 = ty[i16 * 256 + buf[i16]];
+
+        for (let i17 = 0; i17 < 4; i17++) {
+          const i18 = (i11 * 24) + (i17 * 6);
+          const i19 = i17 * 8;
+          const i20 = 28 - i19;
+          const i22 = 24 - i19;
+
+          const n1 = (iC >>> i20) & 15;
+          const n2 = (iC2 >>> i20) & 15;
+          const n3 = (iC3 >>> i20) & 15;
+          const n4 = (iC4 >>> i20) & 15;
+
+          const b10 = xt[(i18 * 16 + n1) * 16 + n2];
+          const b11 = xt[(i18 * 16 + n3) * 16 + n4];
+
+          const m1 = (iC >>> i22) & 15;
+          const m2 = (iC2 >>> i22) & 15;
+          const m3 = (iC3 >>> i22) & 15;
+          const m4 = (iC4 >>> i22) & 15;
+
+          const lo = xt[(i18 + 5) * 256 + xt[(i18 + 2) * 256 + m1 * 16 + m2] * 16 + xt[(i18 + 3) * 256 + m3 * 16 + m4]];
+          const hi = xt[(i18 + 4) * 256 + b10 * 16 + b11];
+
+          buf[i13 + i17] = lo | (hi << 4);
+        }
+
+        const iC5 = mbl[i13 * 256 + buf[i13]];
+        const iC6 = mbl[i14 * 256 + buf[i14]];
+        const iC7 = mbl[i15 * 256 + buf[i15]];
+        const iC8 = mbl[i16 * 256 + buf[i16]];
+
+        for (let i27 = 0; i27 < 4; i27++) {
+          const i28 = (i11 * 24) + (i27 * 6);
+          const i29 = i27 * 8;
+          const i30 = 28 - i29;
+          const i31 = 24 - i29;
+
+          const n1 = (iC5 >>> i30) & 15;
+          const n2 = (iC6 >>> i30) & 15;
+          const n3 = (iC7 >>> i30) & 15;
+          const n4 = (iC8 >>> i30) & 15;
+
+          const a1 = xt[(i28 * 16 + n1) * 16 + n2];
+          const a2 = xt[(i28 * 16 + n3) * 16 + n4];
+          const hi = xt[(i28 + 4) * 256 + a1 * 16 + a2];
+
+          const m1 = (iC5 >>> i31) & 15;
+          const m2 = (iC6 >>> i31) & 15;
+          const m3 = (iC7 >>> i31) & 15;
+          const m4 = (iC8 >>> i31) & 15;
+
+          const b1 = xt[(i28 + 2) * 256 + m1 * 16 + m2];
+          const b2 = xt[(i28 + 3) * 256 + m3 * 16 + m4];
+          const lo = xt[(i28 + 5) * 256 + b1 * 16 + b2];
+
+          buf[i13 + i27] = (hi << 4) | lo;
+        }
+      }
+
+      const tmp = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) tmp[i] = buf[SHIFT[i]];
+      const out = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) out[i] = tbl[i * 256 + tmp[i]];
+      return out;
+    }
+
+    function wbCtr(nonce, data, tables) {
+      const counter = new Uint8Array(nonce);
+      const out = new Uint8Array(data.length);
+      for (let off = 0; off < data.length; off += 16) {
+        const ks = wbCore(counter, tables);
+        for (let i = 15; i >= 0; i--) {
+          counter[i] = (counter[i] + 1) & 0xFF;
+          if (counter[i] !== 0) break;
+        }
+        const blockSize = Math.min(16, data.length - off);
+        for (let i = 0; i < blockSize; i++) {
+          out[off + i] = data[off + i] ^ ks[i];
+        }
+      }
+      return out;
+    }
+
+    async function decryptNapsternetVContent(rawText) {
+      const tables = await loadNpvTables();
+      if (!tables) return null;
+
+      const tokens = rawText.replace(/NPVTSUB1/g, ',').replace(/NPVT1/g, ',').split(',');
+      const utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+      let extractedConfigs = [];
+
+      for (let tok of tokens) {
+        tok = tok.trim();
+        if (!tok || tok.length < 32) continue;
+        try {
+          let s = tok.replace(/\s+/g, '');
+          while (s.length % 4 !== 0) s += '=';
+          const bin = atob(s);
+          if (bin.length < 32) continue;
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+          const nonce = bytes.slice(0, 16);
+          const data = bytes.slice(16);
+          const decrypted = wbCtr(nonce, data, tables);
+          const text = utf8Decoder.decode(decrypted);
+          if (text.includes('{') || text.includes('[')) {
+            try {
+              const parsed = JSON.parse(text);
+              const list = Array.isArray(parsed) ? parsed : [parsed];
+              for (let item of list) {
+                if (item && (item.v2rayProfile || item.v2rayJson || item.type || item.address || item.server)) {
+                  extractedConfigs.push(item);
+                }
+              }
+            } catch (je) {}
+          }
+        } catch (e) {}
+      }
+      return extractedConfigs.length > 0 ? extractedConfigs : null;
+    }
+
+    function parseNapsternetVNode(item, defaultIdx) {
+      if (!item) return null;
+      let name = item.name || ("NapsternetV Node " + defaultIdx);
+      const prof = item.v2rayProfile || item;
+      name = prof.remarks || prof.remark || prof.ps || name;
+
+      let vjson = null;
+      if (prof.v2rayJson || item.v2rayJson) {
+        try {
+          const rawVj = prof.v2rayJson || item.v2rayJson;
+          vjson = typeof rawVj === 'string' ? JSON.parse(rawVj) : rawVj;
+        } catch(e) {}
+      }
+
+      if (vjson && vjson.outbounds && vjson.outbounds.length > 0) {
+        for (let ob of vjson.outbounds) {
+          const proto = (ob.protocol || "").toLowerCase();
+          if (["trojan", "vless", "vmess", "shadowsocks"].includes(proto)) {
+            const stream = ob.streamSettings || {};
+            const net = stream.network || "tcp";
+            const sec = stream.security || "none";
+            let sni = "", host = "", path = "", auth = "", server = "", port = "443";
+
+            if (proto === "trojan") {
+              const srv = (ob.settings && ob.settings.servers && ob.settings.servers[0]) || {};
+              server = srv.address || "";
+              port = srv.port || 443;
+              auth = srv.password || "";
+            } else if (proto === "vless" || proto === "vmess") {
+              const vn = (ob.settings && ob.settings.vnext && ob.settings.vnext[0]) || {};
+              server = vn.address || "";
+              port = vn.port || 443;
+              const usr = (vn.users && vn.users[0]) || {};
+              auth = usr.id || "";
+            }
+
+            if (sec === "tls" && stream.tlsSettings) {
+              sni = stream.tlsSettings.serverName || "";
+            } else if (sec === "reality" && stream.realitySettings) {
+              sni = stream.realitySettings.serverName || "";
+            }
+
+            if (net === "ws" && stream.wsSettings) {
+              path = stream.wsSettings.path || "";
+              host = (stream.wsSettings.headers && stream.wsSettings.headers.Host) || "";
+            }
+
+            if (server && auth) {
+              let uri = "";
+              const q = new URLSearchParams({ type: net });
+              if (sec && sec !== "none") q.set("security", sec);
+              if (sni) q.set("sni", sni);
+              if (host) q.set("host", host);
+              if (path) q.set("path", path);
+
+              if (proto === "trojan") {
+                uri = `trojan://${auth}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+              } else if (proto === "vless") {
+                uri = `vless://${auth}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+              } else if (proto === "vmess") {
+                const vmObj = { v: "2", ps: name, add: server, port: String(port), id: auth, net: net, tls: sec, sni: sni, host: host, path: path };
+                uri = `vmess://${btoa(JSON.stringify(vmObj))}`;
+              }
+
+              return {
+                proto: proto.toUpperCase(),
+                server: server,
+                host: server,
+                port: port,
+                auth: auth,
+                sni: sni,
+                cdnHost: host,
+                path: path,
+                name: name,
+                uri: uri
+              };
+            }
+          }
+        }
+      }
+
+      const server = prof.server || prof.address || prof.host || "";
+      const port = prof.serverPort || prof.port || 443;
+      const auth = prof.password || prof.uuid || prof.id || "";
+      const net = prof.network || prof.net || "ws";
+      const sec = prof.security || "tls";
+      const sni = prof.sni || prof.serverName || "";
+      const host = prof.host || "";
+      const path = prof.path || "";
+      const proto = (prof.protocol || prof.type || (prof.password ? "trojan" : "vless")).toUpperCase();
+
+      if (server && auth) {
+        const q = new URLSearchParams({ type: net, security: sec });
+        if (sni) q.set("sni", sni);
+        if (host) q.set("host", host);
+        if (path) q.set("path", path);
+        const uri = proto.toLowerCase().includes("trojan") 
+          ? `trojan://${auth}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`
+          : `vless://${auth}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+        return {
+          proto: proto,
+          server: server,
+          host: server,
+          port: port,
+          auth: auth,
+          sni: sni,
+          cdnHost: host,
+          path: path,
+          name: name,
+          uri: uri
+        };
+      }
+      return null;
+    }
+
+    function modPow(base, exp, mod) {
+      let res = 1n;
+      base = base % mod;
+      while (exp > 0n) {
+        if (exp % 2n === 1n) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp = exp / 2n;
+      }
+      return res;
+    }
+
+    async function loadHappKeys() {
+      if (window._happKeysCache) return window._happKeysCache;
+      try {
+        const res = await fetch('./happ_keys.json');
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        window._happKeysCache = await res.json();
+        return window._happKeysCache;
+      } catch (e) {
+        console.warn("Failed to load happ_keys.json", e);
+        return null;
+      }
+    }
+
+    async function decryptHappDeepLink(rawLink) {
+      const keys = await loadHappKeys();
+      if (!keys) return null;
+
+      let path = rawLink.replace(/^happ:\/\//, '').trim();
+      let verKey = "crypt1";
+      let payloadB64 = path;
+
+      if (path.startsWith("crypt4/")) { verKey = "crypt4"; payloadB64 = path.substring(7); }
+      else if (path.startsWith("crypt3/")) { verKey = "crypt3"; payloadB64 = path.substring(7); }
+      else if (path.startsWith("crypt2/")) { verKey = "crypt2"; payloadB64 = path.substring(7); }
+      else if (path.startsWith("crypt/")) { verKey = "crypt1"; payloadB64 = path.substring(6); }
+
+      const keyInfo = keys[verKey];
+      if (!keyInfo) return null;
+
+      const blockSize = keyInfo.size / 8;
+      const n = BigInt("0x" + keyInfo.n);
+      const d = BigInt("0x" + keyInfo.d);
+
+      let s = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4 !== 0) s += '=';
+      const rawBytes = Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+      const utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+      let decryptedText = "";
+
+      for (let off = 0; off < rawBytes.length; off += blockSize) {
+        const chunk = rawBytes.slice(off, off + blockSize);
+        if (chunk.length < blockSize) break;
+
+        let hex = "";
+        for (let b of chunk) hex += b.toString(16).padStart(2, '0');
+        const c = BigInt("0x" + hex);
+        const m = modPow(c, d, n);
+
+        let mHex = m.toString(16);
+        if (mHex.length % 2 !== 0) mHex = "0" + mHex;
+        while (mHex.length < blockSize * 2) mHex = "00" + mHex;
+
+        const mBytes = new Uint8Array(blockSize);
+        for (let i = 0; i < blockSize; i++) {
+          mBytes[i] = parseInt(mHex.substring(i * 2, i * 2 + 2), 16);
+        }
+
+        if (mBytes[0] === 0 && mBytes[1] === 2) {
+          let sep = -1;
+          for (let i = 2; i < blockSize; i++) {
+            if (mBytes[i] === 0) { sep = i; break; }
+          }
+          if (sep !== -1) {
+            decryptedText += utf8Decoder.decode(mBytes.slice(sep + 1));
+          }
+        }
+      }
+
+      return decryptedText.trim() || null;
+    }
+
     function handleConverterFileUpload(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -1197,7 +1555,7 @@ PersistentKeepalive = 25`;
       const fileName = file.name;
       const reader = new FileReader();
 
-      reader.onload = function(evt) {
+      reader.onload = async function(evt) {
         let textContent = evt.target.result;
         if (typeof textContent !== "string") {
           const bytes = new Uint8Array(textContent);
@@ -1209,7 +1567,7 @@ PersistentKeepalive = 25`;
         const input = document.getElementById("converter-input");
         input.value = textContent.trim();
         showToast("📄 Загружен: " + fileName);
-        inspectAndConvertConfig(fileName);
+        await inspectAndConvertConfig(fileName);
       };
 
       reader.onerror = function() {
@@ -1227,7 +1585,7 @@ PersistentKeepalive = 25`;
           const text = await navigator.clipboard.readText();
           if (text) {
             input.value = text.trim();
-            inspectAndConvertConfig();
+            await inspectAndConvertConfig();
             return;
           }
         }
@@ -1251,10 +1609,29 @@ PersistentKeepalive = 25`;
     }
 
     function switchConvertedFormat(fmtKey) {
-      if (!currentFormats[fmtKey]) return;
       triggerHaptic('selection');
-      lastConvertedUri = currentFormats[fmtKey];
-      document.getElementById("conv-output-uri").innerText = lastConvertedUri;
+      if (currentFormats[fmtKey]) {
+        lastConvertedUri = currentFormats[fmtKey];
+        document.getElementById("conv-output-uri").innerText = lastConvertedUri;
+      } else if (fmtKey.startsWith("node_")) {
+        const idx = parseInt(fmtKey.replace("node_", ""));
+        if (window._npvNodesList && window._npvNodesList[idx]) {
+          const node = window._npvNodesList[idx];
+          lastConvertedUri = node.uri;
+          document.getElementById("conv-output-uri").innerText = lastConvertedUri;
+          document.getElementById("conv-name").innerText = node.name;
+          document.getElementById("conv-host-port").innerText = node.host + ":" + node.port;
+          document.getElementById("conv-proto-badge").innerText = "NapsternetV ➔ " + node.proto;
+        }
+      } else if (fmtKey === "all_nodes") {
+        if (window._npvNodesList) {
+          lastConvertedUri = window._npvNodesList.map(n => n.uri).join("\n");
+          document.getElementById("conv-output-uri").innerText = lastConvertedUri;
+          showToast("Показаны все " + window._npvNodesList.length + " узлов!");
+        }
+      } else {
+        return;
+      }
       
       document.querySelectorAll('#conv-format-pills button').forEach(b => {
         b.style.borderColor = 'var(--card-border)';
@@ -1267,10 +1644,10 @@ PersistentKeepalive = 25`;
         activeBtn.style.color = '#fff';
         activeBtn.style.background = 'rgba(56, 189, 248, 0.2)';
       }
-      showToast("Формат изменен!");
+      showToast("Формат переключен!");
     }
 
-    function inspectAndConvertConfig() {
+    async function inspectAndConvertConfig(hintFileName) {
       triggerHaptic('impact');
       let raw = document.getElementById("converter-input").value.trim();
       if (!raw) {
@@ -1526,64 +1903,110 @@ PersistentKeepalive = 25`;
           else if (path.startsWith("crypt2/")) ver = "crypt2 (RSA-4096)";
           else if (path.startsWith("crypt5/")) ver = "crypt5 (ChaCha20-Poly1305)";
 
-          parsed = {
-            proto: "Happ (RSA Encrypted)",
-            sec: ver,
-            host: "happ:// deep-link",
-            name: "Happ Subscription Token",
-            cleanUri: raw,
-            details: [
-              { k: "🔑 Шифрование", v: ver },
-              { k: "📦 Токен", v: path.substring(0, 16) + "..." },
-              { k: "⚡ Декодер", v: "Встроен в Bunker-Auto-Engine" },
-              { k: "📱 Назначение", v: "Прямой запуск в Happ / BunkerVPN" }
-            ]
-          };
-        }
-        // 9. NapsternetV (.npvt, .npvs, npv://, JSON)
-        else if (raw.startsWith("npv://") || raw.includes("v2rayProfile") || raw.includes("npvs1:") || (hintFileName && (hintFileName.endsWith(".npvt") || hintFileName.endsWith(".npvs")))) {
-          let cleanContent = raw;
-          if (cleanContent.startsWith("npv://")) {
-            cleanContent = safeB64Decode(cleanContent.substring(6));
-          }
-          let vlessExtracted = "";
-          let server = "1.2.3.4", port = "443", name = "NapsternetV Node";
-
+          let decryptedLink = "";
           try {
-            const j = JSON.parse(cleanContent);
-            const item = Array.isArray(j) ? j[0] : j;
-            const p = item.v2rayProfile || item;
-            server = p.server || p.address || p.host || server;
-            port = p.serverPort || p.port || port;
-            name = item.name || p.remarks || name;
-            const uuid = p.uuid || p.id || "";
-            const sni = p.sni || p.host || "";
-            const pbk = p.publicKey || p.pbk || "";
-            const sid = p.shortId || p.sid || "";
-            const sec = p.security || (pbk ? "reality" : "tls");
-
-            const q = new URLSearchParams({ type: "tcp", security: sec });
-            if (sni) q.set("sni", sni);
-            if (pbk) q.set("pbk", pbk);
-            if (sid) q.set("sid", sid);
-            vlessExtracted = `vless://${uuid}@${server}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+            decryptedLink = await decryptHappDeepLink(raw);
           } catch (e) {
-            vlessExtracted = raw;
+            console.warn("Happ decrypt failed:", e);
           }
 
-          parsed = {
-            proto: "NapsternetV ➔ VLESS",
-            sec: "Распакован из .npvt",
-            host: server + ":" + port,
-            name: name,
-            cleanUri: vlessExtracted,
-            details: [
-              { k: "📁 Исходный файл", v: hintFileName || ".npvt / .npvs" },
-              { k: "🌐 Извлечённый хост", v: server },
-              { k: "🔌 Порт", v: port },
-              { k: "⚡ Статус", v: "Конвертирован в чистый VLESS Reality" }
-            ]
-          };
+          if (decryptedLink) {
+            if (decryptedLink.startsWith("http://") || decryptedLink.startsWith("https://")) {
+              parsed = {
+                proto: "Happ ➔ Подписка",
+                sec: ver + " (Расшифрован)",
+                host: (new URL(decryptedLink)).host,
+                name: "Happ Subscription URL",
+                cleanUri: decryptedLink,
+                details: [
+                  { k: "🔑 Шифрование", v: ver },
+                  { k: "⚡ Статус", v: "Успешно расшифрован RSA ключом" },
+                  { k: "🌐 URL подписки", v: decryptedLink.substring(0, 35) + "..." },
+                  { k: "📱 BunkerVPN", v: "Готов к прямой загрузке подписки" }
+                ]
+              };
+            } else {
+              document.getElementById("converter-input").value = decryptedLink;
+              return inspectAndConvertConfig();
+            }
+          } else {
+            parsed = {
+              proto: "Happ (RSA Token)",
+              sec: ver,
+              host: "happ:// deep-link",
+              name: "Happ Encrypted Link",
+              cleanUri: raw,
+              details: [
+                { k: "🔑 Шифрование", v: ver },
+                { k: "📦 Токен", v: path.substring(0, 20) + "..." },
+                { k: "⚡ Декодер", v: "Автономный RSA PKCS#1 v1.5" },
+                { k: "📱 Назначение", v: "Happ / BunkerVPN Deep-Link" }
+              ]
+            };
+          }
+        }
+        // 9. NapsternetV (.npvt, .npvs, npv://, NPVT1, JSON)
+        else if (raw.startsWith("NPVT1") || raw.startsWith("NPVTSUB1") || raw.includes("NPVT1") || raw.startsWith("npv://") || raw.includes("v2rayProfile") || raw.includes("npvs1:") || (hintFileName && (hintFileName.endsWith(".npvt") || hintFileName.endsWith(".npvs")))) {
+          let extractedItems = [];
+
+          if (raw.startsWith("NPVT1") || raw.startsWith("NPVTSUB1") || raw.includes("NPVT1") || (hintFileName && (hintFileName.endsWith(".npvt") || hintFileName.endsWith(".npvs")))) {
+            showToast("⚡ Расшифровка NapsternetV White-box AES...");
+            extractedItems = await decryptNapsternetVContent(raw);
+          }
+
+          if (!extractedItems || extractedItems.length === 0) {
+            let cleanContent = raw;
+            if (cleanContent.startsWith("npv://")) {
+              cleanContent = safeB64Decode(cleanContent.substring(6));
+            }
+            try {
+              const j = JSON.parse(cleanContent);
+              extractedItems = Array.isArray(j) ? j : [j];
+            } catch (e) {}
+          }
+
+          if (extractedItems && extractedItems.length > 0) {
+            const convertedNodes = [];
+            for (let idx = 0; idx < extractedItems.length; idx++) {
+              const item = extractedItems[idx];
+              if (!item) continue;
+              const nodeInfo = parseNapsternetVNode(item, idx + 1);
+              if (nodeInfo) convertedNodes.push(nodeInfo);
+            }
+
+            if (convertedNodes.length > 0) {
+              window._npvNodesList = convertedNodes;
+              const first = convertedNodes[0];
+
+              const formats = [];
+              if (convertedNodes.length > 1) {
+                convertedNodes.forEach((n, i) => {
+                  formats.push({ id: "node_" + i, label: (n.proto) + " #" + (i + 1) });
+                });
+                formats.push({ id: "all_nodes", label: "📋 Все " + convertedNodes.length + " узлов" });
+              }
+
+              parsed = {
+                proto: "NapsternetV ➔ " + first.proto,
+                sec: "White-box AES CTR (" + convertedNodes.length + " узлов)",
+                host: first.host + ":" + first.port,
+                name: first.name,
+                cleanUri: first.uri,
+                activeFormat: "node_0",
+                details: [
+                  { k: "📁 Исходный контейнер", v: hintFileName || ".npvt White-Box AES" },
+                  { k: "🌐 Сервер", v: first.host },
+                  { k: "🔌 Порт", v: String(first.port) },
+                  { k: "🔑 Пароль / UUID", v: (first.auth || "").substring(0, 10) + "..." },
+                  { k: "🎯 SNI / Маскировка", v: first.sni || "none" },
+                  { k: "🚀 CDN Host", v: (first.cdnHost || "none").substring(0, 25) + "..." },
+                  { k: "🔓 Hardware Lock", v: "Обойден (White-box AES взломан)" },
+                  { k: "📦 Всего найдено", v: convertedNodes.length + " рабочих узлов" }
+                ],
+                formats: formats
+              };
+            }
+          }
         }
         // 10. Dark Tunnel (.dark, .dt, darktunnel://, JSON)
         else if (raw.startsWith("darktunnel://") || raw.startsWith("DARKTUNNEL:") || raw.includes('"serverHost"') || (hintFileName && (hintFileName.endsWith(".dark") || hintFileName.endsWith(".dt")))) {
@@ -1635,6 +2058,25 @@ PersistentKeepalive = 25`;
       }
 
       if (!parsed) {
+        const cleanB64 = raw.replace(/\s+/g, '');
+        if (/^[A-Za-z0-9+/=_-]{40,}$/.test(cleanB64)) {
+          showToast("⚠️ Обнаружен зашифрованный фрагмент!");
+          const compatNote = document.getElementById("conv-compat-note");
+          if (compatNote) {
+            compatNote.style.display = "block";
+            compatNote.innerHTML = "⚠️ <b>Внимание:</b> этот фрагмент скопирован из середины зашифрованного файла <b>.npvt</b> (блок Base64 без ключа/nonce). Чтобы расшифровать конфиг целиком, загрузите файл <b>.npvt</b> через кнопку <b>[📁 Файл]</b> или скопируйте весь файл с первой строчки (начиная с <code>NPVT1</code>)!";
+            document.getElementById("converter-result-box").style.display = "block";
+            document.getElementById("conv-proto-badge").innerText = "Фрагмент .npvt";
+            document.getElementById("conv-sec-badge").innerText = "Требуется целый файл";
+            document.getElementById("conv-name").innerText = "Зашифрованный блок Base64";
+            document.getElementById("conv-host-port").innerText = "Загрузите .npvt файл";
+            document.getElementById("conv-output-uri").innerText = "Нажмите [📁 Файл] и выберите файл .npvt на устройстве для мгновенной расшифровки!";
+            document.getElementById("conv-btn-karing").style.display = "none";
+            document.getElementById("conv-format-row").style.display = "none";
+            document.getElementById("conv-details-grid").style.display = "none";
+          }
+          return;
+        }
         showToast("Формат не распознан. Проверьте ссылку.");
         return;
       }
