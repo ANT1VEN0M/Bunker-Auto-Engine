@@ -945,6 +945,27 @@ def clean_and_parse_uri(uri: str) -> dict | None:
 
     try:
         node = PARSERS[proto](s)
+
+        # Anti-TSPU / Russia DPI Filtering:
+        # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU
+        host_l = (node.host or "").lower()
+        sni_l = (node.sni or "").lower()
+        raw_l = s.lower()
+        if "workers.dev" in host_l or "workers.dev" in sni_l or "workers.dev" in raw_l:
+            return None
+        if "pages.dev" in host_l or "pages.dev" in sni_l or "pages.dev" in raw_l:
+            return None
+
+        # 2. Reject unencrypted plain VLESS / VMess (TSPU detects signature and drops immediately)
+        if proto in ("vless", "vmess") and node.sec == "none":
+            return None
+
+        # 3. For non-Reality standard TLS, reject disposable spam / mass-VPN domains that TSPU blocks on SNI
+        if node.sec != "reality" and node.net != "xhttp":
+            for blocked_tld in (".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site"):
+                if host_l.endswith(blocked_tld) or sni_l.endswith(blocked_tld) or (blocked_tld + "/") in raw_l or (blocked_tld + ":") in raw_l:
+                    return None
+
         canon_uri = build_canonical_uri(node, remark)
         fp = node_fingerprint(node, "nekobox")
         return {

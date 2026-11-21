@@ -59,6 +59,46 @@ def fetch_mtproto_proxies() -> list[str]:
 
     return mtproto_links
 
+DISPOSABLE_VPN_DOMAINS = (
+    ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
+    "workers.dev", "pages.dev"
+)
+
+def is_russia_safe(node: dict) -> bool:
+    proto = node.get("proto", "")
+    if proto == "wireguard":
+        return True
+    
+    raw = node.get("raw", "")
+    sni = (node.get("sni") or "").lower()
+    host = (node.get("host") or "").lower()
+    raw_l = raw.lower()
+    
+    # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU in Russia
+    for bad in ("workers.dev", "pages.dev"):
+        if bad in raw_l or bad in sni or bad in host:
+            return False
+            
+    # 2. Blocked / vulnerable protocols in Russia
+    if proto in ("ss", "shadowsocks"):
+        return False
+    if proto in ("vless", "vmess") and "security=none" in raw_l:
+        return False
+        
+    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
+    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
+    
+    # 3. Reality & XHTTP bypass TSPU
+    if is_reality or is_xhttp:
+        return True
+        
+    # 4. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
+    for bad in DISPOSABLE_VPN_DOMAINS:
+        if bad in raw_l or bad in sni or bad in host:
+            return False
+            
+    return True
+
 def generate_subscriptions(alive_nodes: list[dict]):
     # Enforce strict verification invariant: only deeply verified nodes (passing real Xray HTTP 204 traffic)
     # or validated WireGuard WARP+ nodes are allowed into production subscriptions.
@@ -69,9 +109,12 @@ def generate_subscriptions(alive_nodes: list[dict]):
     else:
         logging.warning("No deep_verified nodes found in generator! Using input list as fallback.")
 
-    # Sort all by ping
-    alive_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
-    
+    # Filter out nodes that cannot bypass Russian TSPU
+    safe_nodes = [n for n in alive_nodes if is_russia_safe(n)]
+    if safe_nodes:
+        logging.info(f"Subscription Generator: filtered {len(alive_nodes)} -> {len(safe_nodes)} Russia-Safe nodes.")
+        alive_nodes = safe_nodes
+
     # Partition
     bs_nodes = []
     factory_nodes = []
@@ -91,16 +134,12 @@ def generate_subscriptions(alive_nodes: list[dict]):
         port = node.get("port", 0)
         proto = node.get("proto", "unknown")
         ping = node.get("ping_ms", 9999)
-        
-        # Plain Shadowsocks is blocked by Russian TSPU (entropy detection)
-        if proto == "ss":
-            proto_nodes["ss"].append(node)
-            continue
-
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l or node.get("is_reality", False)
         is_wl_host = node.get("is_wl_hosting", False)
 
-        # White list (Bypass restrictive mobile throttling & whitelists: Russian domestic hostings or RU/BY on standard ports)
-        if (is_wl_host or (port in [443, 80, 53, 8443] and c in ["RU", "BY"])) and proto in ["vless", "trojan", "vmess", "hy2"]:
+        # White list (Russian domestic hostings or RU/BY on standard ports, or clean Russian Reality)
+        if (is_wl_host or (port in [443, 80, 53, 8443] and (c in ["RU", "BY"] or is_reality))) and proto in ["vless", "trojan", "vmess", "hy2"]:
             bs_nodes.append(node)
             if port in [443, 53] or is_wl_host:
                 factory_nodes.append(node)
@@ -108,46 +147,106 @@ def generate_subscriptions(alive_nodes: list[dict]):
         mix_nodes.append(node)
             
         # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
-        if port in [443, 80, 53] and (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] or is_wl_host):
+        if (is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) and port in [443, 80, 53]:
             tg_nodes.append(node)
 
-        # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Europe / US on 443/UDP)
-        if (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (c in ["NL", "DE", "FI", "SE", "GB", "PL", "FR", "AT", "CH", "US"] or ping < 110)):
+        # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Reality on 443/UDP)
+        if (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (is_reality or is_wl_host)):
             discord_nodes.append(node)
 
         if proto in proto_nodes:
             proto_nodes[proto].append(node)
 
-    # Sort BS nodes: Russian WL hostings on 443/53 first, then by ping
+    # Sort BS nodes: Russian WL hostings on 443/53 first, then Reality on 443, then by ping
     def bs_sort_key(node):
         is_wl = node.get("is_wl_hosting", False)
         p = node.get("port", 0)
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
         if is_wl and p in (443, 53):
             priority = 0
         elif is_wl:
             priority = 1
-        elif p in (443, 53):
+        elif is_reality and p in (443, 53):
             priority = 2
-        elif p == 80:
+        elif p in (443, 53):
             priority = 3
         else:
             priority = 4
         return (priority, node.get("ping_ms", 9999))
     
-    # Sort Discord Voice nodes: Hysteria 2 (native UDP) first, then lowest ping
+    # Sort Mix nodes: Russian WL hostings & clean Reality first, then by ping
+    def mix_sort_key(node):
+        is_wl = node.get("is_wl_hosting", False)
+        p = node.get("port", 0)
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
+        is_xhttp = "type=xhttp" in raw_l
+        if is_wl and p in (443, 53):
+            priority = 0
+        elif is_reality and p in (443, 53):
+            priority = 1
+        elif is_wl:
+            priority = 2
+        elif is_reality:
+            priority = 3
+        elif is_xhttp:
+            priority = 4
+        else:
+            priority = 5
+        return (priority, node.get("ping_ms", 9999))
+
+    # Sort Turbo nodes: lowest ping among Russian Hostings & Reality
+    def fast_sort_key(node):
+        is_wl = node.get("is_wl_hosting", False)
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
+        ping = node.get("ping_ms", 9999)
+        if is_wl and ping < 150:
+            priority = 0
+        elif is_reality and ping < 150:
+            priority = 1
+        elif is_wl:
+            priority = 2
+        elif is_reality:
+            priority = 3
+        else:
+            priority = 4
+        return (priority, ping)
+
+    # Sort TG SOS nodes: proximity to Telegram DCs with Reality / Russian Hostings
+    def tg_sort_key(node):
+        is_wl = node.get("is_wl_hosting", False)
+        c = node.get("country", "UN")
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
+        ping = node.get("ping_ms", 9999)
+        if is_wl:
+            priority = 0
+        elif is_reality and c in ["NL", "DE", "FI", "SE"]:
+            priority = 1
+        elif is_reality:
+            priority = 2
+        else:
+            priority = 3
+        return (priority, ping)
+
+    # Sort Discord Voice nodes: Hysteria 2 (native UDP) first, then Reality, then lowest ping
     def discord_sort_key(node):
         p = node.get("proto", "")
-        priority = 0 if p == "hy2" else (1 if p == "vless" else 2)
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
+        priority = 0 if p == "hy2" else (1 if is_reality else 2)
         return (priority, node.get("ping_ms", 9999))
     
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
-    mix_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
-    tg_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
+    mix_nodes.sort(key=mix_sort_key)
+    tg_nodes.sort(key=tg_sort_key)
     discord_nodes.sort(key=discord_sort_key)
 
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
-    fast_candidates.sort(key=lambda x: x.get("ping_ms", 9999))
+    fast_candidates.sort(key=fast_sort_key)
 
     # Limit lists
     limit_mix = mix_nodes[:250]
