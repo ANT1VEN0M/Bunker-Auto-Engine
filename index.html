@@ -639,39 +639,42 @@
       </button>
     </div>
 
-    <!-- 7. ROUTERS (Keenetic, OpenWrt, MikroTik) -->
+    <!-- 7. ROUTERS & AMNEZIA (Keenetic, OpenWrt, AmneziaWG) -->
     <div class="card" id="card-routers" style="border-color: rgba(16, 185, 129, 0.35);">
       <div class="card-title">
-        <span>📡 Домашние роутеры (Keenetic & OpenWrt)</span>
+        <span>📡 Домашние роутеры & AmneziaWG</span>
         <span class="tag" style="color:var(--success); background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.25);">Для всей семьи</span>
       </div>
 
       <p style="font-size:12px; color:var(--text-muted); line-height:1.45;">
-        Настройте Бункер на домашнем Wi-Fi роутере — YouTube 4K, Discord и Instagram будут работать на всех <b>Smart TV</b>, <b>PlayStation</b>, <b>Xbox</b>, смартфонах и ПК без VPN на каждом устройстве.
+        Настройте Бункер на домашнем роутере или через AmneziaWG — YouTube 4K, Discord и Instagram будут летать на всех <b>Smart TV</b>, <b>PlayStation</b>, <b>Xbox</b>, смартфонах и ПК.
       </p>
 
       <!-- Router Selector Tabs -->
       <div style="display:flex; gap:6px; margin: 2px 0;">
-        <button id="tab-btn-keenetic" onclick="selectRouterTab('keenetic')" class="feed-pill active" style="flex:1; justify-content:center;">
-          Keenetic (WireGuard 880)
+        <button id="tab-btn-amnezia" onclick="selectRouterTab('amnezia')" class="feed-pill active" style="flex:1; justify-content:center; font-size:11px;">
+          AmneziaWG (QUIC i1)
         </button>
-        <button id="tab-btn-openwrt" onclick="selectRouterTab('openwrt')" class="feed-pill" style="flex:1; justify-content:center;">
-          OpenWrt / Clash / Passwall
+        <button id="tab-btn-keenetic" onclick="selectRouterTab('keenetic')" class="feed-pill" style="flex:1; justify-content:center; font-size:11px;">
+          Keenetic (Entware)
+        </button>
+        <button id="tab-btn-openwrt" onclick="selectRouterTab('openwrt')" class="feed-pill" style="flex:1; justify-content:center; font-size:11px;">
+          OpenWrt
         </button>
       </div>
 
-      <!-- Keenetic Panel -->
-      <div id="router-panel-keenetic" style="display:flex; flex-direction:column; gap:10px;">
+      <!-- AmneziaWG Panel -->
+      <div id="router-panel-amnezia" style="display:flex; flex-direction:column; gap:10px;">
         <div class="sub-box">
-          <div class="sub-url" id="keenetic-conf-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf</div>
-          <button class="copy-btn" onclick="copyKeeneticConf()">Копировать</button>
+          <div class="sub-url" id="amnezia-conf-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/amnezia_warp880.conf</div>
+          <button class="copy-btn" onclick="copyAmneziaConf()">Копировать</button>
         </div>
 
         <div class="btn-action-row">
-          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf" download="keenetic_warp880.conf" class="btn btn-primary" style="flex:1; font-size:12px;">
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/amnezia_warp880.conf" download="amnezia_warp880.conf" class="btn btn-primary" style="flex:1; font-size:12px;">
             ⬇️ Скачать .conf файл
           </a>
-          <button onclick="copyKeeneticRaw()" class="btn btn-secondary" style="flex:1; font-size:12px;">
+          <button onclick="copyAmneziaRaw()" class="btn btn-secondary" style="flex:1; font-size:12px;">
             📋 Скопировать текст
           </button>
         </div>
@@ -679,11 +682,39 @@
         <div class="steps">
           <div class="step-item">
             <div class="step-num">1</div>
-            <div>В панели Keenetic (192.168.1.1) перейдите в <b>Сетевые правила</b> ➔ <b>Интернет-подключения</b> ➔ <b>Другие подключения</b> ➔ <b>WireGuard</b> ➔ <b>Загрузить из файла</b>.</div>
+            <div><b>Для ПК (Windows / macOS / Linux), iOS и Android:</b> установите бесплатное приложение <b>AmneziaVPN</b> и импортируйте скачанный <code>.conf</code> файл.</div>
           </div>
           <div class="step-item">
             <div class="step-num">2</div>
-            <div>Включите подключение. В <b>Приоритетах подключений</b> перетащите Smart TV, ПК или консоль в политику WireGuard. Всё летает!</div>
+            <div><b>Бронебойная маскировка:</b> файл использует порт 880 и сигнатурный пакет <b>CPS i1 (QUIC HTTP/3)</b>, полностью обходящий блокировки ТСПУ РКН.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keenetic Panel -->
+      <div id="router-panel-keenetic" style="display:none; flex-direction:column; gap:10px;">
+        <div class="sub-box">
+          <div class="sub-url" id="keenetic-sub-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt</div>
+          <button class="copy-btn" onclick="copyOpenWrtSub()">Копировать</button>
+        </div>
+
+        <div class="btn-action-row">
+          <button onclick="copyOpenWrtSub()" class="btn btn-primary" style="flex:1; font-size:12px;">
+            📋 Скопировать подписку для Entware (VLESS)
+          </button>
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf" download="keenetic_warp880.conf" class="btn btn-secondary" style="flex:1; font-size:12px;">
+            ⬇️ Конфиг AmneziaWG (4.2+)
+          </a>
+        </div>
+
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div><b>Рекомендуемый способ:</b> установите пакет <b>Entware (OPKG)</b> на Keenetic и поставьте <code>sing-box</code> или <code>xray</code> со ссылкой на нашу общую подписку. VLESS Reality полетит на скорости 100+ Мбит/с!</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div><b>Для KeeneticOS 4.2+:</b> поддерживает AmneziaWG прямо из коробки — загрузите файл конфигурации через веб-интерфейс в разделе WireGuard.</div>
           </div>
         </div>
       </div>
@@ -1086,36 +1117,66 @@
 
     function selectRouterTab(tab) {
       triggerHaptic('selection');
+      const amneziaTab = document.getElementById("tab-btn-amnezia");
       const keeneticTab = document.getElementById("tab-btn-keenetic");
       const openwrtTab = document.getElementById("tab-btn-openwrt");
+      const amneziaPanel = document.getElementById("router-panel-amnezia");
       const keeneticPanel = document.getElementById("router-panel-keenetic");
       const openwrtPanel = document.getElementById("router-panel-openwrt");
 
-      if (tab === 'keenetic') {
-        keeneticTab.classList.add('active');
-        openwrtTab.classList.remove('active');
-        keeneticPanel.style.display = 'flex';
-        openwrtPanel.style.display = 'none';
+      [amneziaTab, keeneticTab, openwrtTab].forEach(t => t?.classList.remove('active'));
+      [amneziaPanel, keeneticPanel, openwrtPanel].forEach(p => { if (p) p.style.display = 'none'; });
+
+      if (tab === 'amnezia') {
+        amneziaTab?.classList.add('active');
+        if (amneziaPanel) amneziaPanel.style.display = 'flex';
+      } else if (tab === 'keenetic') {
+        keeneticTab?.classList.add('active');
+        if (keeneticPanel) keeneticPanel.style.display = 'flex';
       } else {
-        keeneticTab.classList.remove('active');
-        openwrtTab.classList.add('active');
-        keeneticPanel.style.display = 'none';
-        openwrtPanel.style.display = 'flex';
+        openwrtTab?.classList.add('active');
+        if (openwrtPanel) openwrtPanel.style.display = 'flex';
       }
     }
 
+    function copyAmneziaConf() {
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/amnezia_warp880.conf";
+      copyText(url, "✅ Ссылка на AmneziaWG конфиг скопирована!");
+    }
+
+    function copyAmneziaRaw() {
+      copyText(KEENETIC_RAW_CONF, "✅ Текст конфигурации AmneziaWG (QUIC i1) скопирован!");
+    }
+
     const KEENETIC_RAW_CONF = `[Interface]
-# Bunker VPN — WireGuard для Keenetic / OpenWrt
-# Порт 880 обходит любые блокировки ТСПУ РКН
-PrivateKey = SFrgzgm3EbATteVsHvj8QOtK4eCdh5CaBLZZILzd0Wo=
-Address = 172.16.0.2/32,2606:4700:110:86cd:5470:bb60:c79c:7699/128
-DNS = 1.1.1.1, 77.88.8.8
+# Bunker VPN — AmneziaWG для ПК (Windows/Linux/macOS), iOS, Android и роутеров (Keenetic / OpenWrt)
+# Порт 880 + CPS Signature Packet i1 (QUIC HTTP/3 Initial Packet для vk.com)
+Address = 172.16.0.2/32,2606:4700:110:83a1:9c89:90a4:b7b7:68c9/128
+PrivateKey = MA62uN1BxTtY8GSkroA3waH+ymQgJS+uAH9XY3b/wU8=
+DNS = 77.88.8.8,1.1.1.1
+MTU = 1280
+
+# AmneziaWG обфускация против DPI ТСПУ
+Jc = 4
+Jmin = 40
+Jmax = 70
+S1 = 0
+S2 = 0
+H1 = 1
+H2 = 2
+H3 = 3
+H4 = 4
+
+# Сигнатурный пакет (CPS i1 - маскировка под HTTP/3 QUIC Initial c SNI vk.com)
+# Генератор кастомных QUIC-пакетов под любой свой домен: https://sageptr.github.io/mini_quic_generator/
+I1 = <b 0xce0000000108c810097c30d1930300004050d2297e0a3ad3203d232c62c3b6ad1712af850cb787cfb2de6aa3cca3760c0807ff59d4965d5b717fe653aceda6dc47d0872c0ccc1e14d37c95f14d5c69d271f0f43b1168def750a6a6d78f7e00ee7097>
 
 [Peer]
 PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
 Endpoint = 162.159.192.1:880
 AllowedIPs = 0.0.0.0/0, ::/0
-PersistentKeepalive = 25`;
+PersistentKeepalive = 25
+`.trim();
 
     function copyKeeneticConf() {
       const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf";
