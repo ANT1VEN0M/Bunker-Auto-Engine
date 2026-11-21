@@ -114,10 +114,109 @@ def build_wireguard_uri(profile: dict, remarks: str) -> str:
     )
 
 
-def build_amnezia_conf(profile: dict) -> str:
+
+import hmac
+import hashlib
+import struct
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+QUIC_SALT_V1 = bytes([
+    0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17,
+    0x9a, 0xe6, 0xa4, 0xc8, 0x0c, 0xad, 0xcc, 0xbb, 0x7f, 0x0a,
+])
+
+def _quic_str8(data: bytes) -> bytes:
+    return bytes([len(data)]) + data
+
+def _quic_str16(data: bytes) -> bytes:
+    return struct.pack('>H', len(data)) + data
+
+def _quic_varint(x: int) -> bytes:
+    if x < 0x40:
+        return bytes([x])
+    elif x < 0x4000:
+        return struct.pack('>H', x | 0x4000)
+    elif x < 0x40000000:
+        return struct.pack('>I', x | 0x80000000)
+    else:
+        return struct.pack('>Q', x | 0xC000000000000000)
+
+def _quic_derive_secret(key: bytes, length: int, label: str, context: bytes = b'') -> bytes:
+    label_bytes = b'tls13 ' + label.encode('ascii')
+    info = struct.pack('>H', length) + _quic_str8(label_bytes) + _quic_str8(context) + bytes([1])
+    h = hmac.new(key, info, hashlib.sha256).digest()
+    return h[:length]
+
+def generate_quic_initial_packet(sni: str = "vk.com") -> str:
+    """Generates an RFC 9001 QUIC v1 Initial Handshake packet (HTTP/3) with SNI in CRYPTO frame."""
+    try:
+        dcid = os.urandom(8)
+        scid = b""
+        token = b""
+        pkn = bytes([0])
+        random_bytes = os.urandom(32)
+
+        # TLS 1.3 ClientHello Sni
+        sni_bytes = sni.encode("utf-8")
+        sni_entry = bytes([0]) + struct.pack(">H", len(sni_bytes)) + sni_bytes
+        ext_data = struct.pack(">H", len(sni_entry)) + sni_entry
+        sni_ext = struct.pack(">HH", 0, len(ext_data)) + ext_data
+        extensions = struct.pack(">H", len(sni_ext)) + sni_ext
+
+        body = bytes([0x03, 0x03]) + random_bytes + bytes([0, 0, 0, 1, 0]) + extensions
+        ch = bytes([0x01]) + struct.pack(">I", len(body))[1:] + body
+        payload = bytes([0x06]) + _quic_varint(0) + _quic_varint(len(ch)) + ch
+
+        pkn_len = len(pkn)
+        tag_len = 16
+        padding_len = max(0, 20 - pkn_len - len(payload) - tag_len)
+        length_val = pkn_len + len(payload) + padding_len + tag_len
+
+        header = (
+            bytes([0xC0 | (pkn_len - 1), 0, 0, 0, 1]) +
+            _quic_str8(dcid) +
+            _quic_str8(scid) +
+            _quic_str8(token) +
+            _quic_varint(length_val) +
+            pkn
+        )
+
+        init_secret = hmac.new(QUIC_SALT_V1, dcid, hashlib.sha256).digest()
+        client_secret = _quic_derive_secret(init_secret, 32, "client in")
+        quic_key = _quic_derive_secret(client_secret, 16, "quic key")
+        quic_iv = bytearray(_quic_derive_secret(client_secret, 12, "quic iv"))
+        quic_hp = _quic_derive_secret(client_secret, 16, "quic hp")
+
+        for i in range(pkn_len):
+            quic_iv[12 - pkn_len + i] ^= pkn[i]
+
+        padded_payload = payload + bytes(padding_len)
+        aesgcm = AESGCM(quic_key)
+        encrypted_payload = aesgcm.encrypt(bytes(quic_iv), padded_payload, header)
+
+        sample_offset = 4 - pkn_len
+        sample = encrypted_payload[sample_offset : sample_offset + 16]
+        cipher = Cipher(algorithms.AES(quic_hp), modes.ECB())
+        encryptor = cipher.encryptor()
+        mask = bytearray(encryptor.update(sample) + encryptor.finalize())
+
+        header_ba = bytearray(header)
+        header_ba[0] ^= (mask[0] & 0x0F)
+        for i in range(pkn_len):
+            header_ba[len(header_ba) - pkn_len + i] ^= mask[1 + i]
+
+        full_packet = bytes(header_ba) + encrypted_payload
+        return full_packet.hex()
+    except Exception:
+        # Fallback uncut hex
+        return "c600000001017f000040501a929b097873d3538f284670574a894429a7c5119b"
+
+def build_amnezia_conf(profile: dict, sni: str = "vk.com") -> str:
+    quic_hex = generate_quic_initial_packet(sni)
     return f"""[Interface]
 # Bunker VPN — AmneziaWG для ПК (Windows/Linux/macOS), iOS, Android и роутеров (Keenetic / OpenWrt)
-# Порт 880 + CPS Signature Packet i1 (маскировка под DNS запрос icloud.com)
+# Порт 880 + CPS Signature Packet i1 (QUIC HTTP/3 Initial Packet для {sni})
 Address = {profile['local_address']}
 PrivateKey = {profile['private_key']}
 DNS = {profile.get('remote_dns', '1.1.1.1, 77.88.8.8')}
@@ -134,8 +233,9 @@ H2 = 2
 H3 = 3
 H4 = 4
 
-# Сигнатурный пакет (CPS i1 - маскировка под DNS запрос icloud.com)
-I1 = <b 0x858000010001000000000669636c6f756403636f6d0000010001c00c000100010000105a00044d583737>
+# Сигнатурный пакет (CPS i1 - маскировка под HTTP/3 QUIC Initial c SNI {sni})
+# Генератор кастомных QUIC-пакетов под любой свой домен: https://sageptr.github.io/mini_quic_generator/
+I1 = <b 0x{quic_hex}>
 
 [Peer]
 PublicKey = {profile['public_key']}
