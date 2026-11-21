@@ -143,7 +143,9 @@ SOURCES = [
     # 46. KFWL / AleqseiVPN Dedicated Feed (18 nodes)
     "https://www.aleqseivpn.site/sub/mLzmgeLbBCYlI0jfh0HgWA",
     # 47. KFWL / BlackVPN Torrent & Fast Relay (70 nodes)
-    "https://p.kfwl.lol/no/https://sub.blackvpn.io/8Z502NguYbbkhxoL"
+    "https://p.kfwl.lol/no/https://sub.blackvpn.io/8Z502NguYbbkhxoL",
+    # 48. Doroguuuuu XHTTP European Auto-Select Matrix (170 nodes)
+    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2Fb2JzaGksMTc5NTIzMTUyMAto0DeXMNnf/auto"
 ]
 
 def clean_source_url(url: str) -> str:
