@@ -61,72 +61,43 @@ def fetch_mtproto_proxies() -> list[str]:
 
 DISPOSABLE_VPN_DOMAINS = (
     ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
-    ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
-    "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com",
-    ".cloud", ".mom", ".uk", "fade.cloud", "my-fade.cloud", "fade.mom", "ferrin.uk"
-)
-
-CLEAN_PORTS = {443, 8043, 8443, 7443, 53, 80, 880}
-
-FOREIGN_SAFE_SNIS = (
-    "nvidia.", "steamstatic.", "steamcommunity.", "deepl.", "microsoft.", "apple.", "rbc.ru"
-)
-
-PROVEN_RELAYS = (
-    "videodolina.", "videobereg.", "mediaroshcha.", "mediatropa.", "setevoypriliv."
+    "workers.dev", "pages.dev"
 )
 
 def is_russia_safe(node: dict) -> bool:
     proto = node.get("proto", "")
-    raw = node.get("raw", "")
-    port = node.get("port", 0)
-
-    # WireGuard: ONLY port 880 bypasses Russian TSPU WireGuard blocks
-    if proto == "wireguard" or raw.startswith("wireguard://"):
-        return port == 880 or ":880" in raw
+    if proto == "wireguard":
+        return True
     
-    # 1. Enforce clean, standard anti-TSPU ports (cellular TSPU drops high random ports >1024)
-    if port not in CLEAN_PORTS:
-        return False
-
+    raw = node.get("raw", "")
     sni = (node.get("sni") or "").lower()
     host = (node.get("host") or "").lower()
-    net = (node.get("net") or "").lower()
     raw_l = raw.lower()
     
-    # 2. Unconditionally reject any disposable / mass-spam / blocked domains
+    # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU in Russia
+    for bad in ("workers.dev", "pages.dev"):
+        if bad in raw_l or bad in sni or bad in host:
+            return False
+            
+    # 2. Blocked / vulnerable protocols in Russia
+    if proto in ("ss", "shadowsocks"):
+        return False
+    if proto in ("vless", "vmess") and "security=none" in raw_l:
+        return False
+        
+    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
+    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
+    
+    # 3. Reality & XHTTP bypass TSPU
+    if is_reality or is_xhttp:
+        return True
+        
+    # 4. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
     for bad in DISPOSABLE_VPN_DOMAINS:
         if bad in raw_l or bad in sni or bad in host:
             return False
             
-    # 3. Blocked / vulnerable protocols & transports in Russia
-    if proto in ("ss", "shadowsocks"):
-        return False
-    if proto in ("vless", "vmess") and ("security=none" in raw_l or node.get("sec") == "none"):
-        return False
-    if net == "xhttp":
-        return False
-    if "nemnogogo.com" in sni or "nemnogogo.com" in host or "baklajann" in sni:
-        return False
-
-    # 4. Russian Domestic nodes (Timeweb, Selectel, VK Cloud, DDoS-Guard, Smart Ape, AEZA, Cloud.ru)
-    is_wl = node.get("is_wl_hosting", False)
-    country = (node.get("country") or "").upper()
-    if is_wl or country == "RU":
-        return True
-
-    # 5. Purpose-built Russian bypass relays (Videodolina, Videobereg, Mediaroshcha)
-    if any(r in host or r in sni for r in PROVEN_RELAYS):
-        return True
-
-    # 6. Foreign Reality: ONLY on 443 or 8443 with FOREIGN CORPORATE SNIs
-    # Cross-border Russian SNIs (*.ru, ads.x5.ru, video.yandex.ru) on foreign VPS are actively blocked by TSPU!
-    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
-    if is_reality and port in (443, 8443):
-        if any(s in sni for s in FOREIGN_SAFE_SNIS):
-            return True
-
-    return False
+    return True
 
 def generate_subscriptions(alive_nodes: list[dict]):
     # Enforce strict verification invariant: only deeply verified nodes (passing real Xray HTTP 204 traffic)
@@ -175,12 +146,12 @@ def generate_subscriptions(alive_nodes: list[dict]):
         
         mix_nodes.append(node)
             
-        # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY, or clean Reality)
-        if (is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) or is_reality:
+        # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
+        if (is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) and port in [443, 80, 53]:
             tg_nodes.append(node)
 
-        # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Reality)
-        if (proto == "hy2") or (proto in ["vless", "trojan"] and (is_reality or is_wl_host)):
+        # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Reality on 443/UDP)
+        if (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (is_reality or is_wl_host)):
             discord_nodes.append(node)
 
         if proto in proto_nodes:
@@ -354,7 +325,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     # Generate Cloudflare WARP+ WireGuard ultra-fast pool
     try:
-        warp_profiles, warp_uris = generate_warp_pool(15, SUB_DIR)
+        warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR)
         print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP+ WireGuard nodes (port 880)")
     except Exception as e:
         print(f"[-] WARP Generator error: {e}")
@@ -363,13 +334,13 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Inject ultra-low-latency WARP+ WireGuard nodes at the top of subscriptions
     # For Discord, WireGuard is the #1 protocol (Layer-3 UDP encapsulation, WebRTC connects in <1s)
     if warp_uris:
-        mix_uris = warp_uris[:8] + mix_uris
-        bs_uris = warp_uris[:6] + bs_uris
-        fast_uris = warp_uris[:8] + fast_uris
-        tg_uris = warp_uris[:6] + tg_uris
+        mix_uris = warp_uris[:5] + mix_uris
+        bs_uris = warp_uris[:4] + bs_uris
+        fast_uris = warp_uris[:5] + fast_uris
+        tg_uris = warp_uris[:3] + tg_uris
 
         discord_warp = []
-        for i, w in enumerate(warp_uris[:8], 1):
+        for i, w in enumerate(warp_uris[:5], 1):
             w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | WireGuard WARP+ (880) | ⚡45ms', w)
             discord_warp.append(w_disc)
         discord_uris = discord_warp + discord_uris

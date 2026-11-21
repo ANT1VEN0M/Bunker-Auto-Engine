@@ -6,7 +6,7 @@ from .scraper import scrape_all_sources
 from .parser_utils import parse_config, deduplicate_configs
 from .checker import check_all_nodes
 from .xray_checker import deep_check_nodes
-from .generator import generate_subscriptions, is_russia_safe
+from .generator import generate_subscriptions
 from .geo import init_geo
 
 logging.basicConfig(
@@ -16,25 +16,25 @@ logging.basicConfig(
 )
 
 def select_balanced_nodes(unique_configs: list[dict], max_total: int = 1500) -> list[dict]:
-    # Prioritize Proven Russia-Safe nodes (matching PROVEN_RUSSIA_SNIS, Russian Hostings, or RU domains)
+    # Prioritize anti-censorship protocols for Russia (VLESS Reality, Trojan, Hysteria2)
+    # Deprioritize plain Shadowsocks as it is blocked by Russian TSPU
     def node_priority(cfg):
-        is_safe = is_russia_safe(cfg)
         proto = cfg.get("proto", "")
         port = cfg.get("port", 0)
         
-        # Priority 0: Proven Russia-Safe on 443 / 53
-        if is_safe and port in (443, 53):
-            return 0
-        # Priority 1: Proven Russia-Safe on other ports
-        if is_safe:
-            return 1
-        # Priority 2: VLESS Reality on 443
+        # Priority 0: VLESS Reality / TLS on 443
         if proto == "vless" and port == 443:
+            return 0
+        # Priority 1: Hysteria 2 / Trojan on 443
+        if proto in ("hy2", "trojan") and port == 443:
+            return 1
+        # Priority 2: VLESS / Trojan / Hy2 on standard/TLS ports (53, 8443, 2053, 2083)
+        if proto in ("vless", "trojan", "hy2") and port in (53, 8443, 2053, 2083, 2087, 2096):
             return 2
-        # Priority 3: Hysteria 2 / Trojan
-        if proto in ("hy2", "trojan"):
+        # Priority 3: Other VLESS / Trojan / VMess
+        if proto in ("vless", "trojan", "vmess"):
             return 3
-        # Priority 4: Other
+        # Priority 4: Plain Shadowsocks (lowest priority)
         return 4
 
     sorted_configs = sorted(unique_configs, key=node_priority)
@@ -64,34 +64,10 @@ def run_pipeline():
 
     # 4. Initialize GeoIP database
     init_geo()
-    from .geo import get_asn_info, is_russian_wl_hosting, get_country_code
-    import concurrent.futures
 
-    def annotate(c):
-        h = c.get("host")
-        if h:
-            try:
-                asn, org = get_asn_info(h)
-                is_wl, wl_name = is_russian_wl_hosting(h, asn)
-                c["asn"] = asn
-                c["org"] = org
-                c["is_wl_hosting"] = is_wl
-                c["wl_hosting"] = wl_name
-                c["country"] = get_country_code(h)
-            except Exception:
-                pass
-        return c
-
-    logging.info(f"Enriching {len(unique)} unique nodes with Russian domestic hosting metadata...")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=60) as executor:
-        unique = list(executor.map(annotate, unique))
-
-    # 5. Filter strictly Russia-Safe candidates (Russian Domestic hostings, clean ports 443/8043/8443, Videodolina, clean Reality)
-    safe_unique = [c for c in unique if is_russia_safe(c)]
-    logging.info(f"Pre-filtered {len(unique)} unique nodes down to {len(safe_unique)} Russia-Safe clean-port candidates.")
-
-    nodes_to_check = select_balanced_nodes(safe_unique if safe_unique else unique, max_total=1500)
-    logging.info(f"Selected {len(nodes_to_check)} Russia-Safe nodes for health check.")
+    # 5. Balanced node selection (prioritizing 443 & 53, balancing VLESS, VMess, Trojan, SS, HY2)
+    nodes_to_check = select_balanced_nodes(unique, max_total=3000)
+    logging.info(f"Selected {len(nodes_to_check)} balanced nodes for health check.")
 
     # 6. Pre-Filter Health & Ping (TCP level)
     alive = check_all_nodes(nodes_to_check, max_workers=140, timeout=2.5)
@@ -132,12 +108,6 @@ def run_pipeline():
         if proto == "vmess":
             return 7
         return 8
-
-    # Pre-filter to Russia-Safe candidates (Russian Hostings, Clean Reality, WARP)
-    russia_safe_alive = [n for n in alive if is_russia_safe(n)]
-    logging.info(f"Russia-Safe candidate filter: {len(alive)} alive -> {len(russia_safe_alive)} anti-TSPU candidates.")
-    if russia_safe_alive:
-        alive = russia_safe_alive
 
     alive.sort(key=deep_candidate_priority)
     logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep Xray testing.")

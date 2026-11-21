@@ -2,8 +2,8 @@ name: Bunker Auto-Engine Subscriptions
 
 on:
   schedule:
-    # Runs every hour at minute 0 (00:00, 01:00, 02:00, ... UTC)
-    - cron: '0 * * * *'
+    # Runs every hour at minute 15 (avoiding top-of-hour congestion on GitHub Actions)
+    - cron: '15 * * * *'
   workflow_dispatch:
 
 permissions:
