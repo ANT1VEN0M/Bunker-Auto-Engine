@@ -62,15 +62,17 @@ def fetch_mtproto_proxies() -> list[str]:
 DISPOSABLE_VPN_DOMAINS = (
     ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
     ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
-    "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com"
+    "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com",
+    ".cloud", ".mom", ".uk", "fade.cloud", "my-fade.cloud", "fade.mom", "ferrin.uk"
 )
 
-CLEAN_CAMOUFLAGE_SNIS = (
-    "google.", "cloudflare.", "yahoo.", "microsoft.", "apple.", "amazon.", "samsung.", "intel.", "bing.",
-    "speedtest.", "fast.com", "steamstatic.", "steamcommunity.", "playstation.", "nvidia.", "amd.",
-    "cdnguard.", "static-edge.", "mother-earth.", "neverspy.", "videodolina.", "mediaroshcha.", "mediatropa.",
-    "setevoypriliv.", "videobereg.", "pinemetrics.", "static.gcore.", "rbc.ru", "wb.ru", "yandex.", "mail.ru",
-    "vk.com", "okcdn.", "habr.com", "deepl.com", "udemy.com"
+PROVEN_RUSSIA_SNIS = (
+    "videodolina.", "videobereg.", "mediaroshcha.", "mediatropa.", "setevoypriliv.",
+    "steamstatic.", "steamcommunity.", "rbc.ru", "wb.ru", "vk.com", "okcdn.", "yandex.",
+    "nvidia.", "pinemetrics.", "telemetryapi.", "opendns.stream", "champmoney.", "olvento.",
+    "nemnogogo.com", "dualarrow.net", "ddnsfree.com", "freeddns.org", "pc-club.app", "questlobby.com",
+    "cloudehouse24.ru", "sbrf-cdn", "gosuslugi.", "mos.ru", "tinkoff.", "sberbank.", "mail.ru",
+    "2ch.hk", "habr.com", "deepl.com"
 )
 
 def is_russia_safe(node: dict) -> bool:
@@ -98,12 +100,15 @@ def is_russia_safe(node: dict) -> bool:
     is_wl = node.get("is_wl_hosting", False)
     country = (node.get("country") or "").upper()
     if is_wl or country == "RU" or host.endswith(".ru") or sni.endswith(".ru") or host.endswith(".su") or sni.endswith(".su"):
-        return True
+        # Even for Russian domestic, make sure SNI is not a blocked disposable domain
+        if not any(bad in sni for bad in (".cloud", ".mom", ".uk", ".click", ".website")):
+            return True
+        return False
         
-    # 4. Reality nodes with clean, respected camouflage SNI
+    # 4. Reality nodes with proven Russian Anti-DPI camouflage SNI
     is_reality = "security=reality" in raw_l or node.get("is_reality", False)
     if is_reality:
-        if any(c in sni for c in CLEAN_CAMOUFLAGE_SNIS):
+        if any(c in sni for c in PROVEN_RUSSIA_SNIS) or sni.endswith(".ru") or sni.endswith(".su"):
             return True
         return False
 

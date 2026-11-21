@@ -16,25 +16,25 @@ logging.basicConfig(
 )
 
 def select_balanced_nodes(unique_configs: list[dict], max_total: int = 1500) -> list[dict]:
-    # Prioritize anti-censorship protocols for Russia (VLESS Reality, Trojan, Hysteria2)
-    # Deprioritize plain Shadowsocks as it is blocked by Russian TSPU
+    # Prioritize Proven Russia-Safe nodes (matching PROVEN_RUSSIA_SNIS, Russian Hostings, or RU domains)
     def node_priority(cfg):
+        is_safe = is_russia_safe(cfg)
         proto = cfg.get("proto", "")
         port = cfg.get("port", 0)
         
-        # Priority 0: VLESS Reality / TLS on 443
-        if proto == "vless" and port == 443:
+        # Priority 0: Proven Russia-Safe on 443 / 53
+        if is_safe and port in (443, 53):
             return 0
-        # Priority 1: Hysteria 2 / Trojan on 443
-        if proto in ("hy2", "trojan") and port == 443:
+        # Priority 1: Proven Russia-Safe on other ports
+        if is_safe:
             return 1
-        # Priority 2: VLESS / Trojan / Hy2 on standard/TLS ports (53, 8443, 2053, 2083)
-        if proto in ("vless", "trojan", "hy2") and port in (53, 8443, 2053, 2083, 2087, 2096):
+        # Priority 2: VLESS Reality on 443
+        if proto == "vless" and port == 443:
             return 2
-        # Priority 3: Other VLESS / Trojan / VMess
-        if proto in ("vless", "trojan", "vmess"):
+        # Priority 3: Hysteria 2 / Trojan
+        if proto in ("hy2", "trojan"):
             return 3
-        # Priority 4: Plain Shadowsocks (lowest priority)
+        # Priority 4: Other
         return 4
 
     sorted_configs = sorted(unique_configs, key=node_priority)

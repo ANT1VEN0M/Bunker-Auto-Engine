@@ -955,7 +955,8 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         DISPOSABLE_DOMAINS = (
             ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
             ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
-            "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com"
+            "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com",
+            ".cloud", ".mom", ".uk", "fade.cloud", "my-fade.cloud", "fade.mom", "ferrin.uk"
         )
         for bad in DISPOSABLE_DOMAINS:
             if bad in host_l or bad in sni_l or (bad + "/") in raw_l or (bad + ":") in raw_l or (bad + "?") in raw_l or (bad + "&") in raw_l:
@@ -965,17 +966,20 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         if proto in ("vless", "vmess") and node.sec == "none":
             return None
 
-        # 3. For Reality nodes, verify camouflage SNI is a clean, reputable domain
+        # 3. For Reality nodes, verify camouflage SNI is a proven Russian anti-DPI domain
         if node.sec == "reality":
-            CLEAN_CAMOUFLAGE_SNIS = (
-                "google.", "cloudflare.", "yahoo.", "microsoft.", "apple.", "amazon.", "samsung.", "intel.", "bing.",
-                "speedtest.", "fast.com", "steamstatic.", "steamcommunity.", "playstation.", "nvidia.", "amd.",
-                "cdnguard.", "static-edge.", "mother-earth.", "neverspy.", "videodolina.", "mediaroshcha.", "mediatropa.",
-                "setevoypriliv.", "videobereg.", "pinemetrics.", "static.gcore.", "rbc.ru", "wb.ru", "yandex.", "mail.ru",
-                "vk.com", "okcdn.", "habr.com", "deepl.com", "udemy.com"
+            PROVEN_RUSSIA_SNIS = (
+                "videodolina.", "videobereg.", "mediaroshcha.", "mediatropa.", "setevoypriliv.",
+                "steamstatic.", "steamcommunity.", "rbc.ru", "wb.ru", "vk.com", "okcdn.", "yandex.",
+                "nvidia.", "pinemetrics.", "telemetryapi.", "opendns.stream", "champmoney.", "olvento.",
+                "nemnogogo.com", "dualarrow.net", "ddnsfree.com", "freeddns.org", "pc-club.app", "questlobby.com",
+                "cloudehouse24.ru", "sbrf-cdn", "gosuslugi.", "mos.ru", "tinkoff.", "sberbank.", "mail.ru",
+                "2ch.hk", "habr.com", "deepl.com"
             )
-            if not any(c in sni_l for c in CLEAN_CAMOUFLAGE_SNIS):
-                return None
+            if not any(c in sni_l for c in PROVEN_RUSSIA_SNIS):
+                # Also allow clean Russian domains
+                if not (sni_l.endswith(".ru") or sni_l.endswith(".su")):
+                    return None
 
         canon_uri = build_canonical_uri(node, remark)
         fp = node_fingerprint(node, "nekobox")

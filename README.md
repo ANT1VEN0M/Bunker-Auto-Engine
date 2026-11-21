@@ -16,15 +16,15 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 09:01:31 МСК` (`2026-11-21 06:01:31 UTC`)
-- 🟢 **Всего активных проверенных нод:** `102`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 09:22:27 МСК` (`2026-11-21 06:22:27 UTC`)
+- 🟢 **Всего активных проверенных нод:** `58`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `80`
-- 🌍 **Мировой Микс (YouTube / DPI):** `107`
-- 🤍 **Белый список (RU / BY):** `96`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `80`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `37`
+- 🌍 **Мировой Микс (YouTube / DPI):** `63`
+- 🤍 **Белый список (RU / BY):** `44`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `37`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `55`
-- 💬 **Пожарный канал для Telegram:** `52`
+- 💬 **Пожарный канал для Telegram:** `23`
 
 ---
 
@@ -103,8 +103,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 - [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=1.arizo.org&port=443&secret=ee1603010200010001fc030386e24c3add6d656469612e737465616d706f77657265642e636f6d)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
 
 
 ---
