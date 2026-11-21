@@ -131,7 +131,19 @@ SOURCES = [
     # 40. Roskompozor Gitlab Mirror Blacklist
     "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/bl",
     # 41. Whoahaow Bypass All Matrix
-    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt"
+    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
+    # 42. KFWL / Clippyx Private Matrix (60 nodes)
+    "https://sub.clippyx.net:8443/s/NzAyNjc3MDg5OTo0OjNlMjVmZGM5ZmY2MDA3Njg",
+    # 43. KFWL / Lunavex Private Sub (305 nodes)
+    "https://p.kfwl.lol/https://lunavex.net/sub/Owo3mNLH0sxT3bJm",
+    # 44. KFWL / StrelaVPN Dedicated RU Feed (34 nodes)
+    "https://sub.strelavpn.ru/QN4FMVLyxdKtTVTJ",
+    # 45. KFWL / ROG-SUB UK High Speed Relay (2 nodes)
+    "https://rog-sub.co.uk/khQmbBC8kM8TTn_S",
+    # 46. KFWL / AleqseiVPN Dedicated Feed (18 nodes)
+    "https://www.aleqseivpn.site/sub/mLzmgeLbBCYlI0jfh0HgWA",
+    # 47. KFWL / BlackVPN Torrent & Fast Relay (70 nodes)
+    "https://p.kfwl.lol/no/https://sub.blackvpn.io/8Z502NguYbbkhxoL"
 ]
 
 def clean_source_url(url: str) -> str:
