@@ -90,8 +90,6 @@ SOURCES = [
     "https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/refs/heads/main/Best-Results/proxies.txt",
     # 20. NiREvil Reality & VLESS Matrix
     "https://raw.githubusercontent.com/NiREvil/vless/refs/heads/main/sub/SSTime",
-    # 21. AeryxVPN Mos.ru Unblockable Russian GitLab Mirror
-    "https://hub.mos.ru/cheesyx/aeryx-mirror/raw/main/mirror.json",
     # 22. AeryxVPN Pozor Bond Direct Feed
     "https://pozor.bond/sub/aeryxvpn",
     # 29. Kort0881 Verified Private Poster - Russia Nodes
@@ -114,10 +112,6 @@ SOURCES = [
     "https://github.com/theakres/VPN/raw/main/all",
     # 38. Zieng2 VLESS Universal Whitelist
     "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt",
-    # 39. Roskompozor Gitlab Mirror Whitelist
-    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/wl",
-    # 40. Roskompozor Gitlab Mirror Blacklist
-    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/bl",
     # 41. Whoahaow Bypass All Matrix
     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
     # 42. KFWL / Clippyx Private Matrix (60 nodes)
