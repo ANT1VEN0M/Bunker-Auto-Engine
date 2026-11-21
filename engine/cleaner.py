@@ -3,6 +3,10 @@
 Adapted and optimized for Bunker-Auto-Engine & BunkerVPN.
 Implements Xray-core 26 compatibility, deep URI repairing,
 canonical normalization, honeypot/junk filtering, and Blake2b fingerprinting.
+
+Credits & Acknowledgments:
+Special thanks to Nikita (https://t.me/urlsources / RKPchannel) for Xray 26 sanitization
+logic, ML-KEM-768 validation, and exception hosting lists.
 """
 
 import base64

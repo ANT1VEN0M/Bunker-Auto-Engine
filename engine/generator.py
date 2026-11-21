@@ -447,6 +447,12 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - 💬 **Чат сообщества:** [@BUNKER_K0TA](https://t.me/BUNKER_K0TA)
 - 🤖 **Telegram Бот:** [@BunkerCatOSBot](https://t.me/BunkerCatOSBot)
 - 👑 **Создатель:** [@k0tlux](https://t.me/k0tlux)
+
+---
+
+## 🤝 Благодарности & Источники вдохновения (Credits)
+- 📡 **Никитка ([RKPchannel / URLSources](https://t.me/urlsources))** — за наработки по чистке конфигов Xray 26, двухпроходному Happ-спуфингу и базу 253 RU-хостингов.
+- 🐈‍⬛ **Сообщество Бункера Кота ([@BUNKER_KOTA](https://t.me/BUNKER_KOTA))**
 """
     readme_path = os.path.join(BASE_DIR, "README.md")
     with open(readme_path, "w", encoding="utf-8") as f:

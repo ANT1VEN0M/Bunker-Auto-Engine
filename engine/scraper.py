@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""Bunker Multi-Source Scraper.
+Aggregates VPN configurations across 40+ trusted sources and Telegram feeds.
+Features dual-pass Happ device spoofing, Clash YAML ingestion, and GitHub raw auto-fixer.
+
+Credits & Acknowledgments:
+Special thanks to Nikita (https://t.me/urlsources / RKPchannel) for Happ device spoofing
+architecture, commit-hash auto-fixer logic, and curated Russian hosting lists.
+"""
+
 import urllib.request
 import urllib.parse
 import json
