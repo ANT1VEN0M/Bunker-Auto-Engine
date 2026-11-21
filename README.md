@@ -1,15 +1,14 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **49 проверенных источников** (включая зеркала AeryxVPN, незаблокируемый GitLab `hub.mos.ru`, глобальный агрегатор **mehdirzfx** на 1125+ фидов, KFWL, Doroguuuuu XHTTP и 171 проверенный Telegram-канал), глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
 
 ---
 
-### 🌐 Портал подключения в 1 клик & Telegram Mini App (TMA)
-Для быстрого подключения без ручного ввода ссылок используйте официальный веб-портал или запускайте его прямо внутри Telegram как Mini App:  
+### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac)
+Для быстрого подключения без ручного ввода ссылок используйте наш официальный портал:  
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
-* 📲 **Telegram Mini App (TMA):** нативный интерфейс прямо в Telegram с тактильной отдачей (Haptics), динамическим выбором конфигураций (*Микс*, *Discord Voice*, *Белый список*, *Завод*, *Турбо*, *Telegram SOS*), встроенным **замером пинга (Live Ping Meter)**, кнопкой **аварийного MTProto прокси**, **инспектором-конвертером любых форматов** и **QR-кодами** для сканирования камерой.
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
@@ -17,8 +16,8 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 00:20:48 МСК` (`2026-11-20 21:20:48 UTC`)
-- 🟢 **Всего активных проверенных нод:** `468`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 07:04:22 МСК` (`2026-11-21 04:04:22 UTC`)
+- 🟢 **Всего активных проверенных нод:** `1590`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `80`
 - 🌍 **Мировой Микс (YouTube / DPI):** `255`
@@ -103,9 +102,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
 - [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
 
 
 ---
@@ -117,11 +116,6 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Trojan:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/trojan_b64.txt`
 - **Shadowsocks:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/ss_b64.txt`
 - **Hysteria 2:** `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/protocols/hy2_b64.txt`
-- **NapsternetV & NPV Tunnel:** встроенный автоматический декодер файлов `.npvt`, `.npvs`, токенов `npvs1:` и JSON outbounds в чистый VLESS Reality.
-- **Dark Tunnel:** поддержка загрузки и расшифровки файлов `.dark`, `.dt` и протокола `darktunnel://` (AES-GCM PBKDF2) в VLESS/Trojan.
-- **OpenVPN:** парсер файлов `.ovpn` и генератор кроссплатформенных ссылок `ovpn://`.
-- **WDTT & qWDTT:** парсинг и валидация ссылок `wdtt://` (Base64 JSON и Colon) и `qwdtt://` для WebRTC звонков VKontakte.
-- **Happ Deep-Links:** автоматический встроенный RSA PKCS#1 v1.5 дешифратор для токенов подписок `happ://crypt`, `crypt2`, `crypt3`, `crypt4`.
 
 ---
 
@@ -138,15 +132,6 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 3. Нажми `+`, вставь ссылку и сохрани.
 4. В меню выбери **«Обновить подписку»**.
 
-### 📡 Настройка на роутере (Keenetic & OpenWrt):
-- **Keenetic (WireGuard порт 880):**
-  1. Скачайте готовый `.conf` файл: `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/keenetic_warp880.conf`
-  2. В панели роутера (192.168.1.1): **Сетевые правила** ➔ **Интернет-подключения** ➔ **Другие подключения** ➔ **WireGuard** ➔ **Загрузить из файла**.
-  3. В **Приоритетах подключений** распределите свои Smart TV, ПК и консоли в политику WireGuard. YouTube 4K и Discord будут работать на всех домашних устройствах без VPN-клиентов!
-- **OpenWrt (Passwall / OpenClash / v2rayA):**
-  1. Скопируйте ссылку на подписку: `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt`
-  2. Добавьте её в раздел «Подписки» плагина с авто-обновлением раз в 12 часов.
-
 ---
 
 ## 👑 Сообщество Бункера Кота
@@ -160,4 +145,3 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ## 🤝 Благодарности & Источники вдохновения (Credits)
 - 📡 **Никитка ([RKPchannel / URLSources](https://t.me/urlsources))** — за наработки по чистке конфигов Xray 26, двухпроходному Happ-спуфингу и базу 253 RU-хостингов.
 - 🐈‍⬛ **Сообщество Бункера Кота ([@BUNKER_KOTA](https://t.me/BUNKER_KOTA))**
-
