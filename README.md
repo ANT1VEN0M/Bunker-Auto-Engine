@@ -16,15 +16,15 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 10:24:51 МСК` (`2026-11-21 07:24:51 UTC`)
-- 🟢 **Всего активных проверенных нод:** `15`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 15:14:33 МСК` (`2026-11-21 12:14:33 UTC`)
+- 🟢 **Всего активных проверенных нод:** `31`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `21`
-- 🌍 **Мировой Микс (YouTube / DPI):** `21`
-- 🤍 **Белый список (RU / BY):** `21`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `14`
-- ⚡ **Турбо-серверы (Минимальный пинг):** `21`
-- 💬 **Пожарный канал для Telegram:** `21`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `35`
+- 🌍 **Мировой Микс (YouTube / DPI):** `37`
+- 🤍 **Белый список (RU / BY):** `37`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `30`
+- ⚡ **Турбо-серверы (Минимальный пинг):** `37`
+- 💬 **Пожарный канал для Telegram:** `35`
 
 ---
 
@@ -102,9 +102,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.123&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=2.27.12.116&port=443&secret=ee19130c695cf699d93f5a31ecf380d4426d742e736b6f746f62617a2e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
 
 
 ---
