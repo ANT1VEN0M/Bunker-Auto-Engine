@@ -44,7 +44,7 @@ jobs:
             echo "No subscription updates found. Skipping commit."
           else
             TIMESTAMP=$(date -u +'%Y%m%d%H%M')
-            TAG="v1.1.${TIMESTAMP}"
+            TAG="v1.2.${TIMESTAMP}"
             git commit -m "🚀 Auto-update Bunker subscriptions [$(date -u +'%Y-%m-%d %H:%M:%S UTC')] [skip ci]"
             git tag "$TAG"
             git push origin main --tags
