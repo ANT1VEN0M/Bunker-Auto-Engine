@@ -7,7 +7,7 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 from .geo import get_flag_emoji
 from .parser_utils import build_branded_uri
-from .warp_generator import generate_warp_pool
+from .warp_generator import generate_warp_pool, build_amnezia_conf
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SUB_DIR = os.path.join(BASE_DIR, "sub")
@@ -356,22 +356,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Generate router WireGuard config (Keenetic / OpenWrt / MikroTik)
     if warp_profiles:
         p0 = warp_profiles[0]
-        keenetic_conf = f"""[Interface]
-# Bunker VPN — WireGuard для Keenetic / OpenWrt / MikroTik
-# Порт 880 обходит любые блокировки ТСПУ РКН
-PrivateKey = {p0['private_key']}
-Address = {p0['local_address']}
-DNS = 1.1.1.1, 77.88.8.8
-
-[Peer]
-PublicKey = {p0['public_key']}
-Endpoint = {p0['server']}:{p0['server_port']}
-AllowedIPs = 0.0.0.0/0, ::/0
-PersistentKeepalive = 25
-"""
-        keenetic_path = os.path.join(SUB_DIR, "keenetic_warp880.conf")
-        with open(keenetic_path, "w", encoding="utf-8") as f:
-            f.write(keenetic_conf)
+        awg_conf = build_amnezia_conf(p0)
+        for fname in ["amnezia_warp880.conf", "amnezia_warp.conf", "keenetic_warp880.conf"]:
+            with open(os.path.join(SUB_DIR, fname), "w", encoding="utf-8") as f:
+                f.write(awg_conf)
 
     # MTProto
     mtproto_links = fetch_mtproto_proxies()

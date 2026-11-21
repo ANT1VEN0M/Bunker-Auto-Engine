@@ -4,6 +4,7 @@ import base64
 import urllib.request
 import urllib.parse
 import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 CLOUDFLARE_ENDPOINTS = [
@@ -18,6 +19,23 @@ CLOUDFLARE_ENDPOINTS = [
     "188.114.99.1",
     "162.159.192.3"
 ]
+
+# Xray UDP noise finalmask to break TSPU / DPI handshake fingerprinting
+DEFAULT_FINALMASK_OBJ = {
+    "udp": [
+        {
+            "type": "noise",
+            "settings": {
+                "noise": [
+                    {"rand": "10-20", "delay": "10-16"}
+                ]
+            }
+        }
+    ]
+}
+DEFAULT_FINALMASK_STR = json.dumps(DEFAULT_FINALMASK_OBJ, separators=(',', ':'))
+DEFAULT_FINALMASK_PARAM = urllib.parse.quote(DEFAULT_FINALMASK_STR)
+
 
 def generate_single_warp_profile(server_ip: str, server_port: int = 880) -> dict | None:
     try:
@@ -81,6 +99,7 @@ def generate_single_warp_profile(server_ip: str, server_port: int = 880) -> dict
         print(f"Failed to generate WARP profile for {server_ip}: {e}")
         return None
 
+
 def build_wireguard_uri(profile: dict, remarks: str) -> str:
     encoded_priv = urllib.parse.quote(profile['private_key'], safe='')
     encoded_pub = urllib.parse.quote(profile['public_key'], safe='')
@@ -90,15 +109,46 @@ def build_wireguard_uri(profile: dict, remarks: str) -> str:
     return (
         f"wireguard://{encoded_priv}@{profile['server']}:{profile['server_port']}?"
         f"publickey={encoded_pub}&address={encoded_addr}&reserved={profile['reserved']}&"
-        f"mtu={profile.get('mtu', 1280)}&dns={profile.get('remote_dns', '1.1.1.1')}#{encoded_remarks}"
+        f"mtu={profile.get('mtu', 1280)}&dns={profile.get('remote_dns', '1.1.1.1')}&"
+        f"fm={DEFAULT_FINALMASK_PARAM}#{encoded_remarks}"
     )
 
-import time
+
+def build_amnezia_conf(profile: dict) -> str:
+    return f"""[Interface]
+# Bunker VPN — AmneziaWG для ПК (Windows/Linux/macOS), iOS, Android и роутеров (Keenetic / OpenWrt)
+# Порт 880 + CPS Signature Packet i1 (маскировка под DNS запрос icloud.com)
+Address = {profile['local_address']}
+PrivateKey = {profile['private_key']}
+DNS = {profile.get('remote_dns', '1.1.1.1, 77.88.8.8')}
+MTU = {profile.get('mtu', 1280)}
+
+# AmneziaWG обфускация против DPI ТСПУ
+Jc = 4
+Jmin = 40
+Jmax = 70
+S1 = 0
+S2 = 0
+H1 = 1
+H2 = 2
+H3 = 3
+H4 = 4
+
+# Сигнатурный пакет (CPS i1 - маскировка под DNS запрос icloud.com)
+I1 = <b 0x858000010001000000000669636c6f756403636f6d0000010001c00c000100010000105a00044d583737>
+
+[Peer]
+PublicKey = {profile['public_key']}
+Endpoint = {profile['server']}:{profile['server_port']}
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+"""
+
 
 def generate_warp_pool(count: int = 8, sub_dir: str = None) -> tuple[list[dict], list[str]]:
     """
-    Generates a pool of active Cloudflare WARP WireGuard accounts with rate-limit pacing,
-    saves sub/warp_pool.json and returns (profiles, uris).
+    Generates a pool of active Cloudflare WARP accounts with rate-limit pacing,
+    saves sub/warp_pool.json, AmneziaWG confs, and returns (profiles, uris).
     """
     endpoints = (CLOUDFLARE_ENDPOINTS * ((count // len(CLOUDFLARE_ENDPOINTS)) + 2))[:count]
     profiles = []
@@ -133,5 +183,13 @@ def generate_warp_pool(count: int = 8, sub_dir: str = None) -> tuple[list[dict],
         raw = "\n".join(uris)
         with open(b64_path, "w", encoding="utf-8") as f:
             f.write(base64.b64encode(raw.encode("utf-8")).decode("utf-8") + "\n")
+
+        # Save AmneziaWG configuration
+        if profiles:
+            p0 = profiles[0]
+            awg_content = build_amnezia_conf(p0)
+            for fname in ["amnezia_warp880.conf", "amnezia_warp.conf", "keenetic_warp880.conf"]:
+                with open(os.path.join(sub_dir, fname), "w", encoding="utf-8") as f:
+                    f.write(awg_content)
 
     return profiles, uris

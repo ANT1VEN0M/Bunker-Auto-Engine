@@ -1,78 +1,23 @@
 [
   {
-    "private_key": "YCWRu8vYaRaUtGsjR6lA/0/8CCd1yBomtcVP66CEw1s=",
+    "private_key": "cKe+X0uSdfxvKCbumRSCY27EWS49+u4mOIz5wdTXaGI=",
     "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
     "server": "162.159.192.1",
     "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:82ae:5311:16bc:2ba1:5c2f/128",
-    "reserved": "225,128,221",
-    "client_id": "4YDd",
+    "local_address": "172.16.0.2/32,2606:4700:110:8033:9113:a9ae:c9c0:9f1c/128",
+    "reserved": "221,48,143",
+    "client_id": "3TCP",
     "mtu": 1280,
     "remote_dns": "77.88.8.8,1.1.1.1"
   },
   {
-    "private_key": "GKHVWCAY4V3T5zmSWdszwI1cvCCFK3BEgAq8imzCVFk=",
+    "private_key": "0EqCQIFSPmG4e6KsXLohGtjyGPqojqVQoxkhJ6QAUVA=",
     "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
     "server": "162.159.193.1",
     "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:8421:6de1:1c9f:6fbf:129a/128",
-    "reserved": "198,4,163",
-    "client_id": "xgSj",
-    "mtu": 1280,
-    "remote_dns": "77.88.8.8,1.1.1.1"
-  },
-  {
-    "private_key": "6DEmvuykm2N3lTgcfZ+DK6yEIoDRruTi71+IZHJbink=",
-    "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-    "server": "162.159.195.1",
-    "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:850d:3d83:e8eb:f8fe:ba5f/128",
-    "reserved": "23,109,193",
-    "client_id": "F23B",
-    "mtu": 1280,
-    "remote_dns": "77.88.8.8,1.1.1.1"
-  },
-  {
-    "private_key": "qIlo36pK3tqZH53IEMhypEYm8DnmwRwaJWqciVbi0Ww=",
-    "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-    "server": "188.114.96.1",
-    "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:86c8:8d4c:573d:a3e5:3a8f/128",
-    "reserved": "239,143,191",
-    "client_id": "74+/",
-    "mtu": 1280,
-    "remote_dns": "77.88.8.8,1.1.1.1"
-  },
-  {
-    "private_key": "4IjMPelsWc7C3i7Hjm2BaJCED8zGSLhc68NohytlP1I=",
-    "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-    "server": "188.114.97.1",
-    "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:85d9:bde3:767b:7b6e:3368/128",
-    "reserved": "255,3,193",
-    "client_id": "/wPB",
-    "mtu": 1280,
-    "remote_dns": "77.88.8.8,1.1.1.1"
-  },
-  {
-    "private_key": "EMzUro1gRQwCgwOI/V26nxkYdFxZuQYikIOE7MCFC2M=",
-    "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-    "server": "162.159.192.2",
-    "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:8729:ac34:3683:22e4:4ab7/128",
-    "reserved": "16,142,142",
-    "client_id": "EI6O",
-    "mtu": 1280,
-    "remote_dns": "77.88.8.8,1.1.1.1"
-  },
-  {
-    "private_key": "4NXdZ6eF39/oGycS/xcO9OuwdiLCeOTFr/Szjzyq3Wo=",
-    "public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-    "server": "162.159.193.2",
-    "server_port": 880,
-    "local_address": "172.16.0.2/32,2606:4700:110:8600:708b:d5d4:739a:cd1a/128",
-    "reserved": "72,166,161",
-    "client_id": "SKah",
+    "local_address": "172.16.0.2/32,2606:4700:110:8c4a:e2fe:8c1d:55fb:ce78/128",
+    "reserved": "117,242,124",
+    "client_id": "dfJ8",
     "mtu": 1280,
     "remote_dns": "77.88.8.8,1.1.1.1"
   }
