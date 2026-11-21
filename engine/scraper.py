@@ -71,7 +71,19 @@ SOURCES = [
     # 27. AeryxVPN Mos.ru Unblockable Russian GitLab Mirror
     "https://hub.mos.ru/cheesyx/aeryx-mirror/raw/main/mirror.json",
     # 28. AeryxVPN Pozor Bond Direct Feed
-    "https://pozor.bond/sub/aeryxvpn"
+    "https://pozor.bond/sub/aeryxvpn",
+    # 29. Kort0881 Verified Private Poster - Russia Nodes
+    "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Russia_part1_sub.txt",
+    # 30. Kort0881 Verified Private Poster - Europe Nodes
+    "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Europe_part1_sub.txt",
+    # 31. Kort0881 Verified Private Poster - Asia Nodes
+    "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Asia_part1_sub.txt",
+    # 32. Kort0881 Verified Private Poster - Unknown Nodes
+    "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Unknown_part1_sub.txt",
+    # 33. Kort0881 Verified Private Poster - Other Nodes
+    "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Other_part1_sub.txt",
+    # 34. FastNodes Japan Dedicated Verified Feed
+    "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/countries/JP.txt"
 ]
 
 def parse_json_configs(content: str) -> list[str]:
