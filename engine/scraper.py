@@ -145,7 +145,9 @@ SOURCES = [
     # 47. KFWL / BlackVPN Torrent & Fast Relay (70 nodes)
     "https://p.kfwl.lol/no/https://sub.blackvpn.io/8Z502NguYbbkhxoL",
     # 48. Doroguuuuu XHTTP European Auto-Select Matrix (170 nodes)
-    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2Fb2JzaGksMTc5NTIzMTUyMAto0DeXMNnf/auto"
+    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2Fb2JzaGksMTc5NTIzMTUyMAto0DeXMNnf/auto",
+    # 49. Doroguuuuu / Happ Decrypted TM Auto Matrix (138 nodes)
+    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2FdG1tLDE3OTUyMzE3MTkfpFzdQ7T0u/auto"
 ]
 
 def clean_source_url(url: str) -> str:
@@ -616,7 +618,15 @@ def scrape_telegram_public_channels() -> list[str]:
                 for u in uris:
                     custom = extract_all_custom_protocols(u)
                     if custom:
-                        found.extend(custom)
+                        for item in custom:
+                            if item.startswith(("http://", "https://")):
+                                try:
+                                    sub_confs = fetch_single_source(item)
+                                    found.extend(sub_confs)
+                                except Exception:
+                                    pass
+                            else:
+                                found.append(item)
                     else:
                         found.append(u)
         except Exception:

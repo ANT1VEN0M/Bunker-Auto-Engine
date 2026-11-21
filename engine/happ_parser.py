@@ -115,13 +115,21 @@ def decrypt_happ_link(link_or_path: str) -> Optional[str]:
 # ============================================================================
 
 def swap_pairs_bytes(b: bytes) -> bytes:
-    out = bytearray(len(b))
-    for i in range(0, len(b) - 1, 2):
-        out[i] = b[i + 1]
-        out[i + 1] = b[i]
-    if len(b) % 2:
-        out[-1] = b[-1]
-    return bytes(out)
+    """Adjacent byte swap: 0<->1, 2<->3..."""
+    t = bytearray(b)
+    for i in range(0, len(t) - 1, 2):
+        t[i], t[i + 1] = t[i + 1], t[i]
+    return bytes(t)
+
+
+def block_pair_swap_bytes(b: bytes) -> bytes:
+    """4-byte block pair swap: ABCD -> CDAB."""
+    t = bytearray(b)
+    n = len(t) - len(t) % 4
+    for i in range(0, n, 4):
+        t[i], t[i + 2] = t[i + 2], t[i]
+        t[i + 1], t[i + 3] = t[i + 3], t[i + 1]
+    return bytes(t)
 
 
 _c5_keys_cache: Optional[Dict[str, Any]] = None
@@ -201,25 +209,41 @@ def _crypt5_body(body: bytes, key, salted: bool) -> Optional[str]:
 
 
 def decrypt_happ_crypt5(payload: str) -> Optional[str]:
-    """Decrypt happ://crypt5/ payload with marker routing."""
-    payload = payload.strip().rstrip('=')
-    n = swap_pairs_bytes(payload.encode('utf-8', errors='ignore'))
-    if len(n) < 8:
-        return None
-    marker = (n[:4] + n[-4:]).decode('latin-1', errors='ignore')
-    body = n[4:-4]
+    """Decrypt happ://crypt5/ payload with marker routing and candidate fallback."""
+    payload = payload.strip()
+    for pref in ('happ://crypt5/', 'crypt5/', 'happ://'):
+        if payload.startswith(pref):
+            payload = payload[len(pref):]
+            break
+    payload = payload.strip()
 
-    key = get_c5_key(marker)
-    if not key:
-        return None
+    base = payload.rstrip('=')
+    candidates = [base]
+    if len(base) > 10:
+        candidates.append(base[:-2])
+    if base != payload:
+        candidates.append(payload)
+    candidates = list(dict.fromkeys(candidates))
 
-    for salted in (False, True):
-        try:
-            res = _crypt5_body(body, key, salted)
-            if res:
-                return res
-        except Exception:
-            pass
+    for cand in candidates:
+        n = block_pair_swap_bytes(cand.encode('utf-8', errors='ignore'))
+        if len(n) < 8:
+            continue
+        marker = (n[:4] + n[-4:]).decode('latin-1', errors='ignore')
+        body = n[4:-4]
+
+        key = get_c5_key(marker)
+        if not key:
+            continue
+
+        salted_auto = len(body) > 12 and not (48 <= body[12] <= 57)
+        for salted in (salted_auto, not salted_auto):
+            try:
+                res = _crypt5_body(body, key, salted)
+                if res:
+                    return res
+            except Exception:
+                pass
     return None
 
 

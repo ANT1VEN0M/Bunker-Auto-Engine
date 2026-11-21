@@ -39,6 +39,22 @@ def fetch_mtproto_proxies() -> list[str]:
                     mtproto_links.append(l)
     except Exception:
         pass
+
+    # Enrich with verified low-latency SOCKS5 proxies from monosans/proxy-list
+    try:
+        url = "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies.json"
+        req = urllib.request.Request(url, headers={"User-Agent": "curl/7.88.1"})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            for p in data:
+                if p.get("protocol") == "socks5" and (p.get("timeout") or 99) < 1.0:
+                    ip = p.get("host")
+                    port = p.get("port")
+                    if ip and port:
+                        mtproto_links.append(f"tg://socks?server={ip}&port={port}")
+    except Exception:
+        pass
+
     return mtproto_links
 
 def generate_subscriptions(alive_nodes: list[dict]):
