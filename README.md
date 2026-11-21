@@ -16,15 +16,15 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 16:22:42 МСК` (`2026-11-21 13:22:42 UTC`)
-- 🟢 **Всего активных проверенных нод:** `185`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 23:13:10 МСК` (`2026-11-21 20:13:10 UTC`)
+- 🟢 **Всего активных проверенных нод:** `171`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `50`
-- 🌍 **Мировой Микс (YouTube / DPI):** `190`
-- 🤍 **Белый список (RU / BY):** `49`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `44`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `53`
+- 🌍 **Мировой Микс (YouTube / DPI):** `176`
+- 🤍 **Белый список (RU / BY):** `52`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `48`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `55`
-- 💬 **Пожарный канал для Telegram:** `38`
+- 💬 **Пожарный канал для Telegram:** `44`
 
 ---
 
@@ -102,67 +102,12 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
 
 
 ---
-
-
----
-
-## 📡 Настройка на домашних роутерах (Smart TV 4K, PlayStation, Xbox, вся сеть)
-
-Хотите, чтобы YouTube 4K, Discord и Instagram работали на телевизорах, приставках и всех домашних устройствах без установки VPN на каждый гаджет? Выберите ваш тип роутера:
-
-### 1. Роутеры Keenetic (2 лучших способа)
-* **Способ А (Самый стабильный и рекомендуемый — VLESS через Entware):**
-  1. Включите компонент **Entware** в настройках Keenetic (на флешку или во встроенную память).
-  2. Установите `sing-box` или `xray` (`opkg install sing-box`).
-  3. Вставьте ссылку на нашу общую подписку:  
-     `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt`  
-     Вся домашняя сеть полетит на скорости 100+ Мбит/с через VLESS Reality без головной боли с блокировками UDP!
-* **Способ Б (Через AmneziaWG в KeeneticOS 4.2+):**
-  1. Скачайте готовый файл конфигурации с защитой QUIC:  
-     👉 [amnezia_warp880.conf](https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/amnezia_warp880.conf) (или `keenetic_warp880.conf`).
-  2. В панели управления Keenetic перейдите: **Сетевые правила** ➔ **Интернет-подключения** ➔ **Другие подключения** ➔ **WireGuard / AmneziaWG** ➔ **Загрузить из файла**.
-  3. Включите подключение и в **Приоритетах подключений** перетащите Smart TV или ПК в созданную политику.
-
-### 2. Роутеры OpenWrt (Passwall / OpenClash / v2rayA)
-1. Откройте веб-интерфейс LuCI ➔ плагин **Passwall** или **OpenClash**.
-2. В разделе **Подписки** добавьте URL:  
-   `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt`
-3. Включите автообновление раз в 12 часов и наслаждайтесь свободным интернетом.
-
-### 3. ПК, одноплатники (x86, Raspberry Pi, Orange Pi)
-Для x86-роутеров на базе OpenWrt или Linux: идеальный вариант — ядро **Xray** или **Sing-box** с автоматической подгрузкой подписки `mix_b64.txt`.
-
----
-
-## 🛡️ AmneziaWG + Cloudflare WARP+ (Порт 880 + QUIC Initial маскировка)
-
-Стандартный WireGuard в РФ глушится ТСПУ РКН по сигнатуре первого пакета. Чтобы решить эту проблему раз и навсегда:
-* Наш туннель выведен на **порт 880** (Cloudflare Edge).
-* Внедрена обфускация **AmneziaWG**: `Jc=4`, `Jmin=40`, `Jmax=70`.
-* Внедрен сигнатурный пакет **CPS `I1` (RFC 9001 QUIC v1 Initial)**: маскирует первый пакет хэндшейка под легитимный браузерный HTTP/3 запрос к `vk.com`, пробивая мобильный и домашний ТСПУ!
-* Для генерации индивидуальных QUIC-пакетов под собственные домены белого списка используйте генератор:  
-  👉 [mini_quic_generator (sageptr)](https://sageptr.github.io/mini_quic_generator/)
-
-🔗 **Скачать готовый .conf для AmneziaVPN (Windows / Mac / Linux / iOS / Android):**  
-👉 `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/amnezia_warp880.conf`
-
----
-
-## 📱 Лайфхаки для мобильного интернета (МТС, Мегафон, Билайн, Т2)
-
-Если дома на Wi-Fi всё летает, а на сотовой связи отваливается:
-1. **На сотовой связи переключайтесь на вкладку «Белый список»:**  
-   Там собраны серверы в российских дата-центрах (Selectel, Timeweb, VK Cloud). Для сотовых вышек этот трафик неотличим от обычных российских сайтов, поэтому его не глушат.
-2. **Включите TLS Фрагментацию:**  
-   В приложении Karing (iOS), Bunker VPN или Hiddify включите в настройках TLS **Фрагментацию пакетов** (разбиение ClientHello на 2–3 части). Это ломает эвристику сотового DPI.
-3. **Отключите экономию батареи:**  
-   В настройках Android для приложения Bunker VPN установите: *Энергопотребление ➔ «Без ограничений»* и включите *«Постоянная VPN»*.
 
 ## 📦 Разделение по протоколам
 Для специфических клиентов или роутеров:
