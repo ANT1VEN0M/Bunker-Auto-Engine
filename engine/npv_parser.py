@@ -13,7 +13,8 @@ import logging
 import os
 import re
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 try:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -30,6 +31,14 @@ except ImportError:
         from whitebox_aes import NPVTDecrypter
     except ImportError:
         NPVTDecrypter = None
+
+try:
+    from engine.npvs_decrypter import NPVSDecrypter
+except ImportError:
+    try:
+        from npvs_decrypter import NPVSDecrypter
+    except ImportError:
+        NPVSDecrypter = None
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -408,17 +417,49 @@ def parse_napsternetv_item(item: dict) -> List[str]:
     return links
 
 
-def decode_napsternetv(content_or_link: str) -> List[str]:
+def decode_napsternetv(content_or_link: Union[str, bytes]) -> List[str]:
     """
     Main decoder for NapsternetV / NPV Tunnel configurations.
     Accepts:
+      - Raw binary / base64 NPVS Gen2 (.npvs / v5)
       - npv://BASE64
       - Raw JSON export (.npvt / .npvs)
       - Strings containing npvs1: sentinels
     """
-    content = content_or_link.strip()
-    if not content:
+    if isinstance(content_or_link, (bytes, bytearray)):
+        content = ""
+        # Check Gen2 NPVS binary first
+        if NPVSDecrypter and len(content_or_link) >= 4 and content_or_link[:4] == b"NPVS":
+            try:
+                tables_path = Path(__file__).resolve().parent / "npv_tables.json"
+                if tables_path.exists():
+                    with open(tables_path, "r", encoding="utf-8") as f:
+                        t_dict = json.load(f)
+                    dec = NPVSDecrypter(t_dict)
+                    npvs_res = dec.decrypt(content_or_link)
+                    if npvs_res and npvs_res.get("links"):
+                        return npvs_res["links"]
+            except Exception as e:
+                logging.debug("NPVSDecrypter binary error: %s", e)
+    else:
+        content = content_or_link.strip()
+    
+    if not content and not isinstance(content_or_link, (bytes, bytearray)):
         return []
+
+    # Check Gen2 NPVS string / base64
+    if NPVSDecrypter and ("NPVS" in content or "TlBWU" in content or "NPVO1" in content):
+        try:
+            tables_path = Path(__file__).resolve().parent / "npv_tables.json"
+            if tables_path.exists():
+                with open(tables_path, "r", encoding="utf-8") as f:
+                    t_dict = json.load(f)
+                dec = NPVSDecrypter(t_dict)
+                npvs_res = dec.decrypt(content)
+                if npvs_res and npvs_res.get("links"):
+                    return npvs_res["links"]
+        except Exception as e:
+            logging.debug("NPVSDecrypter text error: %s", e)
 
     # If URI starts with npv://
     if content.startswith("npv://"):
@@ -851,11 +892,19 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
         if dt_links:
             collected.extend(dt_links)
 
-    # 2. NapsternetV check (.npvt, .npvs, NPVT1, npv://)
-    if "NPVT1" in text or "NPVTSUB1" in text or "npv://" in text or "npvs1:" in text or "v2rayProfile" in text or "v2rayJson" in text:
+    # 2. NapsternetV check (.npvt, .npvs, NPVT1, npv://, binary NPVS)
+    if "NPVT1" in text or "NPVTSUB1" in text or "npv://" in text or "npvs1:" in text or "v2rayProfile" in text or "v2rayJson" in text or "NPVS" in text or "TlBWU" in text or "NPVO1" in text:
         npv_links = decode_napsternetv(text)
         if npv_links:
             collected.extend(npv_links)
+    elif os.path.exists(text) and (text.endswith(".npvs") or text.endswith(".npvt")):
+        try:
+            with open(text, "rb") as f_npv:
+                npv_links = decode_napsternetv(f_npv.read())
+                if npv_links:
+                    collected.extend(npv_links)
+        except Exception:
+            pass
 
     # 3. OpenVPN check
     if "ovpn://" in text or ("client" in text and "remote " in text and "dev " in text):
