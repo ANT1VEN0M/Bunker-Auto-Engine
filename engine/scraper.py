@@ -7,6 +7,7 @@ import concurrent.futures
 import re
 import random
 import yaml
+import html
 from pathlib import Path
 from engine.npv_parser import (
     extract_all_custom_protocols,
@@ -412,6 +413,14 @@ def extract_configs_from_content(content: str) -> list[str]:
     configs = []
     if not content:
         return configs
+
+    # 0. Check if wrapped in HTML pre tag (e.g. Yandex / Google Translate unblocker)
+    if "<pre" in content.lower():
+        m = re.search(r"<pre[^>]*>(.*?)</pre>", content, re.DOTALL | re.IGNORECASE)
+        if m:
+            unwrapped = html.unescape(m.group(1)).strip()
+            if any(proto in unwrapped for proto in ["://", "npvs1:", "DARKTUNNEL:", "proxies:"]) or len(unwrapped) > 30:
+                content = unwrapped
 
     # 1. Custom container check (NapsternetV, Dark Tunnel, OpenVPN)
     custom_uris = extract_all_custom_protocols(content)
