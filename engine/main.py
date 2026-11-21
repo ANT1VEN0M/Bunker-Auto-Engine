@@ -64,10 +64,34 @@ def run_pipeline():
 
     # 4. Initialize GeoIP database
     init_geo()
+    from .geo import get_asn_info, is_russian_wl_hosting, get_country_code
+    import concurrent.futures
 
-    # 5. Balanced node selection (prioritizing 443 & 53, balancing VLESS, VMess, Trojan, SS, HY2)
-    nodes_to_check = select_balanced_nodes(unique, max_total=3000)
-    logging.info(f"Selected {len(nodes_to_check)} balanced nodes for health check.")
+    def annotate(c):
+        h = c.get("host")
+        if h:
+            try:
+                asn, org = get_asn_info(h)
+                is_wl, wl_name = is_russian_wl_hosting(h, asn)
+                c["asn"] = asn
+                c["org"] = org
+                c["is_wl_hosting"] = is_wl
+                c["wl_hosting"] = wl_name
+                c["country"] = get_country_code(h)
+            except Exception:
+                pass
+        return c
+
+    logging.info(f"Enriching {len(unique)} unique nodes with Russian domestic hosting metadata...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=60) as executor:
+        unique = list(executor.map(annotate, unique))
+
+    # 5. Filter strictly Russia-Safe candidates (Russian Domestic hostings, clean ports 443/8043/8443, Videodolina, clean Reality)
+    safe_unique = [c for c in unique if is_russia_safe(c)]
+    logging.info(f"Pre-filtered {len(unique)} unique nodes down to {len(safe_unique)} Russia-Safe clean-port candidates.")
+
+    nodes_to_check = select_balanced_nodes(safe_unique if safe_unique else unique, max_total=1500)
+    logging.info(f"Selected {len(nodes_to_check)} Russia-Safe nodes for health check.")
 
     # 6. Pre-Filter Health & Ping (TCP level)
     alive = check_all_nodes(nodes_to_check, max_workers=140, timeout=2.5)
