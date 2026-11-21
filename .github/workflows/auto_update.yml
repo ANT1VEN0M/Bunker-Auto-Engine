@@ -41,8 +41,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "No subscription updates found. Skipping commit."
           else
+            TIMESTAMP=$(date -u +'%Y%m%d%H%M')
             git commit -m "🚀 Auto-update Bunker subscriptions [$(date -u +'%Y-%m-%d %H:%M:%S UTC')] [skip ci]"
-            git push origin main
+            git tag "v1.1.${TIMESTAMP}"
+            git push origin main --tags
           fi
 
       - name: Purge jsDelivr CDN Cache
@@ -50,11 +52,19 @@ jobs:
         run: |
           python -c "
           import urllib.request
+          # Invalidate repo-level resolution first
+          try:
+              urllib.request.urlopen('https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine', timeout=10)
+              urllib.request.urlopen('https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest', timeout=10)
+          except Exception as e:
+              print(f'Repo purge notice: {e}')
+
           files = ['mix_b64.txt', 'mix.txt', 'discord_b64.txt', 'discord.txt', 'bs_b64.txt', 'bs.txt', 'fast_b64.txt', 'fast.txt', 'tg_b64.txt', 'tg.txt', 'factory_b64.txt', 'factory.txt', 'warp_pool.json', 'warp.txt', 'warp_b64.txt']
           for f in files:
-              try:
-                  urllib.request.urlopen(f'https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/{f}', timeout=10)
-                  print(f'Purged {f}')
-              except Exception as e:
-                  print(f'Error purging {f}: {e}')
+              for v in ['latest', 'main']:
+                  try:
+                      urllib.request.urlopen(f'https://purge.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@{v}/sub/{f}', timeout=10)
+                      print(f'Purged {v}/{f}')
+                  except Exception as e:
+                      print(f'Error purging {v}/{f}: {e}')
           "
