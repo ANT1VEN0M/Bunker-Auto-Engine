@@ -135,7 +135,11 @@ SOURCES = [
     # 48. Doroguuuuu XHTTP European Auto-Select Matrix (170 nodes)
     "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2Fb2JzaGksMTc5NTIzMTUyMAto0DeXMNnf/auto",
     # 49. Doroguuuuu / Happ Decrypted TM Auto Matrix (138 nodes)
-    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2FdG1tLDE3OTUyMzE3MTkfpFzdQ7T0u/auto"
+    "https://doroguuuuu.ru/exec?url=http%3A%2F%2F144.31.5.17%3A5051%2Fecnnqn%2Fsub%2FdG1tLDE3OTUyMzE3MTkfpFzdQ7T0u/auto",
+    # 50. TowshanVpn Richman Google Drive Relay
+    "https://www.googleapis.com/drive/v3/files/1wzOHyEeyXAuyf62xCzcfpwOuAUAees2e?alt=media&key=AIzaSyABWhGqO0OH1RvKe-wzyZE1fNvT1kOreGA",
+    # 51. TowshanVpn Infinite Google Drive Relay
+    "https://www.googleapis.com/drive/v3/files/1JyH-hwc-ZT6t4DOMMvwv2Gr5IpuRDl4K?alt=media&key=AIzaSyCGymbPGMVcK_byQOhvOjAE4Dsk9nb54_E"
 ]
 
 def clean_source_url(url: str) -> str:
@@ -645,6 +649,17 @@ def scrape_all_sources() -> list[str]:
             all_configs.extend(tg_configs)
     except Exception as e:
         logging.warning(f"Telegram channel scraper warning: {e}")
+
+    # Load user-contributed configs (.npvt, .npvs, etc.)
+    user_contrib_path = Path(__file__).resolve().parent / "user_contrib.txt"
+    if user_contrib_path.exists():
+        try:
+            with open(user_contrib_path, "r", encoding="utf-8") as f:
+                u_lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+                all_configs.extend(u_lines)
+                logging.info(f"Loaded {len(u_lines)} user-contributed configs from {user_contrib_path.name}")
+        except Exception as e:
+            logging.warning(f"Failed to read user_contrib.txt: {e}")
 
     logging.info(f"Scraped total {len(all_configs)} raw configs.")
     return all_configs
