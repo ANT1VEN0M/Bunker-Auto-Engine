@@ -1,6 +1,8 @@
 import os
 import re
+import json
 import base64
+import logging
 import urllib.request
 from datetime import datetime, timezone, timedelta
 from .geo import get_flag_emoji
@@ -58,6 +60,15 @@ def fetch_mtproto_proxies() -> list[str]:
     return mtproto_links
 
 def generate_subscriptions(alive_nodes: list[dict]):
+    # Enforce strict verification invariant: only deeply verified nodes (passing real Xray HTTP 204 traffic)
+    # or validated WireGuard WARP+ nodes are allowed into production subscriptions.
+    verified_nodes = [n for n in alive_nodes if n.get("deep_verified") or n.get("proto") == "wireguard"]
+    if verified_nodes:
+        logging.info(f"Subscription Generator: filtered {len(alive_nodes)} -> {len(verified_nodes)} deeply verified nodes.")
+        alive_nodes = verified_nodes
+    else:
+        logging.warning("No deep_verified nodes found in generator! Using input list as fallback.")
+
     # Sort all by ping
     alive_nodes.sort(key=lambda x: x.get("ping_ms", 9999))
     

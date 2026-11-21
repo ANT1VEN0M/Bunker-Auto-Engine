@@ -62,7 +62,7 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                 # Xray REALITY only supports tcp/raw, h2, grpc, xhttp
                 if net not in ["tcp", "raw", "grpc", "h2", "xhttp"]:
                     return None
-                if not pbk:
+                if not pbk or not sni:
                     return None
 
             if flow == "xtls-rprx-vision" and net not in ["tcp", "raw"]:
@@ -173,6 +173,28 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                 query_str = query_str[1:]
             q = parse_qs(query_str)
             sni = q.get("sni", [""])[0]
+            net = q.get("type", ["tcp"])[0]
+            path = q.get("path", ["/"])[0]
+            host_header = q.get("host", [""])[0]
+
+            stream = {
+                "network": net,
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": sni or host,
+                    "allowInsecure": True
+                }
+            }
+            if net == "ws":
+                stream["wsSettings"] = {
+                    "path": path,
+                    "headers": {"Host": host_header or sni or host}
+                }
+            elif net == "grpc":
+                stream["grpcSettings"] = {
+                    "serviceName": q.get("serviceName", [""])[0],
+                    "multiMode": False
+                }
 
             return {
                 "tag": tag,
@@ -184,57 +206,12 @@ def uri_to_outbound(uri: str, tag: str) -> dict | None:
                         "password": password
                     }]
                 },
-                "streamSettings": {
-                    "security": "tls",
-                    "tlsSettings": {
-                        "serverName": sni or host,
-                        "allowInsecure": True
-                    }
-                }
+                "streamSettings": stream
             }
 
         elif uri.startswith("hy2://") or uri.startswith("hysteria2://"):
-            match = re.match(r"^hysteria2?://([^@]+)@([^:/?#]+):(\d+)(.*)$", uri)
-            if not match:
-                return None
-            password, host, port_str, rest = match.groups()
-            port = int(port_str)
-            if not (1 <= port <= 65535):
-                return None
-
-            query_str = rest.split("#", 1)[0]
-            if query_str.startswith("?"):
-                query_str = query_str[1:]
-            q = parse_qs(query_str)
-            sni = q.get("sni", [""])[0]
-            obfs = q.get("obfs", [""])[0]
-            obfs_pw = q.get("obfs-password", [""])[0]
-
-            hy2_settings = {
-                "servers": [{
-                    "address": host,
-                    "port": port,
-                    "password": password
-                }]
-            }
-            if obfs:
-                hy2_settings["obfs"] = {
-                    "type": obfs,
-                    "password": obfs_pw
-                }
-
-            return {
-                "tag": tag,
-                "protocol": "hysteria2",
-                "settings": hy2_settings,
-                "streamSettings": {
-                    "security": "tls",
-                    "tlsSettings": {
-                        "serverName": sni or host,
-                        "allowInsecure": True
-                    }
-                }
-            }
+            # Official Xray-core does not support Hysteria 2 outbounds
+            return None
 
         elif uri.startswith("ss://"):
             main = uri[5:].split("#")[0]
@@ -314,6 +291,63 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
     with open(config_path, "w") as f:
         json.dump(config, f)
 
+    # Validate configuration before launching
+    test_res = subprocess.run([XRAY_BIN, "run", "-test", "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if test_res.returncode != 0:
+        # One or more outbounds in this batch caused an Xray error.
+        # Fall back to testing valid outbounds individually to salvage the batch
+        safe_inbounds = []
+        safe_outbounds = []
+        safe_rules = []
+        safe_valid_items = []
+        for port, cfg in valid_items:
+            t_inbounds = [{"tag": "t_in", "port": port, "protocol": "http", "settings": {}}]
+            t_outbound = uri_to_outbound(cfg["raw"], "t_out")
+            if not t_outbound:
+                continue
+            t_cfg = {
+                "log": {"loglevel": "none"},
+                "inbounds": t_inbounds,
+                "outbounds": [t_outbound],
+                "routing": {"rules": [{"inboundTag": ["t_in"], "outboundTag": "t_out"}]}
+            }
+            t_path = f"/tmp/xray_single_test_{port}.json"
+            try:
+                with open(t_path, "w") as f:
+                    json.dump(t_cfg, f)
+                t_check = subprocess.run([XRAY_BIN, "run", "-test", "-c", t_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if t_check.returncode == 0:
+                    tag = f"out_{len(safe_outbounds)}"
+                    in_tag = f"in_{len(safe_inbounds)}"
+                    t_outbound["tag"] = tag
+                    safe_inbounds.append({"tag": in_tag, "port": port, "protocol": "http", "settings": {}})
+                    safe_outbounds.append(t_outbound)
+                    safe_rules.append({"inboundTag": [in_tag], "outboundTag": tag})
+                    safe_valid_items.append((port, cfg))
+            finally:
+                if os.path.exists(t_path):
+                    try:
+                        os.remove(t_path)
+                    except OSError:
+                        pass
+        
+        if not safe_outbounds:
+            try:
+                os.remove(config_path)
+            except OSError:
+                pass
+            return []
+        
+        config = {
+            "log": {"loglevel": "none"},
+            "inbounds": safe_inbounds,
+            "outbounds": safe_outbounds,
+            "routing": {"rules": safe_rules}
+        }
+        with open(config_path, "w") as f:
+            json.dump(config, f)
+        valid_items = safe_valid_items
+
     proc = subprocess.Popen([XRAY_BIN, "run", "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(0.5)
 
@@ -324,20 +358,20 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
         proxy_handler = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{local_port}"})
         opener = urllib.request.build_opener(proxy_handler)
         
-        test_url = "http://cp.cloudflare.com/generate_204"
-
-        try:
-            t0 = time.perf_counter()
-            req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
-            resp = opener.open(req, timeout=3.0)
-            if resp.status in [200, 204]:
-                real_ping = max(1, int((time.perf_counter() - t0) * 1000))
-                verified = dict(c)
-                verified["ping_ms"] = real_ping
-                verified["deep_verified"] = True
-                return verified
-        except Exception:
-            pass
+        # Test Cloudflare 204 (BunkerVPN primary DELAY_TEST_URL) and gstatic 204 (Android fallback)
+        for test_url in ("http://cp.cloudflare.com/generate_204", "http://connectivitycheck.gstatic.com/generate_204"):
+            try:
+                t0 = time.perf_counter()
+                req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
+                resp = opener.open(req, timeout=3.0)
+                if resp.status in [200, 204]:
+                    real_ping = max(1, int((time.perf_counter() - t0) * 1000))
+                    verified = dict(c)
+                    verified["ping_ms"] = real_ping
+                    verified["deep_verified"] = True
+                    return verified
+            except Exception:
+                continue
         return None
 
     try:
@@ -356,7 +390,7 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
 
     return verified_nodes
 
-def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 25, max_verified: int = 250) -> list[dict]:
+def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 30, max_verified: int = 300) -> list[dict]:
     if not ensure_xray():
         logging.warning("Skipping deep Xray check (binary not available).")
         return candidate_nodes

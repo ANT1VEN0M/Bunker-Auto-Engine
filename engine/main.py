@@ -76,21 +76,49 @@ def run_pipeline():
         logging.warning("No alive nodes detected during ping check!")
         return
 
+    # Sort alive nodes so that high-potential anti-censorship nodes are tested by Xray first
+    def deep_candidate_priority(cfg):
+        is_wl = cfg.get("is_wl_hosting", False)
+        p = cfg.get("port", 0)
+        proto = cfg.get("proto", "")
+        raw = cfg.get("raw", "")
+
+        # Priority 0: Russian Whitelist Hostings (Selectel, Timeweb, etc.) on port 443/53
+        if is_wl and p in (443, 53):
+            return 0
+        # Priority 1: Russian Whitelist Hostings on other ports
+        if is_wl:
+            return 1
+        # Priority 2: VLESS Reality on port 443
+        if proto == "vless" and "security=reality" in raw and p == 443:
+            return 2
+        # Priority 3: Fresh feeds (CloudFront doroguuuuu, NPVS decrypted, etc.)
+        if "cloudfront" in raw or "doroguuuuu" in raw or "wergmb" in raw:
+            return 3
+        # Priority 4: Trojan on port 443 or 8443
+        if proto == "trojan" and p in (443, 8443):
+            return 4
+        # Priority 5: VLESS / Trojan / VMess on standard TLS / anti-censorship ports
+        if proto in ("vless", "trojan") and p in (53, 8443, 2053, 2083, 2087, 2096):
+            return 5
+        # Priority 6: Any other VLESS / Trojan
+        if proto in ("vless", "trojan"):
+            return 6
+        # Priority 7: VMess
+        if proto == "vmess":
+            return 7
+        return 8
+
+    alive.sort(key=deep_candidate_priority)
+    logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep Xray testing.")
+
     # 7. DEEP XRAY CORE VERIFICATION (Real HTTP 204 Traffic Test)
     # Tests candidates through actual Xray Core to guarantee 100% working proxies
-    real_working = deep_check_nodes(alive, batch_size=25, max_verified=250)
+    real_working = deep_check_nodes(alive, batch_size=30, max_verified=300)
 
     if not real_working:
-        logging.warning("No nodes passed deep HTTP 204 check, falling back to TCP alive.")
+        logging.warning("No nodes passed deep HTTP 204 check, falling back to top TCP alive.")
         real_working = alive[:100]
-    else:
-        # Append other high-quality Russian anti-censorship alive nodes (port 443/53/8443)
-        seen_hosts = {f"{c['host']}:{c['port']}" for c in real_working}
-        for n in alive:
-            key = f"{n['host']}:{n['port']}"
-            if key not in seen_hosts and n.get("proto") in ("vless", "trojan", "hy2") and n.get("port") in (443, 53, 8443):
-                real_working.append(n)
-                seen_hosts.add(key)
 
     # 8. Generate subscriptions and dashboard
     logging.info(f"Generating subscription files from {len(real_working)} GUARANTEED WORKING NODES...")
