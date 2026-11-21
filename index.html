@@ -1659,6 +1659,27 @@ PersistentKeepalive = 25`;
       currentFormats = {};
 
       try {
+        // 0. V2RayTun import unwrapper (v2raytun://import/...)
+        if (raw.toLowerCase().startsWith("v2raytun://import/")) {
+          let unwrapped = raw.substring(18).trim();
+          try {
+            unwrapped = decodeURIComponent(unwrapped);
+          } catch(e) {}
+          if (!unwrapped.includes("://")) {
+            try {
+              let s = unwrapped.replace(/\s+/g, '');
+              while (s.length % 4 !== 0) s += '=';
+              const dec = atob(s);
+              if (dec && dec.includes("://")) unwrapped = dec;
+            } catch(e) {}
+          }
+          if (unwrapped && unwrapped !== raw) {
+            document.getElementById("converter-input").value = unwrapped;
+            showToast("🔓 Обёртка V2RayTun развёрнута!");
+            return inspectAndConvertConfig(hintFileName);
+          }
+        }
+
         // 1. qWDTT / WDTT (VK-Voice WebRTC Tunnel)
         if (raw.startsWith("qwdtt://") || raw.startsWith("wdtt://")) {
           let host = "", dtls = 56000, wg = 56001, local = 9000, pass = "", hash = "", name = "WDTT Voice Tunnel";
@@ -2052,6 +2073,71 @@ PersistentKeepalive = 25`;
               { k: "⚡ Статус", v: "Конвертирован в стандартный URI" }
             ]
           };
+        }
+        // 11. INCY VPN (incy://crypt...)
+        else if (raw.toLowerCase().startsWith("incy://")) {
+          parsed = {
+            proto: "INCY (AES-GCM)",
+            sec: "AES-256-GCM Envelope",
+            host: "incy:// deep-link",
+            name: "INCY Subscription Link",
+            cleanUri: raw,
+            details: [
+              { k: "🔑 Шифрование", v: "AES-256-GCM" },
+              { k: "⚡ Декодер", v: "Встроен в Bunker-Auto-Engine" },
+              { k: "📱 Назначение", v: "Прямой запуск в INCY / BunkerVPN" }
+            ]
+          };
+        }
+        // 12. Sing-box JSON Outbound
+        else if ((raw.includes('"server_port"') || (raw.includes('"server"') && raw.includes('"type"'))) && raw.startsWith('{')) {
+          try {
+            const j = JSON.parse(raw);
+            const proto = (j.type || "vless").toUpperCase();
+            const host = j.server || "1.2.3.4";
+            const port = j.server_port || 443;
+            const uuid = j.uuid || j.password || "";
+            const name = j.tag || "SingBox Node";
+            const tls = j.tls || {};
+            const real = tls.reality || {};
+            const isReality = Boolean(real.enabled);
+            const sni = tls.server_name || "";
+            const pbk = real.public_key || "";
+            const sid = real.short_id || "";
+
+            const q = new URLSearchParams({ type: (j.transport && j.transport.type) || "tcp" });
+            if (isReality) {
+              q.set("security", "reality");
+              if (pbk) q.set("pbk", pbk);
+              if (sid) q.set("sid", sid);
+            } else if (tls.enabled) {
+              q.set("security", "tls");
+            }
+            if (sni) q.set("sni", sni);
+
+            let uri = "";
+            if (proto.includes("VLESS")) {
+              uri = `vless://${uuid}@${host}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+            } else if (proto.includes("TROJAN")) {
+              uri = `trojan://${uuid}@${host}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+            } else {
+              uri = `vless://${uuid}@${host}:${port}?${q.toString()}#${encodeURIComponent(name)}`;
+            }
+
+            parsed = {
+              proto: "sing-box ➔ " + proto,
+              sec: isReality ? "Reality XTLS" : (tls.enabled ? "TLS" : "Direct"),
+              host: host + ":" + port,
+              name: name,
+              cleanUri: uri,
+              details: [
+                { k: "📁 Тип конфига", v: "sing-box JSON Outbound" },
+                { k: "🌐 Сервер", v: host },
+                { k: "🔌 Порт", v: String(port) },
+                { k: "🎯 SNI Маскировка", v: sni || "не задан" }
+              ]
+            };
+          } catch(e) {}
         }
       } catch (err) {
         console.warn(err);

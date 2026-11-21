@@ -5,6 +5,7 @@ import base64
 import logging
 import concurrent.futures
 import re
+from pathlib import Path
 from engine.npv_parser import (
     extract_all_custom_protocols,
     decode_napsternetv,
@@ -275,6 +276,53 @@ def fetch_single_source(url: str) -> list[str]:
         logging.warning(f"Failed fetching {url[:50]}: {e}")
     return configs
 
+def scrape_telegram_public_channels() -> list[str]:
+    """Scrapes top active Telegram channels via public web view (t.me/s/) without API keys."""
+    tg_file = Path(__file__).resolve().parent / "tg.txt"
+    if not tg_file.exists():
+        return []
+    try:
+        with open(tg_file, "r", encoding="utf-8") as f:
+            channels = [
+                line.strip().replace("https://t.me/", "").replace("@", "").strip("/")
+                for line in f if line.strip() and not line.startswith("#")
+            ]
+    except Exception:
+        return []
+
+    selected = channels[:45]
+    logging.info(f"Telegram Public Scraper: Scraping {len(selected)} channels in parallel...")
+    collected = []
+
+    def fetch_channel(ch: str) -> list[str]:
+        found = []
+        url = f"https://t.me/s/{ch}"
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                html = resp.read().decode("utf-8", errors="ignore")
+                uris = re.findall(r'(vless://[^\s\"<>]+|trojan://[^\s\"<>]+|ss://[^\s\"<>]+|hy2://[^\s\"<>]+|hysteria2://[^\s\"<>]+|happ://[^\s\"<>]+|v2raytun://[^\s\"<>]+|incy://[^\s\"<>]+)', html)
+                for u in uris:
+                    custom = extract_all_custom_protocols(u)
+                    if custom:
+                        found.extend(custom)
+                    else:
+                        found.append(u)
+        except Exception:
+            pass
+        return found
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        for res in ex.map(fetch_channel, selected):
+            if res:
+                collected.extend(res)
+
+    logging.info(f"Telegram Public Scraper yielded {len(collected)} configs from channels.")
+    return collected
+
 def scrape_all_sources() -> list[str]:
     all_configs = []
     logging.info(f"Starting scraping from {len(SOURCES)} sources in parallel...")
@@ -284,5 +332,13 @@ def scrape_all_sources() -> list[str]:
             configs = future.result()
             all_configs.extend(configs)
     
+    # Also scrape curated Telegram channels
+    try:
+        tg_configs = scrape_telegram_public_channels()
+        if tg_configs:
+            all_configs.extend(tg_configs)
+    except Exception as e:
+        logging.warning(f"Telegram channel scraper warning: {e}")
+
     logging.info(f"Scraped total {len(all_configs)} raw configs.")
     return all_configs

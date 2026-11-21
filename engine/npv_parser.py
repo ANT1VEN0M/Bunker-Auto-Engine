@@ -226,6 +226,82 @@ def parse_v2ray_outbound(outbound: dict, remark: str = "") -> Optional[str]:
     return None
 
 
+def parse_singbox_outbound(d: dict, remark: str = "") -> Optional[str]:
+    """Convert sing-box outbound dictionary into standard proxy URI."""
+    if not isinstance(d, dict):
+        return None
+    proto = str(d.get("type") or "").lower()
+    server = d.get("server")
+    port = d.get("server_port")
+    tag = d.get("tag") or remark or "Bunker-SingBox"
+    remark_q = urllib.parse.quote(str(tag))
+
+    if not server or not port:
+        return None
+
+    tls = d.get("tls", {}) if isinstance(d.get("tls"), dict) else {}
+    tr = d.get("transport", {}) if isinstance(d.get("transport"), dict) else {}
+    net = str(tr.get("type") or "tcp").lower()
+
+    params: Dict[str, str] = {"type": net}
+    if tr.get("path"):
+        params["path"] = str(tr["path"])
+    headers = tr.get("headers") or {}
+    host = headers.get("Host") or headers.get("host")
+    if host:
+        params["host"] = str(host)
+    if tr.get("service_name"):
+        params["serviceName"] = str(tr["service_name"])
+
+    if tls.get("enabled"):
+        params["security"] = "tls"
+        if tls.get("server_name"):
+            params["sni"] = str(tls["server_name"])
+        if tls.get("insecure"):
+            params["allowInsecure"] = "1"
+        fp = (tls.get("utls") or {}).get("fingerprint") or tls.get("fingerprint")
+        if fp:
+            params["fp"] = str(fp)
+
+        real = tls.get("reality", {}) if isinstance(tls.get("reality"), dict) else {}
+        if real.get("enabled"):
+            params["security"] = "reality"
+            if real.get("public_key"):
+                params["pbk"] = str(real["public_key"])
+            if real.get("short_id"):
+                params["sid"] = str(real["short_id"])
+
+    if proto == "vless":
+        uuid = str(d.get("uuid") or "")
+        if d.get("flow"):
+            params["flow"] = str(d["flow"])
+        qs = urllib.parse.urlencode(params)
+        return f"vless://{uuid}@{server}:{port}?{qs}#{remark_q}"
+    elif proto == "vmess":
+        vm = {
+            "v": "2", "ps": str(tag), "add": str(server), "port": str(port),
+            "id": str(d.get("uuid") or ""), "aid": str(d.get("alter_id", 0)),
+            "scy": str(d.get("security") or "auto"), "net": net,
+            "type": "none", "host": params.get("host", ""),
+            "path": params.get("path", ""), "tls": params.get("security", ""),
+            "sni": params.get("sni", "")
+        }
+        b64_str = base64.b64encode(json.dumps(vm).encode("utf-8")).decode("utf-8")
+        return f"vmess://{b64_str}"
+    elif proto == "trojan":
+        qs = urllib.parse.urlencode(params)
+        return f"trojan://{d.get('password', '')}@{server}:{port}?{qs}#{remark_q}"
+    elif proto in ("shadowsocks", "ss"):
+        method = str(d.get("method") or "aes-256-gcm")
+        auth = base64.b64encode(f"{method}:{d.get('password', '')}".encode("utf-8")).decode("utf-8")
+        return f"ss://{auth}@{server}:{port}#{remark_q}"
+    elif proto in ("hysteria2", "hy2"):
+        qs = f"?sni={params['sni']}" if "sni" in params else ""
+        return f"hy2://{d.get('password', '')}@{server}:{port}{qs}#{remark_q}"
+
+    return None
+
+
 def parse_napsternetv_item(item: dict) -> List[str]:
     """Parse a single item or profile from a NapsternetV container."""
     links = []
@@ -261,7 +337,13 @@ def parse_napsternetv_item(item: dict) -> List[str]:
             if link:
                 links.append(link)
 
-    # 3. Check legacy flat profile
+    # 3. Check sing-box outbound
+    if not links:
+        sb_link = parse_singbox_outbound(profile, remark) or parse_singbox_outbound(item, remark)
+        if sb_link:
+            links.append(sb_link)
+
+    # 4. Check legacy flat profile
     if not links:
         server = profile.get("server") or profile.get("address") or profile.get("host") or profile.get("add")
         port = profile.get("serverPort") or profile.get("port")
@@ -753,6 +835,14 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
     if not text:
         return []
 
+    # 0. V2RayTun import unwrapper (v2raytun://import/...)
+    if "v2raytun://import" in text:
+        try:
+            from engine.happ_parser import unwrap_v2raytun_import
+            text = unwrap_v2raytun_import(text)
+        except Exception:
+            pass
+
     collected: List[str] = []
 
     # 1. Dark Tunnel check
@@ -782,10 +872,10 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
                 if w_parsed and w_parsed.get("uri"):
                     collected.append(w_parsed["uri"])
 
-    # 5. Happ deep-link check (happ://crypt...)
-    if "happ://crypt" in text:
+    # 5. Happ & INCY deep-link check (happ://crypt..., incy://crypt...)
+    if "happ://crypt" in text or "incy://crypt" in text:
         try:
-            from engine.happ_parser import decrypt_happ_link
+            from engine.happ_parser import decrypt_happ_link, decrypt_incy
             for line in text.splitlines():
                 line = line.strip()
                 if line.startswith("happ://crypt"):
@@ -793,9 +883,33 @@ def extract_all_custom_protocols(text_or_url: str) -> List[str]:
                     if dec:
                         for sub_l in dec.splitlines():
                             sub_l = sub_l.strip()
-                            if any(sub_l.startswith(p) for p in ("vless://", "vmess://", "trojan://", "ss://", "hy2://", "ovpn://", "wdtt://", "qwdtt://")):
+                            if any(sub_l.startswith(p) for p in ("vless://", "vmess://", "trojan://", "ss://", "hy2://", "ovpn://", "wdtt://", "qwdtt://", "http://", "https://")):
                                 collected.append(sub_l)
+                elif line.startswith("incy://crypt"):
+                    dec_incy = decrypt_incy(line)
+                    if dec_incy:
+                        collected.append(dec_incy)
         except Exception:
             pass
+
+    # 6. Sing-box JSON check
+    if ('"server_port"' in text or '"transport"' in text) and not collected:
+        try:
+            j = json.loads(text)
+            items = j if isinstance(j, list) else [j]
+            for it in items:
+                if isinstance(it, dict):
+                    sb_link = parse_singbox_outbound(it)
+                    if sb_link:
+                        collected.append(sb_link)
+        except Exception:
+            pass
+
+    # 7. Standard URIs fallback
+    if not collected:
+        for line in text.splitlines():
+            line = line.strip()
+            if any(line.startswith(p) for p in ("vless://", "vmess://", "trojan://", "ss://", "hy2://", "hysteria2://", "http://", "https://")):
+                collected.append(line)
 
     return collected

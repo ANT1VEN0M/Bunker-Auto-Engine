@@ -1,21 +1,32 @@
 """
-happ_parser.py - Official RSA Decryptor for Happ deep-links (happ://crypt, crypt2, crypt3, crypt4).
-Decrypts proprietary Happ subscription tokens into standard URLs and proxy configurations.
+happ_parser.py - Multi-Protocol Deep-Link Decryptor for Bunker-Auto-Engine.
+Supports:
+  1. Happ deep-links: happ://crypt (RSA-1024), crypt2-4 (RSA-4096), crypt5 (ChaCha20-Poly1305 / AES-GCM)
+  2. INCY links: incy://crypt1 (AES-256-GCM authenticated sub envelopes)
+  3. V2RayTun import wrappers: v2raytun://import (nested base64 / URL unwrap)
 """
 
 import base64
+import hashlib
+import json
 import logging
+import os
+import re
 import urllib.parse
-from typing import Optional, List
+from pathlib import Path
+from typing import Optional, List, Dict, Any, Tuple
 
 try:
     from cryptography.hazmat.primitives.asymmetric import padding
     from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM, ChaCha20Poly1305
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+_ENGINE_DIR = Path(__file__).resolve().parent
 
 # Embedded PKCS#1 RSA private keys for crypt1–crypt4
 HAPP_RSA_KEYS_B64 = [
@@ -65,7 +76,9 @@ def decrypt_happ_link(link_or_path: str) -> Optional[str]:
     ordinal = -1
     payload = ''
 
-    if path.startswith('crypt4/'):
+    if path.startswith('crypt5/'):
+        return decrypt_happ_crypt5(path[7:])
+    elif path.startswith('crypt4/'):
         ordinal = 3
         payload = path[7:]
     elif path.startswith('crypt3/'):
@@ -95,3 +108,219 @@ def decrypt_happ_link(link_or_path: str) -> Optional[str]:
     except Exception as e:
         logging.warning(f'Failed decrypting Happ {path[:15]}: {e}')
         return None
+
+
+# ============================================================================
+# HAPP CRYPT5 (ChaCha20-Poly1305 / AES-GCM + Marker RSA)
+# ============================================================================
+
+def swap_pairs_bytes(b: bytes) -> bytes:
+    out = bytearray(len(b))
+    for i in range(0, len(b) - 1, 2):
+        out[i] = b[i + 1]
+        out[i + 1] = b[i]
+    if len(b) % 2:
+        out[-1] = b[-1]
+    return bytes(out)
+
+
+_c5_keys_cache: Optional[Dict[str, Any]] = None
+
+def get_c5_key(marker: str):
+    global _c5_keys_cache
+    if _c5_keys_cache is None:
+        c5_path = _ENGINE_DIR / 'happcrypt5.json'
+        if not c5_path.exists():
+            c5_path = _ENGINE_DIR.parent / 'happcrypt5.json'
+        if c5_path.exists():
+            with open(c5_path, 'r', encoding='utf-8') as f:
+                _c5_keys_cache = json.load(f)
+        else:
+            _c5_keys_cache = {}
+
+    if marker not in _c5_keys_cache:
+        return None
+    raw_b64 = _c5_keys_cache[marker]
+    der = base64.b64decode(raw_b64)
+    return serialization.load_der_private_key(der, password=None)
+
+
+def _crypt5_body(body: bytes, key, salted: bool) -> Optional[str]:
+    if len(body) < 13:
+        return None
+    nonce = body[:12]
+    salt = None
+    pos = 12
+    if salted:
+        if len(body) < 22:
+            return None
+        salt = body[14:22]
+        pos = 22
+    start = pos
+    while pos < len(body) and 48 <= body[pos] <= 57:
+        pos += 1
+    if pos == start:
+        return None
+    try:
+        seg_len = int(body[start:pos].decode('ascii'))
+    except Exception:
+        return None
+
+    packed = body[pos:]
+    if not packed or seg_len > len(packed) - 1:
+        return None
+    url_b64 = packed[1:seg_len + 1].decode('utf-8', errors='replace')
+    enc_b64 = packed[seg_len + 1:].decode('utf-8', errors='replace')
+
+    enc_bytes = base64.b64decode(enc_b64 + '=' * ((-len(enc_b64)) % 4))
+    rsa_plain = key.decrypt(enc_bytes, padding.PKCS1v15())
+    key_material_b64 = swap_pairs_bytes(rsa_plain).decode('latin-1')
+    key_material = base64.b64decode(key_material_b64 + '=' * ((-len(key_material_b64)) % 4))
+    if len(key_material) != 32:
+        return None
+
+    if salt:
+        km = bytearray(key_material)
+        for i in range(32):
+            km[i] ^= salt[i % len(salt)]
+        key_material = bytes(km)
+
+    ct = base64.b64decode(url_b64 + '=' * ((-len(url_b64)) % 4))
+    text = None
+    for aead in (ChaCha20Poly1305(key_material), AESGCM(key_material)):
+        try:
+            text = aead.decrypt(nonce, ct, None)
+            break
+        except Exception:
+            pass
+    if text is None:
+        return None
+
+    plain_b64 = swap_pairs_bytes(text).decode('latin-1')
+    return base64.b64decode(plain_b64 + '=' * ((-len(plain_b64)) % 4)).decode('utf-8', errors='replace')
+
+
+def decrypt_happ_crypt5(payload: str) -> Optional[str]:
+    """Decrypt happ://crypt5/ payload with marker routing."""
+    payload = payload.strip().rstrip('=')
+    n = swap_pairs_bytes(payload.encode('utf-8', errors='ignore'))
+    if len(n) < 8:
+        return None
+    marker = (n[:4] + n[-4:]).decode('latin-1', errors='ignore')
+    body = n[4:-4]
+
+    key = get_c5_key(marker)
+    if not key:
+        return None
+
+    for salted in (False, True):
+        try:
+            res = _crypt5_body(body, key, salted)
+            if res:
+                return res
+        except Exception:
+            pass
+    return None
+
+
+# ============================================================================
+# INCY VPN DECRYPTOR (incy://crypt1/...)
+# ============================================================================
+
+_incy_keys_cache: Optional[Dict[str, bytes]] = None
+
+def get_incy_key(scheme: str = 'crypt1') -> Optional[bytes]:
+    global _incy_keys_cache
+    if _incy_keys_cache is None:
+        _incy_keys_cache = {}
+        incy_path = _ENGINE_DIR / 'incy.json'
+        if not incy_path.exists():
+            incy_path = _ENGINE_DIR.parent / 'incy.json'
+        if incy_path.exists():
+            try:
+                with open(incy_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                for s_name, cfg in data.get('schemes', {}).items():
+                    if 'key' in cfg and cfg['key'].strip():
+                        _incy_keys_cache[s_name.lower()] = base64.b64decode(cfg['key'])
+                    elif 'keymat_a' in cfg and 'keymat_b' in cfg:
+                        a = base64.b64decode(''.join(cfg['keymat_a'].split()))
+                        b = base64.b64decode(''.join(cfg['keymat_b'].split()))
+                        off_a = cfg.get('keymat_a_offset', 1024)
+                        off_b = cfg.get('keymat_b_offset', 2048)
+                        klen = cfg.get('keymat_len', 32)
+                        salt = ''.join(str(p) for p in (cfg.get('salt_parts') or ())).encode('utf-8')
+                        _incy_keys_cache[s_name.lower()] = hashlib.sha256(
+                            salt + a[off_a:off_a + klen] + b[off_b:off_b + klen]
+                        ).digest()
+            except Exception as e:
+                logging.warning(f"Failed to load incy.json: {e}")
+
+    return _incy_keys_cache.get(scheme.lower())
+
+
+def decrypt_incy(link: str) -> Optional[str]:
+    """Decrypt incy://crypt1/<payload> into destination sub URL."""
+    clean = link.strip()
+    m = re.match(r'(?i)^incy://(crypt[0-9]+)/(.+)$', clean)
+    if not m:
+        return None
+    scheme = m.group(1).lower()
+    payload = re.sub(r'[^A-Za-z0-9_\-]', '', m.group(2).rstrip('/'))
+    if not payload:
+        return None
+
+    key = get_incy_key(scheme)
+    if not key:
+        return None
+
+    try:
+        wire = base64.urlsafe_b64decode(payload + '=' * ((-len(payload)) % 4))
+        if len(wire) < 12 + 16 + 1:
+            return None
+        iv, ct_and_tag = wire[:12], wire[12:]
+        plaintext = AESGCM(key).decrypt(iv, ct_and_tag, None)
+        parsed = json.loads(plaintext.decode('utf-8'))
+        url = parsed.get('url') if isinstance(parsed, dict) else None
+        return url if isinstance(url, str) else None
+    except Exception as e:
+        logging.warning(f"INCY decrypt error: {e}")
+        return None
+
+
+# ============================================================================
+# V2RAYTUN UNWRAPPER (v2raytun://import/...)
+# ============================================================================
+
+V2RAYTUN_TARGETS = (
+    "http://", "https://", "vless://", "vmess://", "trojan://", "ss://",
+    "hy2://", "hysteria2://", "happ://", "incy://", "wdtt://", "qwdtt://"
+)
+
+def unwrap_v2raytun_import(url: str, depth: int = 0) -> str:
+    """Recursively unwraps v2raytun://import/<payload> into inner config or sub URL."""
+    if not url.lower().startswith("v2raytun://import/"):
+        return url
+    rest = url[len("v2raytun://import/"):].strip()
+    if rest.lower().startswith(V2RAYTUN_TARGETS):
+        return rest
+    try:
+        cand = urllib.parse.unquote(rest)
+    except Exception:
+        cand = rest
+    if cand.lower().startswith(V2RAYTUN_TARGETS):
+        return cand
+
+    cand_clean = re.sub(r'[^A-Za-z0-9+/=_\-]', '', cand)
+    if len(cand_clean) >= 8:
+        for alt in (None, '-_'):
+            try:
+                pad = '=' * ((-len(cand_clean)) % 4)
+                dec = base64.b64decode(cand_clean + pad, altchars=alt).decode('utf-8', errors='ignore').strip()
+                if dec.lower().startswith("v2raytun://import/") and depth < 6:
+                    return unwrap_v2raytun_import(dec, depth + 1)
+                if dec.lower().startswith(V2RAYTUN_TARGETS):
+                    return dec
+            except Exception:
+                pass
+    return url
