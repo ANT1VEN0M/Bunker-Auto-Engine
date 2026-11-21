@@ -5,6 +5,8 @@ import base64
 import logging
 import concurrent.futures
 import re
+import random
+import yaml
 from pathlib import Path
 from engine.npv_parser import (
     extract_all_custom_protocols,
@@ -14,6 +16,27 @@ from engine.npv_parser import (
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+_ZERO_WIDTH = "\u200b\u200c\u200d\u2060\ufeff"
+
+_GH_HASH_RE = re.compile(
+    r"^(?P<prefix>https://raw\.githubusercontent\.com/[^/\s]+/[^/\s]+/"
+    r"|https://github\.com/[^/\s]+/[^/\s]+/raw/)"
+    r"(?P<sha>[0-9a-fA-F]{7,64})"
+    r"(?P<rest>/\S*)$"
+)
+
+HAPP_APP_VERSIONS = (
+    "4.8.0", "4.7.9", "4.7.8", "4.7.7", "4.7.5", "4.7.4", "4.7.3", "4.7.2",
+    "4.7.1", "4.7.0", "4.6.9", "4.6.8", "4.6.7", "4.6.6", "4.6.5", "4.6.4",
+)
+ANDROID_OS_VERSIONS = ("13", "14", "15", "16")
+ANDROID_MODELS = (
+    "SM-S938B", "SM-S928B", "SM-S918B", "SM-A556B", "SM-A546B",
+    "Pixel 9 Pro XL", "Pixel 9 Pro", "Pixel 9", "Pixel 8 Pro", "Pixel 8",
+    "2407FRK8EC", "23127PN0CG", "23116PN5BC",
+    "CPH2609", "CPH2581", "NE2213",
+)
 
 SOURCES = [
     # 1. Igareck Russian Anti-Censorship (White Lists for Mobile & Restrictive Firewalls)
@@ -83,8 +106,205 @@ SOURCES = [
     # 33. Kort0881 Verified Private Poster - Other Nodes
     "https://raw.githubusercontent.com/kort0881/vpn-private-poster/main/checked/Other_part1_sub.txt",
     # 34. FastNodes Japan Dedicated Verified Feed
-    "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/countries/JP.txt"
+    "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/countries/JP.txt",
+    # 35. LimeHi Russian Whitelist
+    "https://raw.githubusercontent.com/LimeHi/LimeVPN/refs/heads/main/whitelist.txt",
+    # 36. LimeHi Russian Blacklist
+    "https://raw.githubusercontent.com/LimeHi/LimeVPN/refs/heads/main/blacklist.txt",
+    # 37. Theakres VPN All In One
+    "https://github.com/theakres/VPN/raw/main/all",
+    # 38. Zieng2 VLESS Universal Whitelist
+    "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt",
+    # 39. Roskompozor Gitlab Mirror Whitelist
+    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/wl",
+    # 40. Roskompozor Gitlab Mirror Blacklist
+    "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/bl",
+    # 41. Whoahaow Bypass All Matrix
+    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt"
 ]
+
+def clean_source_url(url: str) -> str:
+    """Strips invisible zero-width unicode characters and spaces."""
+    return url.strip().strip(_ZERO_WIDTH).strip()
+
+def fix_github_raw_url(url: str) -> str:
+    """Auto-fixes GitHub raw URLs with commit hashes, replacing sha with main."""
+    m = _GH_HASH_RE.match(url)
+    if not m:
+        return url
+    prefix = m.group("prefix")
+    rest = m.group("rest")
+    return f"{prefix}main{rest}"
+
+def generate_happ_device_headers() -> tuple[dict[str, str], str]:
+    """Generates authentic Android device emulation headers for Happ / gated panels."""
+    app = random.choice(HAPP_APP_VERSIONS)
+    model = random.choice(ANDROID_MODELS)
+    os_ver = random.choice(ANDROID_OS_VERSIONS)
+    hwid = f"{random.getrandbits(63) | (1 << 63):016x}"
+    ua_num = str(random.getrandbits(63) | (1 << 63))
+    ua = f"Happ/{app}/Android/{ua_num}"
+    headers = {
+        "User-Agent": ua,
+        "X-HWID": hwid,
+        "X-Device-OS": "Android",
+        "X-Ver-OS": os_ver,
+        "X-Device-Model": model,
+        "X-App-Version": app,
+        "Accept": "*/*"
+    }
+    return headers, hwid
+
+def parse_clash_yaml(content: str) -> list[str]:
+    """Extracts VLESS, VMess, Trojan, Shadowsocks, Hysteria2 from Clash YAML subscriptions."""
+    uris = []
+    try:
+        data = yaml.safe_load(content)
+        if not isinstance(data, dict):
+            return []
+        proxies = data.get("proxies")
+        if not isinstance(proxies, list):
+            return []
+        
+        for p in proxies:
+            if not isinstance(p, dict):
+                continue
+            ptype = str(p.get("type", "")).lower()
+            name = str(p.get("name", ""))
+            server = p.get("server")
+            port = p.get("port")
+            if not server or not port:
+                continue
+            tag = f"#{urllib.parse.quote(name)}" if name else ""
+
+            if ptype == "vless":
+                uuid = p.get("uuid")
+                if not uuid:
+                    continue
+                q = {}
+                q["encryption"] = str(p.get("encryption", "none"))
+                if p.get("flow"):
+                    q["flow"] = str(p["flow"])
+                
+                # TLS / Reality
+                tls = p.get("tls")
+                reality_opts = p.get("reality-opts") or {}
+                if reality_opts:
+                    q["security"] = "reality"
+                    sni = p.get("servername") or p.get("sni")
+                    if sni: q["sni"] = str(sni)
+                    fp = p.get("client-fingerprint") or "chrome"
+                    if fp: q["fp"] = str(fp)
+                    pbk = reality_opts.get("public-key") or reality_opts.get("public_key")
+                    if pbk: q["pbk"] = str(pbk)
+                    sid = reality_opts.get("short-id") or reality_opts.get("short_id")
+                    if sid: q["sid"] = str(sid)
+                elif tls:
+                    q["security"] = "tls"
+                    sni = p.get("servername") or p.get("sni")
+                    if sni: q["sni"] = str(sni)
+                    fp = p.get("client-fingerprint")
+                    if fp: q["fp"] = str(fp)
+                    if p.get("skip-cert-verify"): q["allowInsecure"] = "1"
+                
+                # Network / transport
+                net = str(p.get("network", "tcp")).lower()
+                if net not in ("", "tcp"):
+                    q["type"] = net
+                    if net in ("ws", "httpupgrade"):
+                        ws_opts = p.get("ws-opts") or {}
+                        path = ws_opts.get("path")
+                        if path: q["path"] = str(path)
+                        headers = ws_opts.get("headers") or {}
+                        h = headers.get("Host") or headers.get("host")
+                        if h: q["host"] = str(h)
+                    elif net == "grpc":
+                        g_opts = p.get("grpc-opts") or {}
+                        svc = g_opts.get("grpc-service-name")
+                        if svc: q["serviceName"] = str(svc)
+                    elif net == "xhttp":
+                        xh = p.get("xhttp-opts") or {}
+                        if xh.get("path"): q["path"] = str(xh["path"])
+                        if xh.get("host"): q["host"] = str(xh["host"])
+                
+                query_str = urllib.parse.urlencode(sorted(q.items()))
+                uris.append(f"vless://{uuid}@{server}:{port}?{query_str}{tag}")
+
+            elif ptype == "trojan":
+                password = p.get("password")
+                if not password:
+                    continue
+                q = {}
+                sni = p.get("sni") or p.get("servername")
+                if sni: q["sni"] = str(sni)
+                alpn = p.get("alpn")
+                if isinstance(alpn, list) and alpn: q["alpn"] = ",".join(str(x) for x in alpn)
+                if p.get("skip-cert-verify"): q["allowInsecure"] = "1"
+                net = str(p.get("network", "tcp")).lower()
+                if net not in ("", "tcp"):
+                    q["type"] = net
+                    if net == "ws":
+                        ws_opts = p.get("ws-opts") or {}
+                        if ws_opts.get("path"): q["path"] = str(ws_opts["path"])
+                        headers = ws_opts.get("headers") or {}
+                        if headers.get("Host"): q["host"] = str(headers["Host"])
+                    elif net == "grpc":
+                        g_opts = p.get("grpc-opts") or {}
+                        if g_opts.get("grpc-service-name"): q["serviceName"] = str(g_opts["grpc-service-name"])
+                query_str = ("?" + urllib.parse.urlencode(sorted(q.items()))) if q else ""
+                uris.append(f"trojan://{password}@{server}:{port}{query_str}{tag}")
+
+            elif ptype in ("hysteria2", "hy2"):
+                password = p.get("password") or p.get("auth") or ""
+                q = {}
+                sni = p.get("sni") or p.get("servername")
+                if sni: q["sni"] = str(sni)
+                if p.get("skip-cert-verify"): q["insecure"] = "1"
+                obfs = p.get("obfs")
+                if obfs:
+                    q["obfs"] = str(obfs)
+                    obfs_pass = p.get("obfs-password")
+                    if obfs_pass: q["obfs-password"] = str(obfs_pass)
+                query_str = ("?" + urllib.parse.urlencode(sorted(q.items()))) if q else ""
+                auth_str = f"{password}@" if password else ""
+                uris.append(f"hy2://{auth_str}{server}:{port}{query_str}{tag}")
+
+            elif ptype in ("ss", "shadowsocks"):
+                cipher = p.get("cipher")
+                password = p.get("password")
+                if cipher and password:
+                    raw_userinfo = f"{cipher}:{password}".encode("utf-8")
+                    userinfo = base64.urlsafe_b64encode(raw_userinfo).decode("ascii").rstrip("=")
+                    uris.append(f"ss://{userinfo}@{server}:{port}{tag}")
+
+            elif ptype == "vmess":
+                uuid = p.get("uuid")
+                if not uuid:
+                    continue
+                net = str(p.get("network", "tcp")).lower()
+                ws_opts = p.get("ws-opts") or {}
+                headers = ws_opts.get("headers") or {}
+                tls = p.get("tls")
+                vobj = {
+                    "v": "2",
+                    "ps": name,
+                    "add": str(server),
+                    "port": str(port),
+                    "id": str(uuid),
+                    "aid": str(p.get("alterId", 0)),
+                    "scy": str(p.get("cipher", "auto")),
+                    "net": net,
+                    "type": "none",
+                    "host": str(headers.get("Host", "")),
+                    "path": str(ws_opts.get("path", "")),
+                    "tls": "tls" if tls else "",
+                    "sni": str(p.get("servername", "")),
+                }
+                b64_v = base64.b64encode(json.dumps(vobj).encode("utf-8")).decode("ascii")
+                uris.append(f"vmess://{b64_v}")
+    except Exception:
+        pass
+    return uris
 
 def parse_json_configs(content: str) -> list[str]:
     uris = []
@@ -172,10 +392,8 @@ def decode_stream(raw_text: str) -> str:
     if not raw_text:
         return ""
     
-    # Check if raw lines already have protocols
-    if any(proto in raw_text for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "npv://", "darktunnel://", "DARKTUNNEL:", "ovpn://"]):
-        # If it contains protocols directly, it may also have some base64 blocks
-        # Return as is for line-by-line parsing
+    # Check if raw lines already have protocols or yaml
+    if any(proto in raw_text for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "npv://", "darktunnel://", "DARKTUNNEL:", "ovpn://", "proxies:"]):
         return raw_text
     
     # Try Base64 decoding
@@ -183,12 +401,80 @@ def decode_stream(raw_text: str) -> str:
         pad = len(raw_text) % 4
         padded = raw_text + ("=" * (4 - pad) if pad else "")
         decoded = base64.b64decode(padded).decode("utf-8", errors="ignore")
-        if any(proto in decoded for proto in ["://", "npvs1:", "DARKTUNNEL:"]):
+        if any(proto in decoded for proto in ["://", "npvs1:", "DARKTUNNEL:", "proxies:"]):
             return decoded
     except Exception:
         pass
     
     return raw_text
+
+def extract_configs_from_content(content: str) -> list[str]:
+    configs = []
+    if not content:
+        return configs
+
+    # 1. Custom container check (NapsternetV, Dark Tunnel, OpenVPN)
+    custom_uris = extract_all_custom_protocols(content)
+    if custom_uris:
+        configs.extend(custom_uris)
+
+    # 2. Check if JSON config array (e.g. StekloVPN / Xray configs)
+    if content.startswith("[") or content.startswith("{"):
+        json_uris = parse_json_configs(content)
+        if json_uris:
+            configs.extend(json_uris)
+
+    # 3. Check Clash YAML
+    if ("proxies:" in content or "proxies :" in content) and ("type:" in content or "type :" in content):
+        yaml_uris = parse_clash_yaml(content)
+        if yaml_uris:
+            configs.extend(yaml_uris)
+
+    # 4. Stream and Base64 line parsing
+    if not configs:
+        decoded = decode_stream(content)
+        # Check if decoded payload was Clash YAML
+        if ("proxies:" in decoded or "proxies :" in decoded) and ("type:" in decoded or "type :" in decoded):
+            yaml_uris = parse_clash_yaml(decoded)
+            if yaml_uris:
+                configs.extend(yaml_uris)
+
+        if not configs:
+            for line in decoded.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                
+                # Direct check for custom schemes
+                if line.startswith("darktunnel://") or line.startswith("DARKTUNNEL:"):
+                    dt_parsed = decode_darktunnel(line)
+                    if dt_parsed:
+                        configs.extend(dt_parsed)
+                elif line.startswith("npv://") or "npvs1:" in line:
+                    npv_parsed = decode_napsternetv(line)
+                    if npv_parsed:
+                        configs.extend(npv_parsed)
+                elif line.startswith("ovpn://"):
+                    configs.append(line)
+                # If a line itself is base64
+                elif not "://" in line and len(line) > 30:
+                    try:
+                        p = len(line) % 4
+                        sub_dec = base64.b64decode(line + ("=" * (4 - p) if p else "")).decode("utf-8", errors="ignore")
+                        for sub_l in sub_dec.splitlines():
+                            sub_l = sub_l.strip()
+                            if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
+                                configs.append(sub_l)
+                    except Exception:
+                        pass
+                elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
+                    configs.append(line)
+    return configs
+
+def fetch_url_content(url: str, headers: dict[str, str], timeout: int = 10) -> str:
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="ignore").strip()
 
 def fetch_mehdirzfx_aggregator() -> list[str]:
     configs = []
@@ -201,8 +487,8 @@ def fetch_mehdirzfx_aggregator() -> list[str]:
             links = []
             for b in blocks:
                 for l in b.splitlines():
-                    l = l.strip()
-                    if l.startswith("http") and not l.endswith(".yaml") and not l.endswith(".yml"):
+                    l = clean_source_url(l)
+                    if l.startswith("http"):
                         links.append(l)
 
             # Prioritize Russian bypass, VLESS, Reality, and high-yield subscriptions
@@ -226,67 +512,44 @@ def fetch_mehdirzfx_aggregator() -> list[str]:
     return configs
 
 def fetch_single_source(url: str) -> list[str]:
+    url = clean_source_url(url)
+    url = fix_github_raw_url(url)
+
     if "mehdirzfx" in url:
         return fetch_mehdirzfx_aggregator()
 
-    configs = []
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "v2rayNG/1.8.5 (Linux; Android 14)",
-                "Accept": "*/*"
-            }
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            content = resp.read().decode("utf-8", errors="ignore").strip()
-            
-            # 1. Custom container check (NapsternetV, Dark Tunnel, OpenVPN)
-            custom_uris = extract_all_custom_protocols(content)
-            if custom_uris:
-                configs.extend(custom_uris)
+    # Pass 1: Happ client device emulation (X-HWID, X-Device-Model, X-Ver-OS, UA Happ, ?hwid=...)
+    # This unlocks private panels and Happ subscriptions that reject generic crawlers.
+    happ_headers, hwid = generate_happ_device_headers()
+    happ_url = url
+    if "hwid=" not in url:
+        sep = "&" if "?" in url else "?"
+        happ_url = f"{url}{sep}hwid={hwid}"
 
-            # 2. Check if JSON config array (e.g. StekloVPN / Xray configs)
-            if content.startswith("[") or content.startswith("{"):
-                json_uris = parse_json_configs(content)
-                if json_uris:
-                    configs.extend(json_uris)
-            
-            if not configs:
-                decoded = decode_stream(content)
-                for line in decoded.splitlines():
-                    line = line.strip()
-                    if not line or line.startswith("#"):
-                        continue
-                    
-                    # Direct check for custom schemes
-                    if line.startswith("darktunnel://") or line.startswith("DARKTUNNEL:"):
-                        dt_parsed = decode_darktunnel(line)
-                        if dt_parsed:
-                            configs.extend(dt_parsed)
-                    elif line.startswith("npv://") or "npvs1:" in line:
-                        npv_parsed = decode_napsternetv(line)
-                        if npv_parsed:
-                            configs.extend(npv_parsed)
-                    elif line.startswith("ovpn://"):
-                        configs.append(line)
-                    # If a line itself is base64
-                    elif not "://" in line and len(line) > 30:
-                        try:
-                            p = len(line) % 4
-                            sub_dec = base64.b64decode(line + ("=" * (4 - p) if p else "")).decode("utf-8", errors="ignore")
-                            for sub_l in sub_dec.splitlines():
-                                sub_l = sub_l.strip()
-                                if any(sub_l.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
-                                    configs.append(sub_l)
-                        except Exception:
-                            pass
-                    elif any(line.startswith(proto) for proto in ["vless://", "vmess://", "trojan://", "ss://", "hy2://", "tuic://", "ovpn://"]):
-                        configs.append(line)
-        logging.info(f"Fetched {len(configs)} configs from {url[:50]}...")
+    try:
+        content = fetch_url_content(happ_url, headers=happ_headers, timeout=10)
+        configs = extract_configs_from_content(content)
+        if configs:
+            logging.info(f"[Happ-Pass] Fetched {len(configs)} configs from {url[:50]}...")
+            return configs
+    except Exception:
+        pass
+
+    # Pass 2: Fallback to standard v2rayNG client
+    standard_headers = {
+        "User-Agent": "v2rayNG/1.8.5 (Linux; Android 14)",
+        "Accept": "*/*"
+    }
+    try:
+        content = fetch_url_content(url, headers=standard_headers, timeout=10)
+        configs = extract_configs_from_content(content)
+        if configs:
+            logging.info(f"[Standard-Pass] Fetched {len(configs)} configs from {url[:50]}...")
+            return configs
     except Exception as e:
         logging.warning(f"Failed fetching {url[:50]}: {e}")
-    return configs
+
+    return []
 
 def scrape_telegram_public_channels() -> list[str]:
     """Scrapes top active Telegram channels via public web view (t.me/s/) without API keys."""
@@ -296,8 +559,8 @@ def scrape_telegram_public_channels() -> list[str]:
     try:
         with open(tg_file, "r", encoding="utf-8") as f:
             channels = [
-                line.strip().replace("https://t.me/", "").replace("@", "").strip("/")
-                for line in f if line.strip() and not line.startswith("#")
+                clean_source_url(line).replace("https://t.me/", "").replace("@", "").strip("/")
+                for line in f if clean_source_url(line) and not clean_source_url(line).startswith("#")
             ]
     except Exception:
         return []
