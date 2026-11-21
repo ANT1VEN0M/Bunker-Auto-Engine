@@ -16,11 +16,11 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 08:34:13 МСК` (`2026-11-21 05:34:13 UTC`)
-- 🟢 **Всего активных проверенных нод:** `350`
+- 🕒 **Последнее авто-обновление:** `2026-11-21 08:44:18 МСК` (`2026-11-21 05:44:18 UTC`)
+- 🟢 **Всего активных проверенных нод:** `215`
 - 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `80`
-- 🌍 **Мировой Микс (YouTube / DPI):** `255`
+- 🌍 **Мировой Микс (YouTube / DPI):** `220`
 - 🤍 **Белый список (RU / BY):** `124`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `80`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `55`
@@ -102,9 +102,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
 
 
 ---
