@@ -2,7 +2,7 @@ import socket
 import time
 import logging
 import concurrent.futures
-from .geo import resolve_host_to_ip, get_country_code
+from .geo import resolve_host_to_ip, get_country_code, get_asn_info, is_russian_wl_hosting
 
 def check_single_node(cfg: dict, timeout: float = 2.0) -> dict | None:
     host = cfg.get("host", "")
@@ -25,11 +25,17 @@ def check_single_node(cfg: dict, timeout: float = 2.0) -> dict | None:
         ping_ms = max(1, int(elapsed * 1000))
         
         country = get_country_code(ip)
+        asn, org = get_asn_info(ip)
+        is_wl, wl_name = is_russian_wl_hosting(ip, asn=asn)
         
         result = dict(cfg)
         result["ip"] = ip
         result["ping_ms"] = ping_ms
         result["country"] = country
+        result["asn"] = asn
+        result["org"] = org
+        result["is_wl_hosting"] = is_wl
+        result["wl_hosting"] = wl_name
         return result
     except (socket.timeout, socket.error, OSError, OverflowError, ValueError):
         return None
@@ -45,9 +51,9 @@ def check_all_nodes(configs: list[dict], max_workers: int = 120, timeout: float 
                 res = future.result()
                 if res:
                     alive_nodes.append(res)
-            except Exception as e:
-                # Silently skip any erroneous node
+            except Exception:
                 continue
     
-    logging.info(f"Health check completed: {len(alive_nodes)} / {len(configs)} nodes are alive!")
+    wl_count = sum(1 for n in alive_nodes if n.get("is_wl_hosting"))
+    logging.info(f"Health check completed: {len(alive_nodes)} / {len(configs)} nodes alive! (Russian WL Hostings: {wl_count})")
     return alive_nodes

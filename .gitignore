@@ -3,6 +3,8 @@ __pycache__/
 *$py.class
 Country.mmdb
 engine/Country.mmdb
+GeoLite2-ASN.mmdb
+engine/GeoLite2-ASN.mmdb
 .venv/
 venv/
 .DS_Store

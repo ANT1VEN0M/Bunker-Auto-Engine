@@ -70,16 +70,18 @@ def generate_subscriptions(alive_nodes: list[dict]):
             proto_nodes["ss"].append(node)
             continue
 
-        # White list (Bypass restrictive Wi-Fi / enterprise firewall: standard ports 443, 80, 53, 8443)
-        if port in [443, 80, 53, 8443] and proto in ["vless", "trojan", "vmess", "hy2"]:
+        is_wl_host = node.get("is_wl_hosting", False)
+
+        # White list (Bypass restrictive mobile throttling & whitelists: Russian domestic hostings or RU/BY on standard ports)
+        if (is_wl_host or (port in [443, 80, 53, 8443] and c in ["RU", "BY"])) and proto in ["vless", "trojan", "vmess", "hy2"]:
             bs_nodes.append(node)
-            if port in [443, 53]:
+            if port in [443, 53] or is_wl_host:
                 factory_nodes.append(node)
         
         mix_nodes.append(node)
             
         # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
-        if port in [443, 80, 53] and c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"]:
+        if port in [443, 80, 53] and (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] or is_wl_host):
             tg_nodes.append(node)
 
         # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Europe / US on 443/UDP)
@@ -89,10 +91,20 @@ def generate_subscriptions(alive_nodes: list[dict]):
         if proto in proto_nodes:
             proto_nodes[proto].append(node)
 
-    # Sort BS nodes: 443 & 53 first, then by ping
+    # Sort BS nodes: Russian WL hostings on 443/53 first, then by ping
     def bs_sort_key(node):
+        is_wl = node.get("is_wl_hosting", False)
         p = node.get("port", 0)
-        priority = 0 if p == 443 else (1 if p == 53 else (2 if p == 80 else 3))
+        if is_wl and p in (443, 53):
+            priority = 0
+        elif is_wl:
+            priority = 1
+        elif p in (443, 53):
+            priority = 2
+        elif p == 80:
+            priority = 3
+        else:
+            priority = 4
         return (priority, node.get("ping_ms", 9999))
     
     # Sort Discord Voice nodes: Hysteria 2 (native UDP) first, then lowest ping
@@ -135,7 +147,12 @@ def generate_subscriptions(alive_nodes: list[dict]):
         port = node.get("port", 0)
         ping = node.get("ping_ms", 0)
         port_tag = "53 DNS" if port == 53 else ("443" if port == 443 else f":{port}")
-        remark = f"{flag} [{c}] Бункер БС #{idx:02d} | {port_tag} | ⚡{ping}ms"
+        is_wl = node.get("is_wl_hosting", False)
+        wl_name = node.get("wl_hosting")
+        if is_wl and wl_name:
+            remark = f"🤍 [{wl_name}] Бункер БС #{idx:02d} | {port_tag} | ⚡{ping}ms"
+        else:
+            remark = f"{flag} [{c}] Бункер БС #{idx:02d} | {port_tag} | ⚡{ping}ms"
         bs_uris.append(build_branded_uri(node, remark))
 
     factory_uris = []
@@ -145,7 +162,12 @@ def generate_subscriptions(alive_nodes: list[dict]):
         port = node.get("port", 0)
         ping = node.get("ping_ms", 0)
         tag = "53 DNS" if port == 53 else "443"
-        remark = f"🏭 {flag} [{c}] Завод #{idx:02d} | {tag} | ⚡{ping}ms"
+        is_wl = node.get("is_wl_hosting", False)
+        wl_name = node.get("wl_hosting")
+        if is_wl and wl_name:
+            remark = f"🏭 [{wl_name}] Завод #{idx:02d} | {tag} | ⚡{ping}ms"
+        else:
+            remark = f"🏭 {flag} [{c}] Завод #{idx:02d} | {tag} | ⚡{ping}ms"
         factory_uris.append(build_branded_uri(node, remark))
 
     fast_uris = []
