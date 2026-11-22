@@ -1,7 +1,7 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> Обновляется каждый час на GitHub Actions. **74 проверенных источника**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
 
 ---
 
@@ -11,7 +11,7 @@
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN/releases/tag/v1.4.1)**.
 
 ---
 
@@ -155,6 +155,27 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - 💬 **Чат сообщества:** [@BUNKER_K0TA](https://t.me/BUNKER_K0TA)
 - 🤖 **Telegram Бот:** [@BunkerCatOSBot](https://t.me/BunkerCatOSBot)
 - 👑 **Создатель:** [@k0tlux](https://t.me/k0tlux)
+
+---
+
+## 🔌 Официальные плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
+
+Бункер Кота разрабатывает собственные плагины для кастомных Telegram-клиентов на Android:
+
+1. **💫 Bunker Neon Loader v1.2.0:**
+   - Превращает скучный серый кружок загрузки в футуристичный неоновый спиннер.
+   - 7 дизайнерских стилей: 🌈 RGB-Радуга, ⚡ Cyber Cyan, 🍏 iOS Minimal, 🌅 Sunset Fire, 💚 Matrix Emerald, 💜 Amethyst, 💛 Gold.
+   - Неоновое свечение (Glow), пульсация и высококонтрастная OLED-подложка.
+   - [Скачать bunker_neon_loader.plugin](https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin)
+
+2. **🌐 Bunker Chat Translator v1.2.6:**
+   - Мгновенный перевод сообщений в чатах, каналах и ЛС на лету (16 языков).
+   - [Скачать bunker_chat_translator.plugin](https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin)
+
+📌 **Ссылка на официальный репозиторий плагинов Бункера (для вставки в клиент):**
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json
+```
 
 ---
 
