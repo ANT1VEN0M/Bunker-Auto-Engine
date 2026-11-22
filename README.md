@@ -1,7 +1,7 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **74 проверенных источника**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
 
 ---
 
@@ -11,20 +11,20 @@
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN/releases/tag/v1.4.1)**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
 
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-22 19:22:43 МСК` (`2026-11-22 16:22:43 UTC`)
-- 🟢 **Всего активных проверенных нод:** `81`
+- 🕒 **Последнее авто-обновление:** `2026-11-22 21:08:35 МСК` (`2026-11-22 18:08:35 UTC`)
+- 🟢 **Всего активных проверенных нод:** `64`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `35`
-- 🌍 **Мировой Микс (YouTube / DPI):** `87`
-- 🤍 **Белый список (RU / BY):** `34`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `29`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `21`
+- 🌍 **Мировой Микс (YouTube / DPI):** `70`
+- 🤍 **Белый список (RU / BY):** `20`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `15`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `31`
+- 💬 **Пожарный канал для Telegram:** `16`
 
 ---
 
@@ -102,9 +102,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
 
 
 ---
@@ -155,27 +155,6 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - 💬 **Чат сообщества:** [@BUNKER_K0TA](https://t.me/BUNKER_K0TA)
 - 🤖 **Telegram Бот:** [@BunkerCatOSBot](https://t.me/BunkerCatOSBot)
 - 👑 **Создатель:** [@k0tlux](https://t.me/k0tlux)
-
----
-
-## 🔌 Официальные плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
-
-Бункер Кота разрабатывает собственные плагины для кастомных Telegram-клиентов на Android:
-
-1. **💫 Bunker Neon Loader v1.2.0:**
-   - Превращает скучный серый кружок загрузки в футуристичный неоновый спиннер.
-   - 7 дизайнерских стилей: 🌈 RGB-Радуга, ⚡ Cyber Cyan, 🍏 iOS Minimal, 🌅 Sunset Fire, 💚 Matrix Emerald, 💜 Amethyst, 💛 Gold.
-   - Неоновое свечение (Glow), пульсация и высококонтрастная OLED-подложка.
-   - [Скачать bunker_neon_loader.plugin](https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin)
-
-2. **🌐 Bunker Chat Translator v1.2.6:**
-   - Мгновенный перевод сообщений в чатах, каналах и ЛС на лету (16 языков).
-   - [Скачать bunker_chat_translator.plugin](https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin)
-
-📌 **Ссылка на официальный репозиторий плагинов Бункера (для вставки в клиент):**
-```text
-https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json
-```
 
 ---
 
