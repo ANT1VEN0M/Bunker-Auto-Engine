@@ -137,7 +137,31 @@ SOURCES = [
     # 52. Diman331 Gist VLESS Reality & XHTTP Matrix (96 nodes)
     "https://gist.githubusercontent.com/Diman331/8c868070c0b5a5ec0c7d94507717b67b/raw/subscription.txt",
     # 53. FLAT447 V2Ray Russian Whitelist Full (100 nodes)
-    "https://raw.githubusercontent.com/FLAT447/v2ray-lists/main/WHITE_FULL.txt"
+    "https://raw.githubusercontent.com/FLAT447/v2ray-lists/main/WHITE_FULL.txt",
+    # 54. VPNKeys Incy Dedicated Russian Whitelist (14 nodes)
+    "https://vpnkeys.me/sub/incy/for-russia",
+    # 55. V2Hub High-Speed Direct Sub (5 nodes)
+    "https://v2hub.link/sub/YGW0Q5b_LdpiR-Qg4lN6yEeL3mPGqVAmgXzv0B6u8Bg",
+    # 56. Pozor Bond Unlisted Free Bypass Pool (382 nodes)
+    "https://clck.ly/3WnEfT",
+    # 57. WSProxy Dedicated Anti-Censorship Relay (10 nodes)
+    "https://wsproxy.sub.sos.al/g6ewb39xg3bd8db2hs8",
+    # 58. Cepreu54 VLESS Clean RU Matrix (70 nodes)
+    "https://raw.githubusercontent.com/Cepreu54/vless-clean/refs/heads/main/clean.txt",
+    # 59. YandexDNS Service Bypass Relay (2 nodes)
+    "https://dds.yandexdns-api-service.help/sub/97ISLYSEBA/",
+    # 60. FreeCFGHub / Ilyacom4ik 2026 Free V2Ray (130 nodes)
+    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/FreeCFGHub1.txt",
+    # 61. Diversan313 Apex Parser Alive Exotic (54 nodes)
+    "https://raw.githubusercontent.com/Diversan313/apex-parser/refs/heads/main/subs/other/exotic/alive_plain_exotic.txt",
+    # 62. HiddifyCode HWID Bypass Matrix (10 nodes)
+    "https://is.wepogp.gay/bypass-hwid-lock-3z5O6BFAaJQzGlamvtSo?payload=wiq6mxJkeDA4iTsNc46%2B%2Bmxno5%2B1VG6m5LeYlbNA1kLt5J2vVoj/a6fEi53OHDxSpyGPSCIdbCqC15dCfIQsqgB4wZ0k2tr1AXjNbF9I735NA7YqAzR7xww5XAJz63dh",
+    # 63. PiroShokVPN Resub Cloudflare Matrix (56 nodes)
+    "https://resub.pirzok6.workers.dev/98165ed40f5fd1c0520402391450d52a",
+    # 64. ToshibuVPN Bot Sub Matrix (10 nodes)
+    "https://tshbotpopup.ru/subscriptions/04920673-035c-410d-94e4-5b1469d3fb6f.txt",
+    # 65. Buffetbarko Universal Whitelist VPN (155 nodes)
+    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/whitelist_vpn.txt"
 ]
 
 def clean_source_url(url: str) -> str:
