@@ -57,7 +57,7 @@ __description__ = (
     "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 __icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
@@ -507,7 +507,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 ):
                     return
 
-                # Инжектируем перевод в messageText ДО того, как ячейка построит лэйаут
+                # 1. Инжектируем перевод в messageText ДО того, как ячейка построит лэйаут
                 replace = bool(self.get_setting("replace_original", False))
                 if replace:
                     new_text = f"🌐 {translated_text}"
@@ -517,7 +517,22 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 if hasattr(msg_obj, "messageText"):
                     msg_obj.messageText = String(new_text)
 
-                # Сбрасываем кэш разметки, чтобы Telegram пересчитал лэйаут под новый текст
+                # 2. Обновляем messageOwner.message и очищаем entities
+                if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
+                    try:
+                        msg_obj.messageOwner.message = String(new_text)
+                        msg_obj.messageOwner.entities = None
+                    except Exception:
+                        pass
+
+                # 3. Нативные свойства Telegram
+                try:
+                    msg_obj.translated = True
+                    msg_obj.translatedText = String(translated_text)
+                except Exception:
+                    pass
+
+                # 4. Сбрасываем кэш разметки, чтобы Telegram пересчитал лэйаут под новый текст
                 if hasattr(msg_obj, "textLayoutBlocks"):
                     try:
                         msg_obj.textLayoutBlocks = None
@@ -665,15 +680,42 @@ class BunkerChatTranslatorPlugin(BasePlugin):
     def _on_chat_action_toggle(self, ctx: Any):
         """Включение / отключение автоперевода для текущего чата."""
         try:
-            fragment = ctx.get("fragment") if isinstance(ctx, dict) else ctx
-            if not fragment:
-                fragment = get_last_fragment()
+            frag = None
+            raw_did = None
+
+            if hasattr(ctx, "get") and callable(getattr(ctx, "get")):
+                try:
+                    raw_did = ctx.get("dialog_id")
+                except Exception:
+                    pass
+                try:
+                    frag = ctx.get("fragment")
+                except Exception:
+                    pass
+
+            if not frag:
+                frag = get_last_fragment()
+
+            if raw_did is None and frag is not None:
+                if hasattr(frag, "getDialogId") and callable(getattr(frag, "getDialogId")):
+                    try:
+                        raw_did = frag.getDialogId()
+                    except Exception:
+                        pass
+                if raw_did is None:
+                    try:
+                        raw_did = get_private_field(frag, "dialog_id")
+                    except Exception:
+                        pass
 
             dialog_id = None
-            if fragment and hasattr(fragment, "getDialogId"):
-                dialog_id = int(fragment.getDialogId())
+            if raw_did is not None:
+                try:
+                    dialog_id = int(str(raw_did).strip())
+                except Exception:
+                    pass
 
-            if dialog_id is None:
+            if dialog_id is None or dialog_id == 0:
                 safe_notify("Не удалось определить чат")
                 return
 
@@ -688,6 +730,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             self._schedule_interface_update(account)
         except Exception as e:
             _log(f"toggle chat action error: {e}")
+            safe_notify(f"Ошибка чата: {e}")
 
     def create_settings(self) -> List[Any]:
         """Интерфейс настроек плагина в NimarkoGram / ExteraGram / AyuGram."""

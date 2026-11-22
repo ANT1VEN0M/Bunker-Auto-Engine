@@ -6,7 +6,7 @@
     {
       "id": "bunker_chat_translator",
       "name": "Bunker Chat Translator 🌐",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "description": "Автоматический перевод всего текста в чатах, каналах и ЛС на лету. Всплывающий перевод по долгому тапу и отправка перевода через .tr.",
       "author": "@k0tlux & Бункер Кота",
       "category": "tools",
