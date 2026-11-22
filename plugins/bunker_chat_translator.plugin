@@ -63,6 +63,10 @@ __version__ = "1.2.0"
 __icon__ = "pk_5199573_by_Ctikerubot/65"
 __min_version__ = "11.10.0"
 
+UPDATE_URL_GITHUB = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
+UPDATE_URL_MIRROR = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
+REPO_URL = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json"
+
 SUPPORTED_LANGUAGES: List[Tuple[str, str]] = [
     ("Русский", "ru"),
     ("English", "en"),
@@ -394,6 +398,17 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
         # 5. Меню действий чата (в шапке чата для вкл/выкл автоперевода)
         self._sync_chat_menu()
+
+        # 6. Фоновая проверка обновлений плагина
+        if self.get_setting("auto_update", True):
+            def delayed_update_check():
+                time.sleep(8.0)
+                try:
+                    self._check_and_apply_update(manual=False)
+                except Exception as ex:
+                    _log(f"Auto-update check err: {ex}")
+
+            threading.Thread(target=delayed_update_check, daemon=True).start()
 
         _log("Bunker Chat Translator готов к работе!")
 
@@ -790,10 +805,34 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 on_click=lambda _: self._on_clear_cache_click(),
             ),
             Divider(),
+            Header(text="Обновления и репозиторий"),
+            Switch(
+                key="auto_update",
+                text="Автообновление плагина",
+                subtext="Автоматически загружать свежие патчи при запуске",
+                default=True,
+                icon="msg_reload",
+            ),
+            Text(
+                text="Проверить обновления сейчас",
+                subtext="Связаться с GitHub и проверить наличие свежей версии",
+                icon="msg_download",
+                accent=True,
+                on_click=lambda _: threading.Thread(
+                    target=self._check_and_apply_update, args=(True,), daemon=True
+                ).start(),
+            ),
+            Text(
+                text="Скопировать ссылку на репозиторий",
+                subtext="Добавьте в Настройки Telegram -> Плагины -> Репозитории",
+                icon="msg_link",
+                on_click=lambda _: self._copy_repo_url(),
+            ),
+            Divider(),
             Header(text="О плагине"),
             Text(
                 text="Бункер Кота | VPN • Proxy • TG",
-                subtext="Разработано специально для подписчиков Бункера",
+                subtext=f"Версия {__version__} • Разработано для подписчиков Бункера",
                 icon="msg_bot",
             ),
         ]
@@ -812,3 +851,97 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             )
         except Exception:
             pass
+
+    def _copy_repo_url(self):
+        try:
+            ctx_app = ApplicationLoader.applicationContext
+            cm = ctx_app.getSystemService(Context.CLIPBOARD_SERVICE)
+            clip = ClipData.newPlainText("repo_url", REPO_URL)
+            cm.setPrimaryClip(clip)
+            safe_notify("Ссылка на репозиторий скопирована в буфер обмена! 🐈‍⬛")
+        except Exception as e:
+            safe_notify(f"Ошибка копирования: {e}")
+
+    def _check_and_apply_update(self, manual: bool = False):
+        """Проверяет наличие новой версии плагина на GitHub и обновляет файл."""
+        try:
+            if manual:
+                safe_notify("🔍 Проверяю наличие обновлений...")
+
+            remote_code = None
+            urls = [UPDATE_URL_MIRROR, UPDATE_URL_GITHUB]
+            for url in urls:
+                try:
+                    req = urllib.request.Request(
+                        url,
+                        headers={"User-Agent": "BunkerTranslatorPlugin/1.2"}
+                    )
+                    with urllib.request.urlopen(req, timeout=12.0) as resp:
+                        if resp.getcode() == 200:
+                            data = resp.read().decode("utf-8", errors="replace")
+                            if "__version__" in data and "BunkerChatTranslatorPlugin" in data:
+                                remote_code = data
+                                break
+                except Exception as ex:
+                    _log(f"Update fetch failed from {url}: {ex}")
+                    continue
+
+            if not remote_code:
+                if manual:
+                    safe_notify("❌ Не удалось проверить обновления. Проверьте интернет.")
+                return
+
+            ver_match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', remote_code)
+            if not ver_match:
+                if manual:
+                    safe_notify("⚠️ Ошибка формата версии на сервере.")
+                return
+
+            remote_ver = ver_match.group(1).strip()
+            local_ver = __version__.strip()
+
+            def parse_ver(v_str: str) -> Tuple[int, ...]:
+                parts = []
+                for p in re.findall(r"\d+", v_str):
+                    try:
+                        parts.append(int(p))
+                    except Exception:
+                        pass
+                return tuple(parts)
+
+            if parse_ver(remote_ver) <= parse_ver(local_ver):
+                if manual:
+                    safe_notify(f"У вас самая свежая версия (v{local_ver}) ✅")
+                return
+
+            # Обнаружена новая версия! Ищем целевой путь для записи
+            target_file = None
+            if globals().get("__file__") and os.path.isfile(__file__):
+                target_file = __file__
+            else:
+                for cand_dir in [
+                    "/data/user/0/app.nimarkogram.messenger/files/plugins",
+                    "/data/data/app.nimarkogram.messenger/files/plugins",
+                    "/data/user/0/com.exteragram.messenger/files/plugins",
+                    "/data/data/com.exteragram.messenger/files/plugins",
+                ]:
+                    cand_path = os.path.join(cand_dir, f"{__id__}.plugin")
+                    if os.path.exists(cand_path):
+                        target_file = cand_path
+                        break
+
+            if target_file and os.path.exists(target_file):
+                try:
+                    with open(target_file, "w", encoding="utf-8") as f:
+                        f.write(remote_code)
+                    _log(f"Плагин успешно перезаписан: {target_file} -> v{remote_ver}")
+                    safe_notify(f"🎉 Плагин обновлён до v{remote_ver}! Перезапустите Telegram.")
+                    return
+                except Exception as we:
+                    _log(f"Ошибка записи плагина: {we}")
+
+            safe_notify(f"Доступно обновление v{remote_ver}! Скачайте его в канале Бункера.")
+        except Exception as exc:
+            _log(f"Update error: {exc}")
+            if manual:
+                safe_notify(f"Ошибка обновления: {exc}")

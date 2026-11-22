@@ -1,0 +1,17 @@
+{
+  "name": "Bunker Plugins Repository 🐈‍⬛",
+  "author": "@k0tlux & Бункер Кота",
+  "description": "Официальный репозиторий плагинов Бункера Кота для ExteraGram, NimarkoGram и AyuGram",
+  "plugins": [
+    {
+      "id": "bunker_chat_translator",
+      "name": "Bunker Chat Translator 🌐",
+      "version": "1.2.0",
+      "description": "Автоматический перевод всего текста в чатах, каналах и ЛС на лету. Включает нативную плашку 'Перевести весь чат' без Telegram Premium, перевод прямо в ленте сообщений и отправку перевода через .tr.",
+      "author": "@k0tlux & Бункер Кота",
+      "category": "tools",
+      "icon": "pk_5199573_by_Ctikerubot/65",
+      "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
+    }
+  ]
+}
