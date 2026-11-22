@@ -133,7 +133,9 @@ SOURCES = [
     # 50. TowshanVpn Richman Google Drive Relay
     "https://www.googleapis.com/drive/v3/files/1wzOHyEeyXAuyf62xCzcfpwOuAUAees2e?alt=media&key=AIzaSyABWhGqO0OH1RvKe-wzyZE1fNvT1kOreGA",
     # 51. TowshanVpn Infinite Google Drive Relay
-    "https://www.googleapis.com/drive/v3/files/1JyH-hwc-ZT6t4DOMMvwv2Gr5IpuRDl4K?alt=media&key=AIzaSyCGymbPGMVcK_byQOhvOjAE4Dsk9nb54_E"
+    "https://www.googleapis.com/drive/v3/files/1JyH-hwc-ZT6t4DOMMvwv2Gr5IpuRDl4K?alt=media&key=AIzaSyCGymbPGMVcK_byQOhvOjAE4Dsk9nb54_E",
+    # 52. Diman331 Gist VLESS Reality & XHTTP Matrix (96 nodes)
+    "https://gist.githubusercontent.com/Diman331/8c868070c0b5a5ec0c7d94507717b67b/raw/subscription.txt"
 ]
 
 def clean_source_url(url: str) -> str:
