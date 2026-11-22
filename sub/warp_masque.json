@@ -45,22 +45,35 @@
   ],
   "outbounds": [
     {
+      "type": "urltest",
+      "tag": "🚀 BUNKER-AUTO (Автовыбор)",
+      "outbounds": [
+        "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
+        "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
+        "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
+        "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "5m",
+      "tolerance": 50
+    },
+    {
       "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H2 (HTTP/2)",
+      "tag": "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
       "server": "162.159.198.1",
       "server_port": 443,
       "address": "162.159.198.1",
       "port": 443,
       "tls": {
         "enabled": true,
-        "server_name": "consumer-masque.cloudflareclient.com",
-        "insecure": false
+        "server_name": "zt-masque.cloudflareclient.com",
+        "insecure": true
       },
       "profile": {
-        "id": "e15d46d6-2e36-4da0-9a41-9c205a46b3b6",
-        "auth_token": "7a3081de-af48-40af-adce-3c7e049c5937"
+        "id": "383eae18-d85f-41f0-8081-06fa4c788c78",
+        "auth_token": "ae39f2a8-817a-442e-98af-c3dc341c6e8f"
       },
-      "private_key": "MHcCAQEEIGo972GkbFZBsqjISYYaKBg3rnqrkySKM3t001qf78dAoAoGCCqGSM49AwEHoUQDQgAE385aP7h+BBf4GUQML8Rki8Ye08JAw7+YTFt0Byfc9+fwYhUO/u0pbd0zJvFZkqdxtZfVRbguqpHqWPbxjQhQnA==",
+      "private_key": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
       "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
       "system": false,
       "use_http2": true,
@@ -69,7 +82,30 @@
     },
     {
       "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H3 (HTTP/3)",
+      "tag": "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
+      "server": "162.159.198.1",
+      "server_port": 443,
+      "address": "162.159.198.1",
+      "port": 443,
+      "tls": {
+        "enabled": true,
+        "server_name": "zt-masque.cloudflareclient.com",
+        "insecure": true
+      },
+      "profile": {
+        "id": "383eae18-d85f-41f0-8081-06fa4c788c78",
+        "auth_token": "ae39f2a8-817a-442e-98af-c3dc341c6e8f"
+      },
+      "private_key": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
+      "system": false,
+      "use_http2": false,
+      "udp_timeout": "5m0s",
+      "udp_keepalive_period": "30s"
+    },
+    {
+      "type": "masque",
+      "tag": "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
       "server": "162.159.198.1",
       "server_port": 443,
       "address": "162.159.198.1",
@@ -77,13 +113,36 @@
       "tls": {
         "enabled": true,
         "server_name": "consumer-masque.cloudflareclient.com",
-        "insecure": false
+        "insecure": true
       },
       "profile": {
-        "id": "e15d46d6-2e36-4da0-9a41-9c205a46b3b6",
-        "auth_token": "7a3081de-af48-40af-adce-3c7e049c5937"
+        "id": "383eae18-d85f-41f0-8081-06fa4c788c78",
+        "auth_token": "ae39f2a8-817a-442e-98af-c3dc341c6e8f"
       },
-      "private_key": "MHcCAQEEIGo972GkbFZBsqjISYYaKBg3rnqrkySKM3t001qf78dAoAoGCCqGSM49AwEHoUQDQgAE385aP7h+BBf4GUQML8Rki8Ye08JAw7+YTFt0Byfc9+fwYhUO/u0pbd0zJvFZkqdxtZfVRbguqpHqWPbxjQhQnA==",
+      "private_key": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
+      "system": false,
+      "use_http2": true,
+      "udp_timeout": "5m0s",
+      "udp_keepalive_period": "30s"
+    },
+    {
+      "type": "masque",
+      "tag": "⚡ [WARP-MASQUE] Бункер H3 (Consumer)",
+      "server": "162.159.198.1",
+      "server_port": 443,
+      "address": "162.159.198.1",
+      "port": 443,
+      "tls": {
+        "enabled": true,
+        "server_name": "consumer-masque.cloudflareclient.com",
+        "insecure": true
+      },
+      "profile": {
+        "id": "383eae18-d85f-41f0-8081-06fa4c788c78",
+        "auth_token": "ae39f2a8-817a-442e-98af-c3dc341c6e8f"
+      },
+      "private_key": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
       "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
       "system": false,
       "use_http2": false,
@@ -110,6 +169,7 @@
         "outbound": "direct"
       }
     ],
-    "auto_detect_interface": true
+    "auto_detect_interface": true,
+    "final": "🚀 BUNKER-AUTO (Автовыбор)"
   }
 }

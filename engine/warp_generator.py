@@ -28,7 +28,11 @@ CLOUDFLARE_MASQUE_IPS = [
     "162.159.198.3",
     "162.159.198.4"
 ]
-MASQUE_SNI = "consumer-masque.cloudflareclient.com"
+MASQUE_SNI_DEFAULT = "zt-masque.cloudflareclient.com"
+MASQUE_SNI_ZT = "zt-masque.cloudflareclient.com"
+MASQUE_SNI_CONSUMER = "consumer-masque.cloudflareclient.com"
+MASQUE_SNI_API = "api.cloudflareclient.com"
+MASQUE_SNI = MASQUE_SNI_ZT
 
 # Xray UDP noise finalmask to break TSPU / DPI handshake fingerprinting
 DEFAULT_FINALMASK_OBJ = {
@@ -191,7 +195,7 @@ def enroll_masque_profile(device_id: str, token: str, v4: str = "172.16.0.2", v6
         return None
 
 
-def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159.198.1", port: int = 443, network: str = "h2") -> str:
+def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159.198.1", port: int = 443, network: str = "h2", sni: str = MASQUE_SNI_ZT) -> str:
     encoded_priv = urllib.parse.quote(profile['private_key'], safe='')
     encoded_pub = urllib.parse.quote(profile['public_key'], safe='')
     encoded_addr = urllib.parse.quote(profile['local_address'], safe='')
@@ -200,7 +204,7 @@ def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159
     return (
         f"warp://{encoded_priv}@{masque_ip}:{port}?"
         f"public_key={encoded_pub}&address={encoded_addr}&"
-        f"sni={MASQUE_SNI}&masque=1&network={network}&mtu={profile.get('mtu', 1280)}#"
+        f"sni={sni}&masque=1&network={network}&mtu={profile.get('mtu', 1280)}#"
         f"{encoded_remarks}"
     )
 
@@ -258,16 +262,29 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
         ],
         "outbounds": [
             {
+                "type": "urltest",
+                "tag": "🚀 BUNKER-AUTO (Автовыбор)",
+                "outbounds": [
+                    "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
+                    "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
+                    "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
+                    "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+                ],
+                "url": "https://www.gstatic.com/generate_204",
+                "interval": "5m",
+                "tolerance": 50
+            },
+            {
                 "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H2 (HTTP/2)",
+                "tag": "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
                 "server": masque_ip,
                 "server_port": port,
                 "address": masque_ip,
                 "port": port,
                 "tls": {
                     "enabled": True,
-                    "server_name": MASQUE_SNI,
-                    "insecure": False
+                    "server_name": MASQUE_SNI_ZT,
+                    "insecure": True
                 },
                 "profile": {
                     "id": device_id,
@@ -282,15 +299,61 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
             },
             {
                 "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H3 (HTTP/3)",
+                "tag": "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
                 "server": masque_ip,
                 "server_port": port,
                 "address": masque_ip,
                 "port": port,
                 "tls": {
                     "enabled": True,
-                    "server_name": MASQUE_SNI,
-                    "insecure": False
+                    "server_name": MASQUE_SNI_ZT,
+                    "insecure": True
+                },
+                "profile": {
+                    "id": device_id,
+                    "auth_token": token
+                },
+                "private_key": priv,
+                "public_key": pub,
+                "system": False,
+                "use_http2": False,
+                "udp_timeout": "5m0s",
+                "udp_keepalive_period": "30s"
+            },
+            {
+                "type": "masque",
+                "tag": "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
+                "server": masque_ip,
+                "server_port": port,
+                "address": masque_ip,
+                "port": port,
+                "tls": {
+                    "enabled": True,
+                    "server_name": MASQUE_SNI_CONSUMER,
+                    "insecure": True
+                },
+                "profile": {
+                    "id": device_id,
+                    "auth_token": token
+                },
+                "private_key": priv,
+                "public_key": pub,
+                "system": False,
+                "use_http2": True,
+                "udp_timeout": "5m0s",
+                "udp_keepalive_period": "30s"
+            },
+            {
+                "type": "masque",
+                "tag": "⚡ [WARP-MASQUE] Бункер H3 (Consumer)",
+                "server": masque_ip,
+                "server_port": port,
+                "address": masque_ip,
+                "port": port,
+                "tls": {
+                    "enabled": True,
+                    "server_name": MASQUE_SNI_CONSUMER,
+                    "insecure": True
                 },
                 "profile": {
                     "id": device_id,
@@ -323,7 +386,8 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
                     "outbound": "direct"
                 }
             ],
-            "auto_detect_interface": True
+            "auto_detect_interface": True,
+            "final": "🚀 BUNKER-AUTO (Автовыбор)"
         }
     }
 
@@ -361,7 +425,7 @@ dns:
     - https://dns.google/dns-query
 
 proxies:
-  - name: "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
     type: masque
     server: {masque_ip}
     port: {port}
@@ -371,11 +435,12 @@ proxies:
     ipv6: {ipv6_cidr}
     mtu: 1280
     udp: true
-    sni: {MASQUE_SNI}
+    sni: zt-masque.cloudflareclient.com
+    skip-cert-verify: true
     network: h2
     remote-dns-resolve: true
 
-  - name: "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
     type: masque
     server: {masque_ip}
     port: {port}
@@ -385,32 +450,101 @@ proxies:
     ipv6: {ipv6_cidr}
     mtu: 1280
     udp: true
-    sni: {MASQUE_SNI}
+    sni: zt-masque.cloudflareclient.com
+    skip-cert-verify: true
+    network: quic
+    remote-dns-resolve: true
+
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
+    type: masque
+    server: {masque_ip}
+    port: {port}
+    private-key: "{priv}"
+    public-key: "{pub}"
+    ip: {ipv4_cidr}
+    ipv6: {ipv6_cidr}
+    mtu: 1280
+    udp: true
+    sni: api.cloudflareclient.com
+    skip-cert-verify: true
+    network: h2
+    remote-dns-resolve: true
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
+    type: masque
+    server: {masque_ip}
+    port: {port}
+    private-key: "{priv}"
+    public-key: "{pub}"
+    ip: {ipv4_cidr}
+    ipv6: {ipv6_cidr}
+    mtu: 1280
+    udp: true
+    sni: api.cloudflareclient.com
+    skip-cert-verify: true
+    network: quic
+    remote-dns-resolve: true
+
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
+    type: masque
+    server: {masque_ip}
+    port: {port}
+    private-key: "{priv}"
+    public-key: "{pub}"
+    ip: {ipv4_cidr}
+    ipv6: {ipv6_cidr}
+    mtu: 1280
+    udp: true
+    sni: consumer-masque.cloudflareclient.com
+    skip-cert-verify: true
+    network: h2
+    remote-dns-resolve: true
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
+    type: masque
+    server: {masque_ip}
+    port: {port}
+    private-key: "{priv}"
+    public-key: "{pub}"
+    ip: {ipv4_cidr}
+    ipv6: {ipv6_cidr}
+    mtu: 1280
+    udp: true
+    sni: consumer-masque.cloudflareclient.com
+    skip-cert-verify: true
     network: quic
     remote-dns-resolve: true
 
 proxy-groups:
-  - name: "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
+  - name: "🚀 BUNKER-AUTO (Автовыбор)"
     type: url-test
-    url: http://cp.cloudflare.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
     proxies:
-      - "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
 
   - name: "🛡️ BUNKER-MASQUE"
     type: select
     proxies:
-      - "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
-      - "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
+      - "🚀 BUNKER-AUTO (Автовыбор)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
       - DIRECT
 
 rules:
   - GEOIP,private,DIRECT
   - GEOIP,RU,DIRECT
-  - MATCH,🚀 BUNKER-AUTO (Автовыбор H2/H3)
+  - MATCH,🚀 BUNKER-AUTO (Автовыбор)
 """
 
 
@@ -578,10 +712,17 @@ def generate_warp_pool(count: int = 8, sub_dir: str = None) -> tuple[list[dict],
             masque_prof = p0  # fallback
 
         for idx, m_ip in enumerate(CLOUDFLARE_MASQUE_IPS, 1):
-            remark_h2 = f"⚡ [WARP-MASQUE] Бункер H2 #{idx:02d} (HTTP/2) | ⚡40ms"
-            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h2, masque_ip=m_ip, network="h2"))
-            remark_h3 = f"⚡ [WARP-MASQUE] Бункер H3 #{idx:02d} (HTTP/3) | ⚡35ms"
-            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h3, masque_ip=m_ip, network="quic"))
+            # 1. Zero Trust endpoint (best for bypassing TSPU/ISP SNI blocks)
+            remark_zt_h2 = f"⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) #{idx:02d} | ⚡40ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_zt_h2, masque_ip=m_ip, network="h2", sni=MASQUE_SNI_ZT))
+            remark_zt_h3 = f"⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) #{idx:02d} | ⚡35ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_zt_h3, masque_ip=m_ip, network="quic", sni=MASQUE_SNI_ZT))
+            
+            # 2. Consumer endpoint
+            remark_h2 = f"⚡ [WARP-MASQUE] Бункер H2 (Consumer) #{idx:02d} | ⚡40ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h2, masque_ip=m_ip, network="h2", sni=MASQUE_SNI_CONSUMER))
+            remark_h3 = f"⚡ [WARP-MASQUE] Бункер H3 (Consumer) #{idx:02d} | ⚡35ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h3, masque_ip=m_ip, network="quic", sni=MASQUE_SNI_CONSUMER))
 
     all_uris = masque_uris + uris
 
