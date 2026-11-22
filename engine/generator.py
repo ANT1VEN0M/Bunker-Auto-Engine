@@ -448,7 +448,7 @@ def generate_readme(
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.1](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, обход ТСПУ).
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.2](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, 1-Click Автообновление, обход ТСПУ).
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)**.
 
 ---
