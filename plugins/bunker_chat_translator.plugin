@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  🌐 BUNKER CHAT TRANSLATOR v1.2.0 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  🌐 BUNKER CHAT TRANSLATOR v1.2.1 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.2.0
-  Назначение: Автоматический перевод всех входящих и исходящих сообщений в чатах,
-              каналах и личке на лету. Разблокирует нативную плашку Telegram
-              «Перевести весь чат» без Telegram Premium.
+  Версия: 1.2.1
+  Назначение: Автоматический перевод входящих и исходящих сообщений в чатах,
+              каналах и личке на лету. Всплывающий перевод по долгому тапу
+              и отправка перевода через .tr.
 ================================================================================
 """
 
@@ -33,7 +33,6 @@ from base_plugin import (
     MenuItemData,
     MenuItemType,
     MethodHook,
-    MethodReplacement,
 )
 from client_utils import get_last_fragment
 from file_utils import get_cache_dir
@@ -55,11 +54,10 @@ __id__ = "bunker_chat_translator"
 __name__ = "Bunker Chat Translator 🌐"
 __description__ = (
     "Автоматический перевод всего текста в чатах, каналах и ЛС на лету. "
-    "Включает нативную плашку 'Перевести весь чат' без Telegram Premium, "
-    "перевод прямо в ленте сообщений и отправку перевода через .tr."
+    "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __icon__ = "pk_5199573_by_Ctikerubot/65"
 __min_version__ = "11.10.0"
 
@@ -296,30 +294,14 @@ class TranslationEngine:
         self._executor.submit(worker)
 
 
-class IsPremiumHook(MethodReplacement):
-    """Разблокирует нативную плашку 'Перевести весь чат' (Translate Entire Chat) без Premium."""
-
-    def __init__(self, plugin: "BunkerChatTranslatorPlugin"):
-        super().__init__()
-        self.plugin = plugin
-
-    def replace_hooked_method(self, param):
-        if self.plugin.get_setting("native_bar", True):
-            return True
-        try:
-            return bool(param.thisObject.isPremium)
-        except Exception:
-            return False
-
-
 class ChatMessageCellHook(MethodHook):
-    """Перехватывает отображение сообщений в ленте и инжектирует перевод."""
+    """Перехватывает установку сообщения в ячейку ленты ДО её измерения и отрисовки."""
 
     def __init__(self, plugin: "BunkerChatTranslatorPlugin"):
         super().__init__()
         self.plugin = plugin
 
-    def after_hooked_method(self, param):
+    def before_hooked_method(self, param):
         try:
             if not self.plugin.get_setting("enabled", True):
                 return
@@ -328,12 +310,11 @@ class ChatMessageCellHook(MethodHook):
             if not param.args or len(param.args) < 1:
                 return
 
-            cell = param.thisObject
             msg_obj = param.args[0]
-            if msg_obj is None or cell is None:
+            if msg_obj is None:
                 return
 
-            self.plugin.process_message_object(cell, msg_obj)
+            self.plugin.prepare_message_translation(msg_obj)
         except Exception as exc:
             _log(f"ChatMessageCellHook err: {exc}")
 
@@ -344,34 +325,21 @@ class BunkerChatTranslatorPlugin(BasePlugin):
     def __init__(self):
         super().__init__()
         self._hooks: List[Any] = []
-        self._translated_msg_ids: Set[int] = set()
         self._disabled_dialog_ids: Set[int] = set()
         self._engine: Optional[TranslationEngine] = None
         self._msg_menu_item = None
         self._chat_menu_item = None
+        self._update_timer: Optional[threading.Timer] = None
+        self._update_lock = threading.Lock()
 
     def on_plugin_load(self):
-        _log("Инициализация Bunker Chat Translator v1.2.0...")
+        _log(f"Инициализация Bunker Chat Translator v{__version__}...")
         cache_dir = get_cache_dir() or "/data/data/org.telegram.messenger/cache"
         os.makedirs(cache_dir, exist_ok=True)
         cache_file = os.path.join(cache_dir, "bunker_tr_cache.json")
         self._engine = TranslationEngine(cache_file)
 
-        # 1. Хук разблокировки нативной плашки перевода всего чата (UserConfig.isPremium)
-        try:
-            user_config_cls = find_class("org.telegram.messenger.UserConfig")
-            if not user_config_cls:
-                user_config_cls = jclass("org.telegram.messenger.UserConfig")
-            
-            if user_config_cls:
-                refs = self.hook_all_methods(user_config_cls, "isPremium", IsPremiumHook(self))
-                if refs:
-                    self._hooks.extend(refs)
-                _log(f"UserConfig.isPremium перехвачен ({len(refs)} методов). Нативная плашка активна!")
-        except Exception as e:
-            _log(f"Ошибка хука UserConfig.isPremium: {e}")
-
-        # 2. Хук ленты чата ChatMessageCell (Inline-перевод под сообщением)
+        # 1. Хук ленты чата ChatMessageCell (Inline-перевод ДО измерения разметки)
         try:
             cell_cls = find_class("org.telegram.ui.Cells.ChatMessageCell")
             if not cell_cls:
@@ -386,20 +354,20 @@ class BunkerChatTranslatorPlugin(BasePlugin):
         except Exception as e:
             _log(f"Ошибка хука ChatMessageCell: {e}")
 
-        # 3. Хук исходящих сообщений (перевод перед отправкой по команде .tr или авто)
+        # 2. Хук исходящих сообщений (.tr <текст> или автоперевод)
         try:
             self.add_on_send_message_hook()
             _log("Хук исходящих сообщений (.tr) активирован.")
         except Exception as e:
             _log(f"Ошибка регистрации on_send_message_hook: {e}")
 
-        # 4. Меню действий сообщения (по долгому тапу на сообщение)
+        # 3. Меню действий сообщения (по долгому тапу на сообщение)
         self._sync_context_menu()
 
-        # 5. Меню действий чата (в шапке чата для вкл/выкл автоперевода)
+        # 4. Меню действий чата (в шапке чата для вкл/выкл автоперевода)
         self._sync_chat_menu()
 
-        # 6. Фоновая проверка обновлений плагина
+        # 5. Фоновая проверка обновлений плагина
         if self.get_setting("auto_update", True):
             def delayed_update_check():
                 time.sleep(8.0)
@@ -414,6 +382,11 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
     def on_plugin_unload(self):
         _log("Выгрузка Bunker Chat Translator...")
+        with self._update_lock:
+            if self._update_timer is not None:
+                self._update_timer.cancel()
+                self._update_timer = None
+
         for h in self._hooks:
             try:
                 self.unhook_method(h)
@@ -471,13 +444,9 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             return LANG_CODES[idx]
         return "ru"
 
-    def process_message_object(self, cell: Any, msg_obj: Any):
-        """Инжектирует перевод в сообщение и сбрасывает закэшированные лэйауты."""
+    def prepare_message_translation(self, msg_obj: Any):
+        """Подготавливает перевод сообщения до того, как ячейка выполнит расчёт разметки."""
         try:
-            msg_id = int(msg_obj.getId())
-            if msg_id in self._translated_msg_ids:
-                return
-
             dialog_id = int(msg_obj.getDialogId())
             if dialog_id in self._disabled_dialog_ids:
                 return
@@ -494,17 +463,15 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
             # Защита от повторной обработки
             if "🌐 Перевод:" in raw_text or "🌐 Translated:" in raw_text or raw_text.startswith("🌐 "):
-                self._translated_msg_ids.add(msg_id)
                 return
 
             target_lang = self.get_target_lang()
 
-            # Если переводим на русский, а текст уже преимущественно на кириллице — не трогаем
+            # Если целевой язык русский, а текст на кириллице — перевод не требуется
             if target_lang == "ru" and is_cyrillic(raw_text):
-                self._translated_msg_ids.add(msg_id)
                 return
 
-            # Проверяем кэш
+            # Проверяем кэш переводов
             cached = self._engine.get_cached(raw_text, target_lang)
             if cached:
                 translated_text, src_lang = cached
@@ -512,81 +479,55 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                     src_lang == target_lang
                     or translated_text.strip().lower() == raw_text.strip().lower()
                 ):
-                    self._translated_msg_ids.add(msg_id)
                     return
-                self._apply_translation(cell, msg_obj, raw_text, translated_text)
-                self._translated_msg_ids.add(msg_id)
+
+                # Инжектируем перевод в messageText ДО того, как ячейка построит лэйаут
+                replace = bool(self.get_setting("replace_original", False))
+                if replace:
+                    new_text = f"🌐 {translated_text}"
+                else:
+                    new_text = f"{raw_text}\n\n🌐 Перевод:\n{translated_text}"
+
+                if hasattr(msg_obj, "messageText"):
+                    msg_obj.messageText = String(new_text)
                 return
 
-            # Если в кэше нет — запускаем асинхронный перевод
+            # Если в кэше нет — отправляем в фоновую очередь
             account = int(UserConfig.selectedAccount)
 
             def on_done(translated: str, src: str):
                 if src == target_lang or translated.strip().lower() == raw_text.strip().lower():
-                    self._translated_msg_ids.add(msg_id)
                     return
+                # Планируем единичное пакетное обновление UI через дебаунс
+                self._schedule_interface_update(account)
 
-                def update_cell():
+            self._engine.queue_translate(raw_text, target_lang, on_done)
+        except Exception as e:
+            _log(f"prepare_message_translation error: {e}")
+
+    def _schedule_interface_update(self, account: int):
+        """Пакетное обновление интерфейса сообщений без спама и лагов."""
+        with self._update_lock:
+            if self._update_timer is not None:
+                self._update_timer.cancel()
+                self._update_timer = None
+
+            def fire_update():
+                def do_post():
                     try:
-                        self._apply_translation(cell, msg_obj, raw_text, translated)
-                        self._translated_msg_ids.add(msg_id)
                         nc = NotificationCenter.getInstance(account)
                         nc.postNotificationName(
                             NotificationCenter.updateInterfaces,
                             MessagesController.UPDATE_MASK_MESSAGE_TEXT,
                         )
                     except Exception as ex:
-                        _log(f"update_cell error: {ex}")
+                        _log(f"updateInterfaces error: {ex}")
 
-                run_on_ui_thread(update_cell)
+                run_on_ui_thread(do_post)
 
-            self._engine.queue_translate(raw_text, target_lang, on_done)
-        except Exception as e:
-            _log(f"process_message_object error: {e}")
-
-    def _apply_translation(
-        self, cell: Any, msg_obj: Any, original: str, translated: str
-    ):
-        """Форматирует текст сообщения, подставляя перевод во все слои Telegram."""
-        try:
-            replace = bool(self.get_setting("replace_original", False))
-            if replace:
-                new_text = f"🌐 {translated}"
-            else:
-                new_text = f"{original}\n\n🌐 Перевод:\n{translated}"
-
-            # 1. Присваиваем новый текст в messageText
-            if hasattr(msg_obj, "messageText"):
-                msg_obj.messageText = String(new_text)
-
-            # 2. Обновляем messageOwner.message (источник правды для генерации разметки в Telegram)
-            if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
-                try:
-                    msg_obj.messageOwner.message = String(new_text)
-                except Exception:
-                    pass
-
-            # 3. Заполняем нативные поля перевода Telegram
-            if hasattr(msg_obj, "translated"):
-                msg_obj.translated = True
-            if hasattr(msg_obj, "translatedText"):
-                msg_obj.translatedText = String(translated)
-
-            # 4. Сбрасываем кэш измерений TextLayoutBlocks в MessageObject
-            if hasattr(msg_obj, "resetLayout"):
-                msg_obj.resetLayout()
-            if hasattr(msg_obj, "forceUpdate"):
-                msg_obj.forceUpdate = True
-
-            # 5. Принудительно заставляем ячейку пересчитать размеры и перерисоваться
-            if cell is not None:
-                try:
-                    cell.requestLayout()
-                    cell.invalidate()
-                except Exception:
-                    pass
-        except Exception as exc:
-            _log(f"apply_translation err: {exc}")
+            self._update_timer = threading.Timer(0.35, fire_update)
+            self._update_timer.daemon = True
+            self._update_timer.start()
 
     def on_send_message_hook(self, account, params):
         """Перехват отправки сообщений для команды .tr или автоперевода."""
@@ -709,13 +650,8 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 self._disabled_dialog_ids.add(dialog_id)
                 safe_notify("⏸️ Автоперевод для этого чата ОТКЛЮЧЁН")
 
-            # Перерисовываем экран
             account = int(UserConfig.selectedAccount)
-            nc = NotificationCenter.getInstance(account)
-            nc.postNotificationName(
-                NotificationCenter.updateInterfaces,
-                MessagesController.UPDATE_MASK_MESSAGE_TEXT,
-            )
+            self._schedule_interface_update(account)
         except Exception as e:
             _log(f"toggle chat action error: {e}")
 
@@ -737,13 +673,6 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 subtext="Главный переключатель работы плагина",
                 default=True,
                 icon="msg_translate",
-            ),
-            Switch(
-                key="native_bar",
-                text="Нативная плашка Telegram",
-                subtext="Разблокирует верхнюю полосу «Перевести весь чат» без Premium",
-                default=True,
-                icon="msg_premium",
             ),
             Divider(),
             Header(text="Перевод входящих сообщений"),
@@ -840,15 +769,10 @@ class BunkerChatTranslatorPlugin(BasePlugin):
     def _on_clear_cache_click(self):
         if self._engine:
             self._engine.clear_cache()
-        self._translated_msg_ids.clear()
         safe_notify("Кэш переводов успешно очищен!")
         try:
             account = int(UserConfig.selectedAccount)
-            nc = NotificationCenter.getInstance(account)
-            nc.postNotificationName(
-                NotificationCenter.updateInterfaces,
-                MessagesController.UPDATE_MASK_MESSAGE_TEXT,
-            )
+            self._schedule_interface_update(account)
         except Exception:
             pass
 
