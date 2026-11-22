@@ -334,14 +334,26 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Inject ultra-low-latency WARP-MASQUE & WARP+ WireGuard nodes at the top of subscriptions
     # For Discord, Layer-3 UDP / CONNECT-UDP encapsulation lets WebRTC voice connect in <1s
     if warp_uris:
-        mix_uris = warp_uris[:6] + mix_uris
-        bs_uris = warp_uris[:5] + bs_uris
-        fast_uris = warp_uris[:6] + fast_uris
-        tg_uris = warp_uris[:4] + tg_uris
+        masque_nodes = [w for w in warp_uris if w.startswith("warp://")]
+        wg_nodes = [w for w in warp_uris if w.startswith("wireguard://")]
 
+        # Smart blend: both cutting-edge MASQUE (HTTP/3) and standard WireGuard (880 with UDP noise)
+        top_mix = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
+        top_bs = (masque_nodes[:3] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:5]
+        top_fast = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
+        top_tg = (masque_nodes[:2] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:4]
+        top_factory = masque_nodes[:2] if masque_nodes else []
+
+        mix_uris = top_mix + mix_uris
+        bs_uris = top_bs + bs_uris
+        fast_uris = top_fast + fast_uris
+        tg_uris = top_tg + tg_uris
+        factory_uris = top_factory + factory_uris
+
+        discord_blend = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         discord_warp = []
-        for i, w in enumerate(warp_uris[:6], 1):
-            proto_label = "WARP-MASQUE (HTTP/3)" if w.startswith("warp://") else "WireGuard WARP+ (880)"
+        for i, w in enumerate(discord_blend, 1):
+            proto_label = "WARP-MASQUE" if w.startswith("warp://") else "WARP+ 880"
             w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | {proto_label} | ⚡35ms', w)
             discord_warp.append(w_disc)
         discord_uris = discord_warp + discord_uris
@@ -427,7 +439,7 @@ def generate_readme(
     readme_content = f"""# 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> Обновляется каждый час на GitHub Actions. **74 проверенных источника**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880) & WARP-MASQUE (HTTP/3)**.
 
 ---
 
@@ -437,7 +449,7 @@ def generate_readme(
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)**.
 
 ---
 
@@ -545,6 +557,16 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Подписка URI (Karing / Hiddify):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
+
+---
+
+## 🔌 Плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
+
+Фирменные плагины для Telegram-клиентов на движке exteraGram:
+- 💫 **[Bunker Neon Loader v1.2.0](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа, автообновление, кастомная палитра.
+- 🌐 **[Bunker Chat Translator v1.2.6](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_chat_translator.plugin)** — Инлайн-переводчик чатов в реальном времени без сторонних API-ключей.
+- 📋 **Репозиторий плагинов (URL для добавления в клиент):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/extera-plugins.json`
 
 ---
 
