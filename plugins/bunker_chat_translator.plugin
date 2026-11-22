@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  🌐 BUNKER CHAT TRANSLATOR v1.2.5 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  🌐 BUNKER CHAT TRANSLATOR v1.2.6 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.2.5
+  Версия: 1.2.6
   Назначение: Автоматический перевод входящих и исходящих сообщений в чатах,
               каналах и личке на лету. Всплывающий перевод по долгому тапу
               и отправка перевода через .tr.
@@ -57,7 +57,7 @@ __description__ = (
     "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.5"
+__version__ = "1.2.6"
 __icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
@@ -189,7 +189,7 @@ def extract_dialog_id(ctx: Any = None, frag: Any = None) -> int:
         if ctx is not None:
             get_fn = getattr(ctx, "get", None)
             if callable(get_fn):
-                for key in ("dialog_id", "dialogId", "chat_id", "peer_id"):
+                for key in ("dialog_id", "dialogId", "chat_id", "chatId", "peer_id", "peerId", "id"):
                     try:
                         v = get_fn(key)
                         if v is not None:
@@ -198,6 +198,22 @@ def extract_dialog_id(ctx: Any = None, frag: Any = None) -> int:
                                 return val
                     except Exception:
                         pass
+
+                # Проверяем вложенный chat или user в контексте
+                for entity_key in ("chat", "currentChat", "user", "currentUser"):
+                    try:
+                        ent = get_fn(entity_key)
+                        if ent is not None:
+                            eid = getattr(ent, "id", None)
+                            if eid is not None:
+                                val = int(str(eid).strip())
+                                if val != 0:
+                                    if "chat" in entity_key.lower() and val > 0:
+                                        return -val
+                                    return val
+                    except Exception:
+                        pass
+
                 if not frag:
                     try:
                         frag = get_fn("fragment")
@@ -635,29 +651,39 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 else:
                     new_text = f"{raw_text}\n\n🌐 Перевод:\n{translated_text}"
 
-                # Обновляем только CharSequence messageText
-                if hasattr(msg_obj, "messageText"):
+                # 1. Защита от NullPointerException в applyEntities: гарантируем не-null entities
+                if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
                     try:
-                        msg_obj.messageText = String(new_text)
+                        if getattr(msg_obj.messageOwner, "entities", None) is None:
+                            msg_obj.messageOwner.entities = jclass("java.util.ArrayList")()
                     except Exception:
                         pass
 
-                # Перегенерируем лэйаут разметки БЕЗ смены типа ячейки
-                if hasattr(msg_obj, "resetLayout") and callable(getattr(msg_obj, "resetLayout")):
-                    try:
-                        msg_obj.resetLayout()
-                    except Exception:
-                        pass
+                # 2. Сбрасываем флаг translated во избежание NPE в getEntities()
+                try:
+                    msg_obj.translated = False
+                except Exception:
+                    pass
 
-                if hasattr(msg_obj, "generateLayout") and callable(getattr(msg_obj, "generateLayout")):
+                # 3. Штатный метод applyNewText пересчитывает лэйаут, эмодзи и ширину бабла
+                applied = False
+                if hasattr(msg_obj, "applyNewText") and callable(getattr(msg_obj, "applyNewText")):
                     try:
-                        msg_obj.generateLayout(None)
-                    except Exception:
-                        pass
+                        msg_obj.applyNewText(String(new_text))
+                        applied = True
+                    except Exception as e:
+                        _log(f"applyNewText err: {e}")
+
+                if not applied:
+                    if hasattr(msg_obj, "messageText"):
+                        try:
+                            msg_obj.messageText = String(new_text)
+                        except Exception:
+                            pass
 
                 # ВНИМАНИЕ:
-                # 1. НЕЛЬЗЯ трогать msg_obj.translated = True (вызовет NPE в applyEntities: getEntities().isEmpty())
-                # 2. НЕЛЬЗЯ трогать msg_obj.textLayoutBlocks = None (схлопнет баблы в синие полоски)
+                # 1. НЕЛЬЗЯ вызывать resetLayout() без пересоздания (схлопнет баблы в синие полоски)
+                # 2. НЕЛЬЗЯ трогать msg_obj.translated = True (вызовет NPE в applyEntities)
                 # 3. НЕЛЬЗЯ трогать msg_obj.messageOwner.entities = None (вызовет NPE в entities.size())
                 return
 

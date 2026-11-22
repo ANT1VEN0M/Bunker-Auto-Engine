@@ -161,7 +161,11 @@ SOURCES = [
     # 64. ToshibuVPN Bot Sub Matrix (10 nodes)
     "https://tshbotpopup.ru/subscriptions/04920673-035c-410d-94e4-5b1469d3fb6f.txt",
     # 65. Buffetbarko Universal Whitelist VPN (155 nodes)
-    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/whitelist_vpn.txt"
+    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/whitelist_vpn.txt",
+    # 66. Tesla Safepass VLESS Subscription (23 nodes)
+    "https://tesla.safepass.click/api/subscription/vless/5140e6d3-737c-49ec-8089-a774bc0b962f",
+    # 67. Zonex VPNs Google Drive Media API (37 nodes)
+    "https://www.googleapis.com/drive/v3/files/11hSkJep7b3NefeGzhGxuX4N-JhUpypw0?alt=media&key=AIzaSyCPzRhkWhsG0cj9B1wz0lOCnAeipNtPDlw"
 ]
 
 def clean_source_url(url: str) -> str:
