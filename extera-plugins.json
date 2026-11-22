@@ -10,7 +10,7 @@
       "description": "Автоматический перевод всего текста в чатах, каналах и ЛС на лету. Всплывающий перевод по долгому тапу и отправка перевода через .tr.",
       "author": "@k0tlux & Бункер Кота",
       "category": "tools",
-      "icon": "pk_5199573_by_Ctikerubot/65",
+      "icon": "exteraPlugins/1",
       "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
     }
   ]
