@@ -532,9 +532,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 ---
 
-## ⚡ Cloudflare WARP-MASQUE (HTTP/3 CONNECT-IP)
-> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3) через Anycast Cloudflare (`162.159.198.1:443`).**  
-> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домен `consumer-masque.cloudflareclient.com`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов.
+## ⚡ Cloudflare WARP-MASQUE (HTTP/3 & HTTP/2 CONNECT-IP)
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `zt-masque.cloudflareclient.com` (Zero Trust) и `consumer-masque`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
 
 - **Sing-box (v1.10+) Нативный JSON:**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
