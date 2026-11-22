@@ -181,7 +181,9 @@ SOURCES = [
     # 72. anna1211688 Shadowrocket Auto Relay (14 nodes)
     "https://anna1211688.github.io/shadowrocket-auto/shadowrocket.txt",
     # 73. FreeCFGHub Master Matrix (2993 nodes)
-    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/FreeCFGHub.txt"
+    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/FreeCFGHub.txt",
+    # 74. FreeCFGHub All Base64 Matrix (1500+ nodes)
+    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/all_base64.txt"
 ]
 
 def clean_source_url(url: str) -> str:
