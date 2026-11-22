@@ -123,31 +123,57 @@ def extract_text_from_any(obj: Any) -> str:
     """Универсальное извлечение текста сообщения из любого переданного объекта (dict, MessageObject, TLRPC.Message)."""
     if obj is None:
         return ""
-    if isinstance(obj, dict):
-        msg = obj.get("message") or obj.get("messageObject") or obj.get("msg")
-        if msg is not None and msg is not obj:
-            return extract_text_from_any(msg)
-        return str(obj.get("text", "") or "")
+    try:
+        if isinstance(obj, dict):
+            msg = (
+                obj.get("message")
+                or obj.get("messageObject")
+                or obj.get("msg")
+                or obj.get("message_object")
+            )
+            if msg is not None and msg is not obj:
+                res = extract_text_from_any(msg)
+                if res:
+                    return res
+            for k in ("text", "caption", "message", "body"):
+                v = obj.get(k)
+                if v:
+                    s = str(v).strip()
+                    if s:
+                        return s
+            return ""
 
-    # Пробуем TLRPC.Message
-    owner = getattr(obj, "messageOwner", None)
-    if owner and getattr(owner, "message", None):
-        return str(owner.message)
+        # 1. Пробуем TLRPC.Message через messageOwner
+        owner = getattr(obj, "messageOwner", None)
+        if owner is not None:
+            msg_str = getattr(owner, "message", None)
+            if msg_str:
+                s = str(msg_str).strip()
+                if s:
+                    return s
 
-    # Пробуем прямой доступ к message
-    msg_prop = getattr(obj, "message", None)
-    if msg_prop and isinstance(msg_prop, str):
-        return str(msg_prop)
+        # 2. Пробуем messageText (CharSequence)
+        mt = getattr(obj, "messageText", None)
+        if mt is not None:
+            s = str(mt).strip()
+            if s:
+                return s
 
-    # Пробуем messageText (CharSequence)
-    mt = getattr(obj, "messageText", None)
-    if mt:
-        return str(mt)
+        # 3. Пробуем прямой доступ к message
+        msg_prop = getattr(obj, "message", None)
+        if msg_prop is not None:
+            s = str(msg_prop).strip()
+            if s:
+                return s
 
-    # Пробуем caption (подпись к фото/видео)
-    cap = getattr(obj, "caption", None)
-    if cap:
-        return str(cap)
+        # 4. Пробуем caption (подпись к фото/видео)
+        cap = getattr(obj, "caption", None)
+        if cap is not None:
+            s = str(cap).strip()
+            if s:
+                return s
+    except Exception:
+        pass
 
     return ""
 
@@ -598,6 +624,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                             else ApplicationLoader.applicationContext
                         )
                         if not act:
+                            safe_notify(f"🌐 Перевод: {translated}")
                             return
 
                         builder = AlertDialog.Builder(act)
@@ -619,7 +646,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                         builder.show()
                     except Exception as de:
                         _log(f"show_dialog err: {de}")
-                        safe_notify(f"Ошибка окна перевода: {de}")
+                        safe_notify(f"🌐 Перевод: {translated}")
 
                 run_on_ui_thread(show_dialog)
 
