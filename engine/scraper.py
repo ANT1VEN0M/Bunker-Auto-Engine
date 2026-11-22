@@ -179,7 +179,9 @@ SOURCES = [
     # 71. tqsmmm High-Speed V2Ray Sub (17 nodes)
     "https://raw.githubusercontent.com/tqsmmm/v2ray-sub/main/sub.txt",
     # 72. anna1211688 Shadowrocket Auto Relay (14 nodes)
-    "https://anna1211688.github.io/shadowrocket-auto/shadowrocket.txt"
+    "https://anna1211688.github.io/shadowrocket-auto/shadowrocket.txt",
+    # 73. FreeCFGHub Master Matrix (2993 nodes)
+    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/FreeCFGHub.txt"
 ]
 
 def clean_source_url(url: str) -> str:
