@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  🌐 BUNKER CHAT TRANSLATOR v1.1.0 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  🌐 BUNKER CHAT TRANSLATOR v1.2.0 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.1.0
+  Версия: 1.2.0
   Назначение: Автоматический перевод всех входящих и исходящих сообщений в чатах,
               каналах и личке на лету. Разблокирует нативную плашку Telegram
               «Перевести весь чат» без Telegram Premium.
@@ -59,8 +59,8 @@ __description__ = (
     "перевод прямо в ленте сообщений и отправку перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.1.0"
-__icon__ = "msg_translate"
+__version__ = "1.2.0"
+__icon__ = "pk_5199573_by_Ctikerubot/65"
 __min_version__ = "11.10.0"
 
 SUPPORTED_LANGUAGES: List[Tuple[str, str]] = [
@@ -109,12 +109,45 @@ def safe_notify(msg: str):
 
 
 def is_cyrillic(text: str) -> bool:
-    """Быстрая проверка: если текст преимущественно на кириллице, его не нужно переводить на русский."""
+    """Проверка: если текст преимущественно на кириллице (русский/укр/бел)."""
     letters = [c for c in text if c.isalpha()]
     if not letters:
         return False
     cyr = sum(1 for c in letters if '\u0400' <= c <= '\u04FF')
     return (cyr / len(letters)) > 0.6
+
+
+def extract_text_from_any(obj: Any) -> str:
+    """Универсальное извлечение текста сообщения из любого переданного объекта (dict, MessageObject, TLRPC.Message)."""
+    if obj is None:
+        return ""
+    if isinstance(obj, dict):
+        msg = obj.get("message") or obj.get("messageObject") or obj.get("msg")
+        if msg is not None and msg is not obj:
+            return extract_text_from_any(msg)
+        return str(obj.get("text", "") or "")
+
+    # Пробуем TLRPC.Message
+    owner = getattr(obj, "messageOwner", None)
+    if owner and getattr(owner, "message", None):
+        return str(owner.message)
+
+    # Пробуем прямой доступ к message
+    msg_prop = getattr(obj, "message", None)
+    if msg_prop and isinstance(msg_prop, str):
+        return str(msg_prop)
+
+    # Пробуем messageText (CharSequence)
+    mt = getattr(obj, "messageText", None)
+    if mt:
+        return str(mt)
+
+    # Пробуем caption (подпись к фото/видео)
+    cap = getattr(obj, "caption", None)
+    if cap:
+        return str(cap)
+
+    return ""
 
 
 class TranslationEngine:
@@ -314,7 +347,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
         self._chat_menu_item = None
 
     def on_plugin_load(self):
-        _log("Инициализация Bunker Chat Translator v1.1.0...")
+        _log("Инициализация Bunker Chat Translator v1.2.0...")
         cache_dir = get_cache_dir() or "/data/data/org.telegram.messenger/cache"
         os.makedirs(cache_dir, exist_ok=True)
         cache_file = os.path.join(cache_dir, "bunker_tr_cache.json")
@@ -434,20 +467,13 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             if dialog_id in self._disabled_dialog_ids:
                 return
 
-            # Проверяем исходящее или входящее
+            # Проверяем исходящее или входящее (по умолчанию переводим и свои для теста в Избранном)
             is_out = bool(msg_obj.isOut())
-            if is_out and not self.get_setting("translate_own", False):
+            if is_out and not self.get_setting("translate_own", True):
                 return
 
-            # Извлекаем оригинальный текст сообщения
-            raw_text = None
-            if hasattr(msg_obj, "messageText") and msg_obj.messageText is not None:
-                raw_text = str(msg_obj.messageText)
-            elif hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None and msg_obj.messageOwner.message:
-                raw_text = str(msg_obj.messageOwner.message)
-            elif hasattr(msg_obj, "caption") and msg_obj.caption is not None:
-                raw_text = str(msg_obj.caption)
-
+            # Извлекаем оригинальный текст сообщения через универсальный экстрактор
+            raw_text = extract_text_from_any(msg_obj)
             if not raw_text or len(raw_text.strip()) < 2:
                 return
 
@@ -458,7 +484,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
             target_lang = self.get_target_lang()
 
-            # Если переводим на русский, а текст уже русский — пропускаем мгновенно
+            # Если переводим на русский, а текст уже преимущественно на кириллице — не трогаем
             if target_lang == "ru" and is_cyrillic(raw_text):
                 self._translated_msg_ids.add(msg_id)
                 return
@@ -506,7 +532,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
     def _apply_translation(
         self, cell: Any, msg_obj: Any, original: str, translated: str
     ):
-        """Форматирует текст сообщения, подставляя перевод и обновляя отображение ячейки."""
+        """Форматирует текст сообщения, подставляя перевод во все слои Telegram."""
         try:
             replace = bool(self.get_setting("replace_original", False))
             if replace:
@@ -514,16 +540,30 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             else:
                 new_text = f"{original}\n\n🌐 Перевод:\n{translated}"
 
-            # 1. Присваиваем новый текст
-            msg_obj.messageText = String(new_text)
+            # 1. Присваиваем новый текст в messageText
+            if hasattr(msg_obj, "messageText"):
+                msg_obj.messageText = String(new_text)
 
-            # 2. Сбрасываем кэш измерений TextLayoutBlocks в MessageObject
+            # 2. Обновляем messageOwner.message (источник правды для генерации разметки в Telegram)
+            if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
+                try:
+                    msg_obj.messageOwner.message = String(new_text)
+                except Exception:
+                    pass
+
+            # 3. Заполняем нативные поля перевода Telegram
+            if hasattr(msg_obj, "translated"):
+                msg_obj.translated = True
+            if hasattr(msg_obj, "translatedText"):
+                msg_obj.translatedText = String(translated)
+
+            # 4. Сбрасываем кэш измерений TextLayoutBlocks в MessageObject
             if hasattr(msg_obj, "resetLayout"):
                 msg_obj.resetLayout()
             if hasattr(msg_obj, "forceUpdate"):
                 msg_obj.forceUpdate = True
 
-            # 3. Принудительно заставляем ячейку пересчитать размеры и перерисоваться
+            # 5. Принудительно заставляем ячейку пересчитать размеры и перерисоваться
             if cell is not None:
                 try:
                     cell.requestLayout()
@@ -568,35 +608,30 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
         return HookResult()
 
-    def _on_context_menu_translate(self, message_object: Any):
+    def _on_context_menu_translate(self, ctx: Any):
         """Показ перевода сообщения во всплывающем окне с кнопкой копирования."""
         try:
-            if message_object is None:
-                safe_notify("Сообщение не выбрано")
-                return
-
-            text = None
-            if hasattr(message_object, "messageOwner") and message_object.messageOwner and message_object.messageOwner.message:
-                text = str(message_object.messageOwner.message)
-            elif (
-                hasattr(message_object, "messageText") and message_object.messageText
-            ):
-                text = str(message_object.messageText)
-
-            if not text or not text.strip():
+            raw_text = extract_text_from_any(ctx)
+            if not raw_text or not raw_text.strip():
                 safe_notify("В сообщении нет текста")
                 return
 
-            clean_text = text.strip()
-            # Убираем префикс если уже был встроен
+            clean_text = raw_text.strip()
             clean_text = re.sub(r"\n\n🌐 Перевод:[\s\S]*$", "", clean_text)
             clean_text = re.sub(r"^🌐\s*", "", clean_text)
 
             target_lang = self.get_target_lang()
-            safe_notify(f"Перевожу на [{target_lang.upper()}]...")
+
+            # Умное определение: если текст уже на русском, переводим на английский для теста
+            if target_lang == "ru" and is_cyrillic(clean_text):
+                actual_target = "en"
+            else:
+                actual_target = target_lang
+
+            safe_notify(f"Перевожу на [{actual_target.upper()}]...")
 
             def worker():
-                translated, src = self._engine.translate_sync(clean_text, target_lang)
+                translated, src = self._engine.translate_sync(clean_text, actual_target)
 
                 def show_dialog():
                     try:
@@ -610,14 +645,13 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                             return
 
                         builder = AlertDialog.Builder(act)
-                        builder.setTitle(f"🌐 Перевод ({src.upper()} ➔ {target_lang.upper()})")
+                        builder.setTitle(f"🌐 Перевод ({src.upper()} ➔ {actual_target.upper()})")
                         builder.setMessage(translated)
 
-                        # Кнопка скопировать
                         def on_copy(dialog, which):
                             try:
-                                ctx = ApplicationLoader.applicationContext
-                                cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+                                ctx_app = ApplicationLoader.applicationContext
+                                cm = ctx_app.getSystemService(Context.CLIPBOARD_SERVICE)
                                 clip = ClipData.newPlainText("translation", translated)
                                 cm.setPrimaryClip(clip)
                                 safe_notify("Перевод скопирован в буфер")
@@ -638,13 +672,15 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             _log(f"_on_context_menu_translate err: {exc}")
             safe_notify(f"Ошибка: {exc}")
 
-    def _on_chat_action_toggle(self, fragment: Any):
+    def _on_chat_action_toggle(self, ctx: Any):
         """Включение / отключение автоперевода для текущего чата."""
         try:
+            fragment = ctx.get("fragment") if isinstance(ctx, dict) else ctx
             if not fragment:
-                return
+                fragment = get_last_fragment()
+
             dialog_id = None
-            if hasattr(fragment, "getDialogId"):
+            if fragment and hasattr(fragment, "getDialogId"):
                 dialog_id = int(fragment.getDialogId())
 
             if dialog_id is None:
@@ -713,8 +749,8 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             Switch(
                 key="translate_own",
                 text="Переводить свои сообщения",
-                subtext="Обычно отключено, чтобы не переводить себя",
-                default=False,
+                subtext="Позволяет тестировать перевод на своих сообщениях и в Избранном",
+                default=True,
                 icon="msg_user",
             ),
             Selector(
