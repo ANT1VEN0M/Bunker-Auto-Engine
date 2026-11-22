@@ -169,7 +169,11 @@ SOURCES = [
     # 66. Tesla Safepass VLESS Subscription (23 nodes)
     "https://tesla.safepass.click/api/subscription/vless/5140e6d3-737c-49ec-8089-a774bc0b962f",
     # 67. Zonex VPNs Google Drive Media API (37 nodes)
-    "https://www.googleapis.com/drive/v3/files/11hSkJep7b3NefeGzhGxuX4N-JhUpypw0?alt=media&key=AIzaSyCPzRhkWhsG0cj9B1wz0lOCnAeipNtPDlw"
+    "https://www.googleapis.com/drive/v3/files/11hSkJep7b3NefeGzhGxuX4N-JhUpypw0?alt=media&key=AIzaSyCPzRhkWhsG0cj9B1wz0lOCnAeipNtPDlw",
+    # 68. Freeinternet by Mygalaru Premium Reality Matrix (200 nodes)
+    "https://raw.githubusercontent.com/btsk161/Freeinternet_byMygalaru.github.io/refs/heads/main/premium.txt",
+    # 69. Buffetbarko Universal Blacklist VPN - Wi-Fi bypass (353 nodes)
+    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/blacklist_vpn.txt"
 ]
 
 def clean_source_url(url: str) -> str:
