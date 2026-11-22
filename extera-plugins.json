@@ -12,6 +12,16 @@
       "category": "tools",
       "icon": "bunker_plugins/1",
       "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
+    },
+    {
+      "id": "bunker_neon_loader",
+      "name": "Bunker Neon Loader 💫",
+      "version": "1.0.0",
+      "description": "Кастомный лоадер и спиннер загрузки медиа (фото, видео, кружочки) в стиле Неон, RGB-Радуга, iOS Minimal, Sunset и Cyberpunk с эффектом свечения.",
+      "author": "@k0tlux & Бункер Кота",
+      "category": "appearance",
+      "icon": "bunker_plugins/loader",
+      "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin"
     }
   ]
 }
