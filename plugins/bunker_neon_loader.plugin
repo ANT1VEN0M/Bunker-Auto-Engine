@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  💫 BUNKER NEON LOADER v1.1.0 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  💫 BUNKER NEON LOADER v1.2.0 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.1.0
+  Версия: 1.2.0
   Назначение: Ультимативная кастомизация лоадеров, спиннеров и кнопок загрузки
               медиа (фото, видео, кружочки Video Notes, файлы) в чатах.
               Неоновые цвета, плавная RGB-радуга, iOS-минимализм, настраиваемая
-              толщина кольца, свечение (Glow) и OLED-подложка.
+              толщина кольца, свечение (Glow), OLED-подложка и автообновление.
 ================================================================================
 """
 
 import math
+import os
+import re
+import threading
 import time
-from typing import Any, List, Optional
+import urllib.request
+from typing import Any, List, Optional, Tuple
 
 # Android SDK & Java bridge
+from android.content import ClipData, Context
 from android.graphics import Color, Paint
 from android.os import SystemClock
+from android.widget import Toast
 
 from android_utils import log, run_on_ui_thread
 from base_plugin import BasePlugin, MethodHook
 from hook_utils import find_class, get_private_field
 from java import jarray
 
-from org.telegram.messenger import AndroidUtilities
+from org.telegram.messenger import AndroidUtilities, ApplicationLoader
 from ui.settings import Divider, Header, Selector, Switch, Text
 
 __id__ = "bunker_neon_loader"
@@ -35,12 +41,13 @@ __description__ = (
     "Неон, RGB-Радуга, iOS Minimal, Sunset и Cyberpunk с эффектом свечения."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __icon__ = "bunker_plugins/loader"
 __min_version__ = "11.10.0"
 
 UPDATE_URL_GITHUB = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin"
 UPDATE_URL_MIRROR = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin"
+REPO_URL = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json"
 
 
 def _log(msg: str):
@@ -48,6 +55,21 @@ def _log(msg: str):
         log(f"[BunkerLoader] {msg}")
     except Exception:
         pass
+
+
+def safe_notify(msg: str):
+    """Отображает всплывающее уведомление (Toast) на главном UI-потоке."""
+    try:
+        def _toast():
+            try:
+                ctx = ApplicationLoader.applicationContext
+                if ctx:
+                    Toast.makeText(ctx, str(msg), Toast.LENGTH_SHORT).show()
+            except Exception:
+                pass
+        run_on_ui_thread(_toast)
+    except Exception:
+        _log(f"Notify: {msg}")
 
 
 def _to_signed_32(val: int) -> int:
@@ -157,7 +179,6 @@ class RadialProgress2SetColorKeysHook(MethodHook):
         if not self.plugin.is_enabled():
             return
         try:
-            # Заменяем все аргументы (circle, circlePressed, icon, iconPressed) на -1
             if param.args is not None and len(param.args) >= 4:
                 param.args[0] = -1
                 param.args[1] = -1
@@ -387,7 +408,7 @@ class BunkerNeonLoaderPlugin(BasePlugin):
 
     def on_plugin_load(self):
         self._alive = True
-        _log("Bunker Neon Loader v1.1.0 loading hooks...")
+        _log(f"Bunker Neon Loader v{__version__} loading hooks...")
 
         # 1. Хуки RadialProgress2 (ChatMessageCell)
         try:
@@ -465,7 +486,18 @@ class BunkerNeonLoaderPlugin(BasePlugin):
         except Exception as e:
             _log(f"Failed to hook RadialProgress: {e}")
 
-        _log("Bunker Neon Loader v1.1.0 loaded successfully! 🔥")
+        # Фоновая проверка обновлений
+        if self.get_setting("auto_update", True):
+            def delayed_check():
+                time.sleep(2.5)
+                try:
+                    self._check_and_apply_update(manual=False)
+                except Exception as ex:
+                    _log(f"Auto-update check error: {ex}")
+
+            threading.Thread(target=delayed_check, daemon=True).start()
+
+        _log(f"Bunker Neon Loader v{__version__} loaded successfully! 🔥")
 
     def on_plugin_unload(self):
         self._alive = False
@@ -612,6 +644,115 @@ class BunkerNeonLoaderPlugin(BasePlugin):
         except Exception:
             pass
 
+    def _copy_repo_url(self):
+        """Копирует ссылку на репозиторий плагинов Бункера в буфер обмена."""
+        try:
+            ctx_app = ApplicationLoader.applicationContext
+            cm = ctx_app.getSystemService(Context.CLIPBOARD_SERVICE)
+            clip = ClipData.newPlainText("repo_url", REPO_URL)
+            cm.setPrimaryClip(clip)
+            safe_notify("Ссылка на репозиторий скопирована в буфер обмена! 🐈‍⬛")
+        except Exception as e:
+            safe_notify(f"Ошибка копирования: {e}")
+
+    def _check_and_apply_update(self, manual: bool = False):
+        """Проверяет обновления на GitHub и автоматически обновляет файл плагина."""
+        try:
+            if manual:
+                safe_notify("🔍 Проверяю наличие обновлений Bunker Loader...")
+
+            remote_code = None
+            urls = [UPDATE_URL_MIRROR, UPDATE_URL_GITHUB]
+            for url in urls:
+                try:
+                    req = urllib.request.Request(
+                        url,
+                        headers={"User-Agent": "BunkerNeonLoaderPlugin/1.2"}
+                    )
+                    with urllib.request.urlopen(req, timeout=12.0) as resp:
+                        if resp.getcode() == 200:
+                            data = resp.read().decode("utf-8", errors="replace")
+                            if "__version__" in data and "BunkerNeonLoaderPlugin" in data:
+                                remote_code = data
+                                break
+                except Exception as ex:
+                    _log(f"Update fetch failed from {url}: {ex}")
+                    continue
+
+            if not remote_code:
+                if manual:
+                    safe_notify("❌ Не удалось проверить обновления. Проверьте интернет.")
+                return
+
+            ver_match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', remote_code)
+            if not ver_match:
+                if manual:
+                    safe_notify("⚠️ Ошибка формата версии на сервере.")
+                return
+
+            remote_ver = ver_match.group(1).strip()
+            local_ver = __version__.strip()
+
+            def parse_ver(v_str: str) -> Tuple[int, ...]:
+                parts = []
+                for p in re.findall(r"\d+", v_str):
+                    try:
+                        parts.append(int(p))
+                    except Exception:
+                        pass
+                return tuple(parts)
+
+            if parse_ver(remote_ver) <= parse_ver(local_ver):
+                if manual:
+                    safe_notify(f"У вас самая свежая версия (v{local_ver}) ✅")
+                return
+
+            # Ищем файл плагина для перезаписи
+            target_file = None
+            if globals().get("__file__") and os.path.isfile(__file__):
+                target_file = __file__
+
+            if not target_file:
+                try:
+                    ctx_app = ApplicationLoader.applicationContext
+                    if ctx_app:
+                        app_files_dir = ctx_app.getFilesDir().getAbsolutePath()
+                        p_path = os.path.join(app_files_dir, "plugins", f"{__id__}.plugin")
+                        if os.path.exists(p_path):
+                            target_file = p_path
+                except Exception:
+                    pass
+
+            if not target_file:
+                for cand_dir in [
+                    "/data/user/0/app.nimarkogram.messenger/files/plugins",
+                    "/data/data/app.nimarkogram.messenger/files/plugins",
+                    "/data/user/0/com.exteragram.messenger/files/plugins",
+                    "/data/data/com.exteragram.messenger/files/plugins",
+                ]:
+                    cand_path = os.path.join(cand_dir, f"{__id__}.plugin")
+                    if os.path.exists(cand_path):
+                        target_file = cand_path
+                        break
+
+            if target_file and os.path.exists(target_file):
+                try:
+                    with open(target_file, "w", encoding="utf-8") as f:
+                        f.write(remote_code)
+                    _log(f"Плагин успешно перезаписан: {target_file} -> v{remote_ver}")
+                    safe_notify(f"🎉 Bunker Loader обновлён до v{remote_ver}! Перезапустите Telegram.")
+                    return
+                except Exception as wr_err:
+                    _log(f"Ошибка перезаписи {target_file}: {wr_err}")
+
+            if manual:
+                safe_notify(f"Доступна новая v{remote_ver}! Скачайте из канала Бункера.")
+
+        except Exception as exc:
+            _log(f"Update error: {exc}")
+            if manual:
+                safe_notify(f"Ошибка обновления: {exc}")
+
     def create_settings(self) -> List[Any]:
         """Формирует меню настроек плагина в NimarkoGram / ExteraGram / AyuGram."""
         return [
@@ -680,9 +821,33 @@ class BunkerNeonLoaderPlugin(BasePlugin):
                 icon="msg_download",
             ),
             Divider(),
+            Header(text="Обновления плагина"),
+            Switch(
+                key="auto_update",
+                text="Автообновление",
+                subtext="Автоматически загружать новые версии и стили с GitHub Бункера",
+                default=True,
+                icon="msg_retry",
+            ),
+            Text(
+                text="Проверить обновления сейчас",
+                subtext=f"Текущая версия: v{__version__}",
+                icon="msg_download",
+                accent=True,
+                on_click=lambda _: threading.Thread(
+                    target=self._check_and_apply_update, args=(True,), daemon=True
+                ).start(),
+            ),
+            Text(
+                text="Скопировать ссылку на репозиторий",
+                subtext="Добавьте в Настройки Telegram -> Плагины -> Репозитории",
+                icon="msg_link",
+                on_click=lambda _: self._copy_repo_url(),
+            ),
+            Divider(),
             Header(text="О плагине"),
             Text(
-                text="Bunker Neon Loader v1.1.0",
+                text="Bunker Neon Loader v1.2.0",
                 subtext="Бункер Кота (@BUNKER_K0TA / @k0tlux)",
                 icon="msg_info",
             ),
