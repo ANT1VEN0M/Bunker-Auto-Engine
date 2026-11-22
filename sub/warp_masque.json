@@ -46,7 +46,7 @@
   "outbounds": [
     {
       "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер Ультра (HTTP/3)",
+      "tag": "⚡ [WARP-MASQUE] Бункер H2 (HTTP/2)",
       "server": "162.159.198.1",
       "server_port": 443,
       "address": "162.159.198.1",
@@ -57,9 +57,34 @@
         "insecure": false
       },
       "profile": {
-        "id": "19302bbe-7301-4551-81c5-e24904be65d0",
-        "auth_token": "5c79fbc9-c60d-4c30-b8bd-f06fb90dfd75"
+        "id": "e15d46d6-2e36-4da0-9a41-9c205a46b3b6",
+        "auth_token": "7a3081de-af48-40af-adce-3c7e049c5937"
       },
+      "private_key": "MHcCAQEEIGo972GkbFZBsqjISYYaKBg3rnqrkySKM3t001qf78dAoAoGCCqGSM49AwEHoUQDQgAE385aP7h+BBf4GUQML8Rki8Ye08JAw7+YTFt0Byfc9+fwYhUO/u0pbd0zJvFZkqdxtZfVRbguqpHqWPbxjQhQnA==",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
+      "system": false,
+      "use_http2": true,
+      "udp_timeout": "5m0s",
+      "udp_keepalive_period": "30s"
+    },
+    {
+      "type": "masque",
+      "tag": "⚡ [WARP-MASQUE] Бункер H3 (HTTP/3)",
+      "server": "162.159.198.1",
+      "server_port": 443,
+      "address": "162.159.198.1",
+      "port": 443,
+      "tls": {
+        "enabled": true,
+        "server_name": "consumer-masque.cloudflareclient.com",
+        "insecure": false
+      },
+      "profile": {
+        "id": "e15d46d6-2e36-4da0-9a41-9c205a46b3b6",
+        "auth_token": "7a3081de-af48-40af-adce-3c7e049c5937"
+      },
+      "private_key": "MHcCAQEEIGo972GkbFZBsqjISYYaKBg3rnqrkySKM3t001qf78dAoAoGCCqGSM49AwEHoUQDQgAE385aP7h+BBf4GUQML8Rki8Ye08JAw7+YTFt0Byfc9+fwYhUO/u0pbd0zJvFZkqdxtZfVRbguqpHqWPbxjQhQnA==",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
       "system": false,
       "use_http2": false,
       "udp_timeout": "5m0s",

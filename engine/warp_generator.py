@@ -6,6 +6,8 @@ import urllib.parse
 import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization
 
 CLOUDFLARE_ENDPOINTS = [
     "162.159.192.1",
@@ -126,17 +128,79 @@ def build_wireguard_uri(profile: dict, remarks: str) -> str:
     )
 
 
-def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159.198.1", port: int = 443) -> str:
+def enroll_masque_profile(device_id: str, token: str, v4: str = "172.16.0.2", v6: str = "") -> dict | None:
+    """
+    Enrolls an ECDSA P-256 (secp256r1) keypair with Cloudflare WARP MASQUE API
+    according to the Diniboy1123/usque standard required by Mihomo / Clash.Meta / Xray.
+    Returns client private key (SEC1 DER base64, 164 chars) and server public key (PKIX DER base64, 124 chars).
+    """
+    try:
+        ec_priv = ec.generate_private_key(ec.SECP256R1())
+        ec_pub = ec_priv.public_key()
+        
+        # SEC1 ASN.1 DER private key format (x509.MarshalECPrivateKey equivalent)
+        priv_der = ec_priv.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        priv_b64 = base64.b64encode(priv_der).decode('utf-8')
+        
+        # PKIX SubjectPublicKeyInfo DER format (x509.MarshalPKIXPublicKey equivalent)
+        pub_der = ec_pub.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pub_b64 = base64.b64encode(pub_der).decode('utf-8')
+        
+        api_url = "https://api.cloudflareclient.com/v0a4471"
+        headers = {
+            "User-Agent": "WARP for Android",
+            "CF-Client-Version": "a-6.35-4471",
+            "Content-Type": "application/json; charset=UTF-8",
+            "Connection": "Keep-Alive",
+            "Authorization": f"Bearer {token}"
+        }
+        patch_data = json.dumps({
+            "key": pub_b64,
+            "key_type": "secp256r1",
+            "tunnel_type": "masque"
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(f"{api_url}/reg/{device_id}", data=patch_data, headers=headers, method="PATCH")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            masque_res = json.load(resp)
+            
+        server_pub_raw = masque_res['config']['peers'][0]['public_key']
+        server_pub_clean = ''.join(line.strip() for line in server_pub_raw.splitlines() if not line.startswith('-----'))
+        
+        v4_addr = masque_res['config']['interface']['addresses'].get('v4', v4)
+        v6_addr = masque_res['config']['interface']['addresses'].get('v6', v6)
+        
+        return {
+            'private_key': priv_b64,
+            'public_key': server_pub_clean,
+            'device_id': device_id,
+            'token': token,
+            'ipv4_cidr': f"{v4_addr}/32",
+            'ipv6_cidr': f"{v6_addr}/128" if v6_addr else "2606:4700:110::2/128",
+            'local_address': f"{v4_addr}/32" + (f",{v6_addr}/128" if v6_addr else "")
+        }
+    except Exception as e:
+        print(f"Failed to enroll MASQUE key: {e}")
+        return None
+
+
+def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159.198.1", port: int = 443, network: str = "h2") -> str:
     encoded_priv = urllib.parse.quote(profile['private_key'], safe='')
     encoded_pub = urllib.parse.quote(profile['public_key'], safe='')
     encoded_addr = urllib.parse.quote(profile['local_address'], safe='')
     encoded_remarks = urllib.parse.quote(remarks, safe='')
-    reserved_val = profile.get('reserved', '0,0,0')
     
     return (
         f"warp://{encoded_priv}@{masque_ip}:{port}?"
-        f"public_key={encoded_pub}&address={encoded_addr}&reserved={reserved_val}&"
-        f"sni={MASQUE_SNI}&masque=1&network=quic&mtu={profile.get('mtu', 1280)}#"
+        f"public_key={encoded_pub}&address={encoded_addr}&"
+        f"sni={MASQUE_SNI}&masque=1&network={network}&mtu={profile.get('mtu', 1280)}#"
         f"{encoded_remarks}"
     )
 
@@ -144,6 +208,8 @@ def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159
 def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", port: int = 443) -> dict:
     device_id = profile.get('device_id', '')
     token = profile.get('token', '')
+    priv = profile.get('private_key', '')
+    pub = profile.get('public_key', '')
     
     return {
         "$schema": "https://raw.githubusercontent.com/SagerNet/sing-box/main/schemas/config.json",
@@ -193,7 +259,7 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
         "outbounds": [
             {
                 "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер Ультра (HTTP/3)",
+                "tag": "⚡ [WARP-MASQUE] Бункер H2 (HTTP/2)",
                 "server": masque_ip,
                 "server_port": port,
                 "address": masque_ip,
@@ -207,6 +273,31 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
                     "id": device_id,
                     "auth_token": token
                 },
+                "private_key": priv,
+                "public_key": pub,
+                "system": False,
+                "use_http2": True,
+                "udp_timeout": "5m0s",
+                "udp_keepalive_period": "30s"
+            },
+            {
+                "type": "masque",
+                "tag": "⚡ [WARP-MASQUE] Бункер H3 (HTTP/3)",
+                "server": masque_ip,
+                "server_port": port,
+                "address": masque_ip,
+                "port": port,
+                "tls": {
+                    "enabled": True,
+                    "server_name": MASQUE_SNI,
+                    "insecure": False
+                },
+                "profile": {
+                    "id": device_id,
+                    "auth_token": token
+                },
+                "private_key": priv,
+                "public_key": pub,
                 "system": False,
                 "use_http2": False,
                 "udp_timeout": "5m0s",
@@ -238,18 +329,17 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
 
 
 def build_warp_masque_clash(profile: dict, masque_ip: str = "162.159.198.1", port: int = 443) -> str:
-    node_name = "⚡ [WARP-MASQUE] Бункер Ультра (HTTP/3) | ⚡40ms"
     ipv4_cidr = profile.get('ipv4_cidr', '172.16.0.2/32')
     ipv6_cidr = profile.get('ipv6_cidr', '2606:4700:110::2/128')
     priv = profile.get('private_key', '')
     pub = profile.get('public_key', '')
     
     return f"""# ==============================================================================
-# 🛡️ BUNKER VPN — CLOUDFLARE WARP-MASQUE (HTTP/3 CONNECT-IP)
+# 🛡️ BUNKER VPN — CLOUDFLARE WARP-MASQUE (RFC 9484 CONNECT-IP)
 # ==============================================================================
 # Совместимо с Mihomo / Clash.Meta / Clash Verge Rev / Flclash
-# Протокол: RFC 9484 (CONNECT-IP over HTTP/3 QUIC) через Anycast Cloudflare
-# Бронебойная маскировка под веб-трафик к consumer-masque.cloudflareclient.com
+# Протокол: RFC 9484 (CONNECT-IP over HTTP/2 & HTTP/3 QUIC) через Anycast Cloudflare
+# Ключи: ECDSA P-256 (secp256r1) сгенерированные по спецификации usque
 # ==============================================================================
 
 port: 7890
@@ -271,7 +361,21 @@ dns:
     - https://dns.google/dns-query
 
 proxies:
-  - name: "{node_name}"
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
+    type: masque
+    server: {masque_ip}
+    port: {port}
+    private-key: "{priv}"
+    public-key: "{pub}"
+    ip: {ipv4_cidr}
+    ipv6: {ipv6_cidr}
+    mtu: 1280
+    udp: true
+    sni: {MASQUE_SNI}
+    network: h2
+    remote-dns-resolve: true
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
     type: masque
     server: {masque_ip}
     port: {port}
@@ -286,16 +390,27 @@ proxies:
     remote-dns-resolve: true
 
 proxy-groups:
-  - name: "🚀 BUNKER-AUTO"
+  - name: "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
+    type: url-test
+    url: http://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
+
+  - name: "🛡️ BUNKER-MASQUE"
     type: select
     proxies:
-      - "{node_name}"
+      - "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (TCP / HTTP/2) | ⚡40ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (QUIC / HTTP/3) | ⚡35ms"
       - DIRECT
 
 rules:
   - GEOIP,private,DIRECT
   - GEOIP,RU,DIRECT
-  - MATCH,🚀 BUNKER-AUTO
+  - MATCH,🚀 BUNKER-AUTO (Автовыбор H2/H3)
 """
 
 
@@ -454,11 +569,19 @@ def generate_warp_pool(count: int = 8, sub_dir: str = None) -> tuple[list[dict],
         uris.append(build_wireguard_uri(p, remark))
 
     masque_uris = []
+    masque_prof = None
     if profiles:
         p0 = profiles[0]
+        # Enroll ECDSA P-256 (secp256r1) keypair for MASQUE (usque standard for Mihomo/Clash/Xray)
+        masque_prof = enroll_masque_profile(p0.get('device_id'), p0.get('token'), v4=p0.get('ipv4_cidr', '172.16.0.2').split('/')[0])
+        if not masque_prof:
+            masque_prof = p0  # fallback
+
         for idx, m_ip in enumerate(CLOUDFLARE_MASQUE_IPS, 1):
-            remark = f"⚡ [WARP-MASQUE] Бункер Ультра #{idx:02d} (HTTP/3) | ⚡40ms"
-            masque_uris.append(build_warp_masque_uri(p0, remark, masque_ip=m_ip))
+            remark_h2 = f"⚡ [WARP-MASQUE] Бункер H2 #{idx:02d} (HTTP/2) | ⚡40ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h2, masque_ip=m_ip, network="h2"))
+            remark_h3 = f"⚡ [WARP-MASQUE] Бункер H3 #{idx:02d} (HTTP/3) | ⚡35ms"
+            masque_uris.append(build_warp_masque_uri(masque_prof, remark_h3, masque_ip=m_ip, network="quic"))
 
     all_uris = masque_uris + uris
 
@@ -480,17 +603,16 @@ def generate_warp_pool(count: int = 8, sub_dir: str = None) -> tuple[list[dict],
             f.write(base64.b64encode(raw.encode("utf-8")).decode("utf-8") + "\n")
 
         # Save dedicated WARP-MASQUE subscription & config files
-        if masque_uris and profiles:
-            p0 = profiles[0]
+        if masque_uris and masque_prof:
             # 1. Sing-box JSON (v1.10+)
             sb_path = os.path.join(sub_dir, "warp_masque.json")
             with open(sb_path, "w", encoding="utf-8") as f:
-                json.dump(build_warp_masque_singbox(p0), f, ensure_ascii=False, indent=2)
+                json.dump(build_warp_masque_singbox(masque_prof), f, ensure_ascii=False, indent=2)
 
             # 2. Mihomo / Clash Meta YAML
             clash_path = os.path.join(sub_dir, "warp_masque.yaml")
             with open(clash_path, "w", encoding="utf-8") as f:
-                f.write(build_warp_masque_clash(p0))
+                f.write(build_warp_masque_clash(masque_prof))
 
             # 3. Plaintext URIs (Hiddify, Karing)
             masque_txt_path = os.path.join(sub_dir, "warp_masque.txt")
