@@ -173,7 +173,13 @@ SOURCES = [
     # 68. Freeinternet by Mygalaru Premium Reality Matrix (200 nodes)
     "https://raw.githubusercontent.com/btsk161/Freeinternet_byMygalaru.github.io/refs/heads/main/premium.txt",
     # 69. Buffetbarko Universal Blacklist VPN - Wi-Fi bypass (353 nodes)
-    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/blacklist_vpn.txt"
+    "https://raw.githubusercontent.com/Buffetbarko/Universal-Proxy-Config-Parser-/main/blacklist_vpn.txt",
+    # 70. cjsjsuz Hourly Auto Matrix (494 nodes)
+    "https://raw.githubusercontent.com/cjsjsuz/sub1h/HEAD/out1h/sub.txt",
+    # 71. tqsmmm High-Speed V2Ray Sub (17 nodes)
+    "https://raw.githubusercontent.com/tqsmmm/v2ray-sub/main/sub.txt",
+    # 72. anna1211688 Shadowrocket Auto Relay (14 nodes)
+    "https://anna1211688.github.io/shadowrocket-auto/shadowrocket.txt"
 ]
 
 def clean_source_url(url: str) -> str:
