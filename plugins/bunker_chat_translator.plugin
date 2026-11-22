@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  🌐 BUNKER CHAT TRANSLATOR v1.2.1 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  🌐 BUNKER CHAT TRANSLATOR v1.2.4 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.2.1
+  Версия: 1.2.4
   Назначение: Автоматический перевод входящих и исходящих сообщений в чатах,
               каналах и личке на лету. Всплывающий перевод по долгому тапу
               и отправка перевода через .tr.
@@ -57,7 +57,7 @@ __description__ = (
     "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 __icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
@@ -120,30 +120,34 @@ def is_cyrillic(text: str) -> bool:
 
 
 def extract_text_from_any(obj: Any) -> str:
-    """Универсальное извлечение текста сообщения из любого переданного объекта (dict, MessageObject, TLRPC.Message)."""
+    """Универсальное извлечение текста сообщения из любого переданного объекта (dict, Java Map, MessageObject, TLRPC.Message)."""
     if obj is None:
         return ""
     try:
-        if isinstance(obj, dict):
-            msg = (
-                obj.get("message")
-                or obj.get("messageObject")
-                or obj.get("msg")
-                or obj.get("message_object")
-            )
-            if msg is not None and msg is not obj:
-                res = extract_text_from_any(msg)
-                if res:
-                    return res
-            for k in ("text", "caption", "message", "body"):
-                v = obj.get(k)
-                if v:
-                    s = str(v).strip()
-                    if s:
-                        return s
-            return ""
+        # 1. Если это словарь (Python dict) или Java Map (HashMap)
+        get_fn = getattr(obj, "get", None)
+        if callable(get_fn):
+            for key in ("message", "messageObject", "msg", "message_object", "selectedMessage", "item"):
+                try:
+                    val = get_fn(key)
+                    if val is not None and val is not obj:
+                        res = extract_text_from_any(val)
+                        if res:
+                            return res
+                except Exception:
+                    pass
 
-        # 1. Пробуем TLRPC.Message через messageOwner
+            for key in ("text", "caption", "message", "body"):
+                try:
+                    val = get_fn(key)
+                    if val is not None:
+                        s = str(val).strip()
+                        if s:
+                            return s
+                except Exception:
+                    pass
+
+        # 2. Пробуем TLRPC.Message через messageOwner
         owner = getattr(obj, "messageOwner", None)
         if owner is not None:
             msg_str = getattr(owner, "message", None)
@@ -152,17 +156,10 @@ def extract_text_from_any(obj: Any) -> str:
                 if s:
                     return s
 
-        # 2. Пробуем messageText (CharSequence)
+        # 3. Пробуем messageText (CharSequence на MessageObject)
         mt = getattr(obj, "messageText", None)
         if mt is not None:
             s = str(mt).strip()
-            if s:
-                return s
-
-        # 3. Пробуем прямой доступ к message
-        msg_prop = getattr(obj, "message", None)
-        if msg_prop is not None:
-            s = str(msg_prop).strip()
             if s:
                 return s
 
@@ -172,10 +169,117 @@ def extract_text_from_any(obj: Any) -> str:
             s = str(cap).strip()
             if s:
                 return s
-    except Exception:
-        pass
+
+        # 5. Пробуем прямой доступ к message
+        msg_prop = getattr(obj, "message", None)
+        if msg_prop is not None and not callable(msg_prop):
+            s = str(msg_prop).strip()
+            if s:
+                return s
+    except Exception as e:
+        _log(f"extract_text error: {e}")
 
     return ""
+
+
+def extract_dialog_id(ctx: Any = None, frag: Any = None) -> int:
+    """Универсальное извлечение dialog_id из контекста действия или фрагмента."""
+    try:
+        # 1. Из контекста (dict или Java Map)
+        if ctx is not None:
+            get_fn = getattr(ctx, "get", None)
+            if callable(get_fn):
+                for key in ("dialog_id", "dialogId", "chat_id", "peer_id"):
+                    try:
+                        v = get_fn(key)
+                        if v is not None:
+                            val = int(str(v).strip())
+                            if val != 0:
+                                return val
+                    except Exception:
+                        pass
+                if not frag:
+                    try:
+                        frag = get_fn("fragment")
+                    except Exception:
+                        pass
+
+        # 2. Из текущего / переданного фрагмента
+        if not frag:
+            try:
+                frag = get_last_fragment()
+            except Exception:
+                pass
+
+        if frag is not None:
+            # Метод getDialogId()
+            if hasattr(frag, "getDialogId") and callable(getattr(frag, "getDialogId")):
+                try:
+                    did = int(frag.getDialogId())
+                    if did != 0:
+                        return did
+                except Exception:
+                    pass
+
+            # Поле dialog_id
+            try:
+                did = get_private_field(frag, "dialog_id")
+                if did is not None:
+                    val = int(str(did).strip())
+                    if val != 0:
+                        return val
+            except Exception:
+                pass
+
+            # currentUser / currentChat
+            try:
+                u = getattr(frag, "currentUser", None)
+                if u is not None:
+                    uid = getattr(u, "id", 0)
+                    if uid:
+                        return int(uid)
+            except Exception:
+                pass
+
+            try:
+                c = getattr(frag, "currentChat", None)
+                if c is not None:
+                    cid = getattr(c, "id", 0)
+                    if cid:
+                        return -int(cid)
+            except Exception:
+                pass
+    except Exception as e:
+        _log(f"extract_dialog_id err: {e}")
+
+    return 0
+
+
+def _get_dialog_title(dialog_id: int) -> str:
+    """Возвращает человекочитаемое название чата или имя пользователя."""
+    try:
+        acc = int(UserConfig.selectedAccount)
+        mc = MessagesController.getInstance(acc)
+        if dialog_id > 0:
+            user = mc.getUser(dialog_id)
+            if user is not None:
+                first = str(getattr(user, "first_name", "") or "").strip()
+                last = str(getattr(user, "last_name", "") or "").strip()
+                full = f"{first} {last}".strip()
+                if full:
+                    return full
+                uname = str(getattr(user, "username", "") or "").strip()
+                if uname:
+                    return f"@{uname}"
+        else:
+            chat = mc.getChat(-dialog_id)
+            if chat is not None:
+                title = str(getattr(chat, "title", "") or "").strip()
+                if title:
+                    return title
+    except Exception:
+        pass
+    return f"Чат {dialog_id}"
 
 
 class TranslationEngine:
@@ -208,7 +312,6 @@ class TranslationEngine:
     def _save_cache(self):
         try:
             with open(self.cache_file, "w", encoding="utf-8") as f:
-                # Ограничиваем кэш последними 3000 переводами для экономии памяти
                 items = list(self._cache.items())[-3000:]
                 json.dump(dict(items), f, ensure_ascii=False)
         except Exception as e:
@@ -471,18 +574,28 @@ class BunkerChatTranslatorPlugin(BasePlugin):
         return "ru"
 
     def prepare_message_translation(self, msg_obj: Any):
-        """Подготавливает перевод сообщения до того, как ячейка выполнит расчёт разметки."""
+        """Безопасная подготовка перевода для отображения в ячейке сообщения."""
         try:
-            dialog_id = int(msg_obj.getDialogId())
+            if msg_obj is None:
+                return
+
+            dialog_id = 0
+            if hasattr(msg_obj, "getDialogId") and callable(getattr(msg_obj, "getDialogId")):
+                try:
+                    dialog_id = int(msg_obj.getDialogId())
+                except Exception:
+                    pass
+
             if dialog_id in self._disabled_dialog_ids:
                 return
 
-            # Проверяем исходящее или входящее (по умолчанию переводим и свои для теста в Избранном)
-            is_out = bool(msg_obj.isOut())
-            if is_out and not self.get_setting("translate_own", True):
-                return
+            # Проверяем исходящее или входящее
+            if hasattr(msg_obj, "isOut") and callable(getattr(msg_obj, "isOut")):
+                is_out = bool(msg_obj.isOut())
+                if is_out and not self.get_setting("translate_own", True):
+                    return
 
-            # Извлекаем оригинальный текст сообщения через универсальный экстрактор
+            # Извлекаем оригинальный текст
             raw_text = extract_text_from_any(msg_obj)
             if not raw_text or len(raw_text.strip()) < 2:
                 return
@@ -507,37 +620,48 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 ):
                     return
 
-                # 1. Инжектируем перевод в messageText ДО того, как ячейка построит лэйаут
                 replace = bool(self.get_setting("replace_original", False))
                 if replace:
                     new_text = f"🌐 {translated_text}"
                 else:
                     new_text = f"{raw_text}\n\n🌐 Перевод:\n{translated_text}"
 
-                if hasattr(msg_obj, "messageText"):
-                    msg_obj.messageText = String(new_text)
+                # Применяем новый текст через штатный метод applyNewText
+                applied = False
+                if hasattr(msg_obj, "applyNewText") and callable(getattr(msg_obj, "applyNewText")):
+                    try:
+                        msg_obj.applyNewText(String(new_text))
+                        applied = True
+                    except Exception as e:
+                        _log(f"applyNewText err: {e}")
 
-                # 2. Обновляем messageOwner.message и очищаем entities
+                if not applied:
+                    if hasattr(msg_obj, "messageText"):
+                        try:
+                            msg_obj.messageText = String(new_text)
+                        except Exception:
+                            pass
+                    if hasattr(msg_obj, "generateLayout") and callable(getattr(msg_obj, "generateLayout")):
+                        try:
+                            msg_obj.generateLayout(None)
+                        except Exception:
+                            pass
+
+                # Обновляем messageOwner.message БЕЗ обнуления entities!
                 if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
                     try:
                         msg_obj.messageOwner.message = String(new_text)
-                        msg_obj.messageOwner.entities = None
                     except Exception:
                         pass
 
-                # 3. Нативные свойства Telegram
+                # Нативные свойства Telegram
                 try:
                     msg_obj.translated = True
                     msg_obj.translatedText = String(translated_text)
                 except Exception:
                     pass
 
-                # 4. Сбрасываем кэш разметки, чтобы Telegram пересчитал лэйаут под новый текст
-                if hasattr(msg_obj, "textLayoutBlocks"):
-                    try:
-                        msg_obj.textLayoutBlocks = None
-                    except Exception:
-                        pass
+                # ВНИМАНИЕ: НИКОГДА не обнулять msg_obj.textLayoutBlocks и msg_obj.messageOwner.entities!
                 return
 
             # Если в кэше нет — отправляем в фоновую очередь
@@ -680,51 +804,19 @@ class BunkerChatTranslatorPlugin(BasePlugin):
     def _on_chat_action_toggle(self, ctx: Any):
         """Включение / отключение автоперевода для текущего чата."""
         try:
-            frag = None
-            raw_did = None
-
-            if hasattr(ctx, "get") and callable(getattr(ctx, "get")):
-                try:
-                    raw_did = ctx.get("dialog_id")
-                except Exception:
-                    pass
-                try:
-                    frag = ctx.get("fragment")
-                except Exception:
-                    pass
-
-            if not frag:
-                frag = get_last_fragment()
-
-            if raw_did is None and frag is not None:
-                if hasattr(frag, "getDialogId") and callable(getattr(frag, "getDialogId")):
-                    try:
-                        raw_did = frag.getDialogId()
-                    except Exception:
-                        pass
-                if raw_did is None:
-                    try:
-                        raw_did = get_private_field(frag, "dialog_id")
-                    except Exception:
-                        pass
-
-            dialog_id = None
-            if raw_did is not None:
-                try:
-                    dialog_id = int(str(raw_did).strip())
-                except Exception:
-                    pass
-
-            if dialog_id is None or dialog_id == 0:
+            dialog_id = extract_dialog_id(ctx)
+            if dialog_id == 0:
                 safe_notify("Не удалось определить чат")
                 return
 
+            title = _get_dialog_title(dialog_id)
+
             if dialog_id in self._disabled_dialog_ids:
                 self._disabled_dialog_ids.remove(dialog_id)
-                safe_notify("🌐 Автоперевод для этого чата ВКЛЮЧЁН")
+                safe_notify(f"🌐 Автоперевод для «{title}» ВКЛЮЧЁН")
             else:
                 self._disabled_dialog_ids.add(dialog_id)
-                safe_notify("⏸️ Автоперевод для этого чата ОТКЛЮЧЁН")
+                safe_notify(f"⏸️ Автоперевод для «{title}» ОТКЛЮЧЁН")
 
             account = int(UserConfig.selectedAccount)
             self._schedule_interface_update(account)
@@ -919,7 +1011,20 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             target_file = None
             if globals().get("__file__") and os.path.isfile(__file__):
                 target_file = __file__
-            else:
+
+            if not target_file:
+                # Динамический поиск через filesDir приложения
+                try:
+                    ctx_app = ApplicationLoader.applicationContext
+                    if ctx_app:
+                        app_files_dir = ctx_app.getFilesDir().getAbsolutePath()
+                        p_path = os.path.join(app_files_dir, "plugins", f"{__id__}.plugin")
+                        if os.path.exists(p_path):
+                            target_file = p_path
+                except Exception:
+                    pass
+
+            if not target_file:
                 for cand_dir in [
                     "/data/user/0/app.nimarkogram.messenger/files/plugins",
                     "/data/data/app.nimarkogram.messenger/files/plugins",
