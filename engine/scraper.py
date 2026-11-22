@@ -158,6 +158,10 @@ SOURCES = [
     "https://is.wepogp.gay/bypass-hwid-lock-3z5O6BFAaJQzGlamvtSo?payload=wiq6mxJkeDA4iTsNc46%2B%2Bmxno5%2B1VG6m5LeYlbNA1kLt5J2vVoj/a6fEi53OHDxSpyGPSCIdbCqC15dCfIQsqgB4wZ0k2tr1AXjNbF9I735NA7YqAzR7xww5XAJz63dh",
     # 63. PiroShokVPN Resub Cloudflare Matrix (56 nodes)
     "https://resub.pirzok6.workers.dev/98165ed40f5fd1c0520402391450d52a",
+    # 64. TowshanVpn Decrypted Happ Crypt5 Drive Matrix #1 (107 nodes)
+    "https://www.googleapis.com/drive/v3/files/1TYZIGG90fSR9nMKdX8Z0izYZXLMJzGhL?alt=media&key=AIzaSyABWhGqO0OH1RvKe-wzyZE1fNvT1kOreGA",
+    # 65. TowshanVpn Decrypted Happ Crypt5 Drive Matrix #2 (64 nodes)
+    "https://www.googleapis.com/drive/v3/files/1OeynnrSC3qu1D55QTCMQtkrHSTAy0mHY?alt=media&key=AIzaSyABWhGqO0OH1RvKe-wzyZE1fNvT1kOreGA",
     # 64. ToshibuVPN Bot Sub Matrix (10 nodes)
     "https://tshbotpopup.ru/subscriptions/04920673-035c-410d-94e4-5b1469d3fb6f.txt",
     # 65. Buffetbarko Universal Whitelist VPN (155 nodes)
