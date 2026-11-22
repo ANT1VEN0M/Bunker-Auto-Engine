@@ -16,15 +16,15 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-22 19:22:43 МСК` (`2026-11-22 16:22:43 UTC`)
-- 🟢 **Всего активных проверенных нод:** `81`
+- 🕒 **Последнее авто-обновление:** `2026-11-22 21:03:57 МСК` (`2026-11-22 18:03:57 UTC`)
+- 🟢 **Всего активных проверенных нод:** `80`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `35`
-- 🌍 **Мировой Микс (YouTube / DPI):** `87`
-- 🤍 **Белый список (RU / BY):** `34`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `29`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `23`
+- 🌍 **Мировой Микс (YouTube / DPI):** `86`
+- 🤍 **Белый список (RU / BY):** `23`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `18`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `31`
+- 💬 **Пожарный канал для Telegram:** `19`
 
 ---
 
@@ -102,9 +102,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
 
 
 ---
