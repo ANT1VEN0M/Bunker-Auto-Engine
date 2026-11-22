@@ -57,7 +57,7 @@ __description__ = (
     "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
@@ -516,6 +516,13 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
                 if hasattr(msg_obj, "messageText"):
                     msg_obj.messageText = String(new_text)
+
+                # Сбрасываем кэш разметки, чтобы Telegram пересчитал лэйаут под новый текст
+                if hasattr(msg_obj, "textLayoutBlocks"):
+                    try:
+                        msg_obj.textLayoutBlocks = None
+                    except Exception:
+                        pass
                 return
 
             # Если в кэше нет — отправляем в фоновую очередь
