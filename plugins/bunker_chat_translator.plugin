@@ -1,0 +1,732 @@
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+  🌐 BUNKER CHAT TRANSLATOR — ПЛАГИН ДЛЯ EXTERAGRAM / AYUGRAM
+================================================================================
+  Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
+  Версия: 1.0.0
+  Назначение: Автоматический перевод всех входящих и исходящих сообщений в чатах,
+              каналах и личке на лету. Разблокирует нативную плашку Telegram
+              «Перевести весь чат» без Telegram Premium.
+================================================================================
+"""
+
+import json
+import os
+import re
+import threading
+import time
+import urllib.parse
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+# Android SDK & Java bridge
+from android.content import ClipData, Context
+from android.graphics import Color, Typeface
+from android.graphics.drawable import GradientDrawable
+from android.view import Gravity, View, ViewGroup
+from android.widget import Button, LinearLayout, ScrollView, TextView
+
+from android_utils import log, run_on_ui_thread
+from base_plugin import (
+    BasePlugin,
+    HookResult,
+    HookStrategy,
+    MenuItemData,
+    MenuItemType,
+    MethodHook,
+    MethodReplacement,
+)
+from client_utils import get_last_fragment, run_on_queue
+from file_utils import get_cache_dir, write_file
+from hook_utils import find_class, get_private_field
+from java import dynamic_proxy, jclass
+from java.lang import Runnable, String
+
+from org.telegram.messenger import (
+    AndroidUtilities,
+    ApplicationLoader,
+    MessagesController,
+    NotificationCenter,
+    UserConfig,
+)
+from org.telegram.ui.ActionBar import AlertDialog, Theme
+from ui.bulletin import BulletinHelper
+from ui.settings import Divider, Header, Selector, Switch, Text
+
+__id__ = "bunker_chat_translator"
+__name__ = "Bunker Chat Translator 🌐"
+__description__ = (
+    "Автоматический перевод всего текста в чатах, каналах и ЛС на лету. "
+    "Включает нативную плашку 'Перевести весь чат' без Telegram Premium, "
+    "перевод прямо в ленте сообщений и отправку перевода через .tr."
+)
+__author__ = "@k0tlux & Бункер Кота"
+__version__ = "1.0.0"
+__icon__ = "msg_translate"
+__min_version__ = "11.10.0"
+
+SUPPORTED_LANGUAGES: List[Tuple[str, str]] = [
+    ("Русский", "ru"),
+    ("English", "en"),
+    ("Deutsch", "de"),
+    ("Español", "es"),
+    ("Français", "fr"),
+    ("Italiano", "it"),
+    ("Türkçe", "tr"),
+    ("Українська", "uk"),
+    ("Қазақша", "kk"),
+    ("Беларуская", "be"),
+    ("Polski", "pl"),
+    ("Português", "pt"),
+    ("العربية", "ar"),
+    ("日本語", "ja"),
+    ("한국어", "ko"),
+    ("中文 (Упрощенный)", "zh-CN"),
+]
+
+LANG_NAMES = [name for name, _ in SUPPORTED_LANGUAGES]
+LANG_CODES = [code for _, code in SUPPORTED_LANGUAGES]
+
+
+def _log(msg: str):
+    log(f"[BunkerTranslator] {msg}")
+
+
+class TranslationEngine:
+    """Движок перевода текста с многопоточностью, повторными попытками и кэшем."""
+
+    def __init__(self, cache_file_path: str):
+        self.cache_file = cache_file_path
+        self._cache: Dict[str, Tuple[str, str]] = {}  # hash -> (translated, src_lang)
+        self._pending: Set[str] = set()
+        self._lock = threading.Lock()
+        self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="bunker_tr")
+        self._load_cache()
+
+    def _hash_key(self, text: str, target_lang: str) -> str:
+        clean = text.strip()
+        return f"{target_lang}:{clean}"
+
+    def _load_cache(self):
+        if not os.path.exists(self.cache_file):
+            return
+        try:
+            with open(self.cache_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    self._cache = data
+                    _log(f"Загружено из кэша переводов: {len(self._cache)} записей.")
+        except Exception as e:
+            _log(f"Ошибка загрузки кэша переводов: {e}")
+
+    def _save_cache(self):
+        try:
+            with open(self.cache_file, "w", encoding="utf-8") as f:
+                # Ограничиваем кэш последними 3000 переводами для экономии памяти
+                items = list(self._cache.items())[-3000:]
+                json.dump(dict(items), f, ensure_ascii=False)
+        except Exception as e:
+            _log(f"Ошибка сохранения кэша переводов: {e}")
+
+    def get_cached(self, text: str, target_lang: str) -> Optional[Tuple[str, str]]:
+        key = self._hash_key(text, target_lang)
+        with self._lock:
+            return self._cache.get(key)
+
+    def clear_cache(self):
+        with self._lock:
+            self._cache.clear()
+            self._pending.clear()
+        if os.path.exists(self.cache_file):
+            try:
+                os.remove(self.cache_file)
+            except Exception:
+                pass
+        _log("Кэш переводов очищен.")
+
+    def count(self) -> int:
+        with self._lock:
+            return len(self._cache)
+
+    def translate_sync(self, text: str, target_lang: str = "ru") -> Tuple[str, str]:
+        """Синхронный перевод через Google Translate GTX с фолбэком на MyMemory."""
+        clean_text = text.strip()
+        if not clean_text:
+            return "", "unknown"
+
+        key = self._hash_key(clean_text, target_lang)
+        with self._lock:
+            cached = self._cache.get(key)
+            if cached:
+                return cached
+
+        # Попытка 1: Google Translate GTX (быстро, бесплатно, без API ключей)
+        try:
+            url = (
+                "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+                + target_lang
+                + "&dt=t&q="
+                + urllib.parse.quote(clean_text)
+            )
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0"
+                },
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                translated = "".join([part[0] for part in data[0] if part and part[0]])
+                detected_src = data[2] if len(data) > 2 and data[2] else "auto"
+
+                with self._lock:
+                    self._cache[key] = (translated, detected_src)
+                self._save_cache()
+                return translated, detected_src
+        except Exception as e:
+            _log(f"Google GTX translate error: {e}")
+
+        # Попытка 2: MyMemory API (резервный)
+        try:
+            url = f"https://api.mymemory.translated.net/get?q={urllib.parse.quote(clean_text)}&langpair=auto|{target_lang}"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                res = data.get("responseData", {})
+                translated = res.get("translatedText", clean_text)
+                detected_src = res.get("detectedLanguage", "auto")
+
+                with self._lock:
+                    self._cache[key] = (translated, detected_src)
+                self._save_cache()
+                return translated, detected_src
+        except Exception as e:
+            _log(f"MyMemory translate error: {e}")
+
+        return clean_text, "error"
+
+    def queue_translate(
+        self, text: str, target_lang: str, on_success: Callable[[str, str], None]
+    ):
+        """Асинхронный фоновый перевод."""
+        clean_text = text.strip()
+        if not clean_text:
+            return
+
+        key = self._hash_key(clean_text, target_lang)
+        with self._lock:
+            if key in self._pending:
+                return
+            self._pending.add(key)
+
+        def worker():
+            try:
+                translated, src = self.translate_sync(clean_text, target_lang)
+                with self._lock:
+                    self._pending.discard(key)
+                if translated and on_success:
+                    on_success(translated, src)
+            except Exception as exc:
+                with self._lock:
+                    self._pending.discard(key)
+                _log(f"Async worker error: {exc}")
+
+        self._executor.submit(worker)
+
+
+class IsPremiumHook(MethodReplacement):
+    """Разблокирует нативную плашку 'Перевести весь чат' (Translate Entire Chat) без Premium."""
+
+    def __init__(self, plugin: "BunkerChatTranslatorPlugin"):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        if self.plugin.get_setting("native_bar", True):
+            return True
+        return param.getResult()
+
+
+class ChatMessageCellHook(MethodHook):
+    """Перехватывает отображение сообщений в ленте и инжектирует перевод."""
+
+    def __init__(self, plugin: "BunkerChatTranslatorPlugin"):
+        super().__init__()
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("enabled", True):
+                return
+            if not self.plugin.get_setting("inline_translate", True):
+                return
+            if not param.args or len(param.args) < 1:
+                return
+
+            msg_obj = param.args[0]
+            if msg_obj is None:
+                return
+
+            self.plugin.process_message_object(msg_obj)
+        except Exception as exc:
+            _log(f"ChatMessageCellHook err: {exc}")
+
+
+class BunkerChatTranslatorPlugin(BasePlugin):
+    """Главный класс плагина перевода чатов Telegram."""
+
+    def __init__(self):
+        super().__init__()
+        self._hooks: List[Any] = []
+        self._translated_msg_ids: Set[int] = set()
+        self._disabled_dialog_ids: Set[int] = set()
+        self._engine: Optional[TranslationEngine] = None
+        self._msg_menu_item = None
+        self._chat_menu_item = None
+
+    def on_plugin_load(self):
+        _log("Инициализация Bunker Chat Translator...")
+        cache_dir = get_cache_dir() or "/data/data/org.telegram.messenger/cache"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_file = os.path.join(cache_dir, "bunker_tr_cache.json")
+        self._engine = TranslationEngine(cache_file)
+
+        # 1. Хук разблокировки нативной плашки перевода всего чата (Premium Translate Entire Chat)
+        try:
+            user_config_cls = jclass("org.telegram.messenger.UserConfig").getClass()
+            if user_config_cls:
+                is_premium_method = user_config_cls.getDeclaredMethod("isPremium")
+                is_premium_method.setAccessible(True)
+                ref = self.hook_method(is_premium_method, IsPremiumHook(self))
+                if ref:
+                    self._hooks.append(ref)
+                _log("Нативная плашка Telegram Translate Entire Chat разблокирована!")
+        except Exception as e:
+            _log(f"Ошибка хука UserConfig.isPremium: {e}")
+
+        # 2. Хук ленты чата ChatMessageCell (Inline-перевод под сообщением)
+        try:
+            cell_cls = find_class("org.telegram.ui.Cells.ChatMessageCell")
+            if cell_cls is not None:
+                refs = self.hook_all_methods(
+                    cell_cls, "setMessageObject", ChatMessageCellHook(self)
+                )
+                if refs:
+                    self._hooks.extend(refs)
+                _log(f"ChatMessageCell успешно перехвачен ({len(refs)} хуков).")
+        except Exception as e:
+            _log(f"Ошибка хука ChatMessageCell: {e}")
+
+        # 3. Хук исходящих сообщений (перевод перед отправкой по команде .tr или авто)
+        try:
+            self.add_on_send_message_hook()
+            _log("Хук исходящих сообщений (.tr) активирован.")
+        except Exception as e:
+            _log(f"Ошибка регистрации on_send_message_hook: {e}")
+
+        # 4. Меню действий сообщения (по долгому тапу на сообщение)
+        self._sync_context_menu()
+
+        # 5. Меню действий чата (в шапке чата для вкл/выкл автоперевода)
+        self._sync_chat_menu()
+
+        _log("Bunker Chat Translator готов к работе!")
+
+    def on_plugin_unload(self):
+        _log("Выгрузка Bunker Chat Translator...")
+        for h in self._hooks:
+            try:
+                self.unhook_method(h)
+            except Exception:
+                pass
+        self._hooks.clear()
+
+        try:
+            if self._msg_menu_item:
+                self.remove_menu_item("bunker_tr_msg")
+            if self._chat_menu_item:
+                self.remove_menu_item("bunker_tr_chat")
+        except Exception:
+            pass
+
+    def _sync_context_menu(self):
+        try:
+            self.remove_menu_item("bunker_tr_msg")
+        except Exception:
+            pass
+        try:
+            self._msg_menu_item = self.add_menu_item(
+                MenuItemData(
+                    menu_type=MenuItemType.MESSAGE_CONTEXT_MENU,
+                    text="🌐 Перевести в окне",
+                    icon="msg_translate",
+                    item_id="bunker_tr_msg",
+                    on_click=self._on_context_menu_translate,
+                )
+            )
+        except Exception as e:
+            _log(f"Context menu add err: {e}")
+
+    def _sync_chat_menu(self):
+        try:
+            self.remove_menu_item("bunker_tr_chat")
+        except Exception:
+            pass
+        try:
+            self._chat_menu_item = self.add_menu_item(
+                MenuItemData(
+                    menu_type=MenuItemType.CHAT_ACTION_MENU,
+                    text="🌐 Автоперевод чата",
+                    icon="msg_translate",
+                    item_id="bunker_tr_chat",
+                    on_click=self._on_chat_action_toggle,
+                )
+            )
+        except Exception as e:
+            _log(f"Chat action menu add err: {e}")
+
+    def get_target_lang(self) -> str:
+        idx = self.get_setting("target_lang_idx", 0)
+        if 0 <= idx < len(LANG_CODES):
+            return LANG_CODES[idx]
+        return "ru"
+
+    def process_message_object(self, msg_obj: Any):
+        """Инжектирует перевод прямо в messageText объекта сообщения."""
+        try:
+            msg_id = int(msg_obj.getId())
+            if msg_id in self._translated_msg_ids:
+                return
+
+            dialog_id = int(msg_obj.getDialogId())
+            if dialog_id in self._disabled_dialog_ids:
+                return
+
+            # Проверяем исходящее или входящее
+            is_out = bool(msg_obj.isOut())
+            if is_out and not self.get_setting("translate_own", False):
+                return
+
+            # Извлекаем оригинальный текст сообщения
+            raw_text = None
+            if hasattr(msg_obj, "messageText") and msg_obj.messageText is not None:
+                raw_text = str(msg_obj.messageText)
+            elif hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
+                raw_text = str(msg_obj.messageOwner.message)
+
+            if not raw_text or len(raw_text.strip()) < 2:
+                return
+
+            # Защита от повторной обработки
+            if "🌐 Перевод:" in raw_text or "🌐 Translated:" in raw_text:
+                self._translated_msg_ids.add(msg_id)
+                return
+
+            target_lang = self.get_target_lang()
+
+            # Проверяем кэш
+            cached = self._engine.get_cached(raw_text, target_lang)
+            if cached:
+                translated_text, src_lang = cached
+                if (
+                    src_lang == target_lang
+                    or translated_text.strip() == raw_text.strip()
+                ):
+                    # Сообщение уже на целевом языке, переводить не требуется
+                    self._translated_msg_ids.add(msg_id)
+                    return
+                self._apply_translation_to_cell(
+                    msg_obj, raw_text, translated_text, target_lang
+                )
+                self._translated_msg_ids.add(msg_id)
+                return
+
+            # Если в кэше нет — запускаем асинхронный перевод
+            account = int(UserConfig.selectedAccount)
+
+            def on_done(translated: str, src: str):
+                if src == target_lang or translated.strip() == raw_text.strip():
+                    self._translated_msg_ids.add(msg_id)
+                    return
+                self._apply_translation_to_cell(
+                    msg_obj, raw_text, translated, target_lang
+                )
+                self._translated_msg_ids.add(msg_id)
+
+                # Уведомляем интерфейс перерисовать сообщения
+                def notify_ui():
+                    try:
+                        nc = NotificationCenter.getInstance(account)
+                        nc.postNotificationName(
+                            NotificationCenter.updateInterfaces,
+                            MessagesController.UPDATE_MASK_MESSAGE_TEXT,
+                        )
+                    except Exception:
+                        pass
+
+                run_on_ui_thread(notify_ui)
+
+            self._engine.queue_translate(raw_text, target_lang, on_done)
+        except Exception as e:
+            _log(f"process_message_object error: {e}")
+
+    def _apply_translation_to_cell(
+        self, msg_obj: Any, original: str, translated: str, target_lang: str
+    ):
+        """Форматирует текст сообщения, подставляя перевод."""
+        try:
+            replace = bool(self.get_setting("replace_original", False))
+            if replace:
+                new_text = f"🌐 {translated}"
+            else:
+                new_text = f"{original}\n\n🌐 Перевод:\n{translated}"
+
+            msg_obj.messageText = String(new_text)
+        except Exception as exc:
+            _log(f"apply_translation err: {exc}")
+
+    def on_send_message_hook(self, account, params):
+        """Перехват отправки сообщений для команды .tr или автоперевода."""
+        try:
+            if not self.get_setting("enabled", True):
+                return HookResult()
+            if not hasattr(params, "message") or not isinstance(params.message, str):
+                return HookResult()
+
+            text = params.message.strip()
+            if not text:
+                return HookResult()
+
+            # Режим 1: префикс команды .tr (например: .tr привет как дела)
+            if text.startswith(".tr ") or text.startswith("!tr "):
+                body = text[4:].strip()
+                out_lang = self.get_setting("outgoing_lang", "en")
+                translated, _ = self._engine.translate_sync(body, out_lang)
+                if translated:
+                    params.message = translated
+                    BulletinHelper.show_info(f"🌐 Переведено на [{out_lang.upper()}]")
+                    return HookResult(strategy=HookStrategy.MODIFY_FINAL)
+
+            # Режим 2: полный автоперевод всех исходящих
+            if self.get_setting("auto_tr_outgoing", False):
+                out_lang = self.get_setting("outgoing_lang", "en")
+                translated, src = self._engine.translate_sync(text, out_lang)
+                if translated and src != out_lang:
+                    params.message = translated
+                    return HookResult(strategy=HookStrategy.MODIFY_FINAL)
+
+        except Exception as e:
+            _log(f"on_send_message_hook err: {e}")
+
+        return HookResult()
+
+    def _on_context_menu_translate(self, message_object: Any):
+        """Показ перевода сообщения во всплывающем окне с кнопкой копирования."""
+        try:
+            if message_object is None:
+                BulletinHelper.show_error("Сообщение не выбрано")
+                return
+
+            text = None
+            if hasattr(message_object, "messageOwner") and message_object.messageOwner:
+                text = str(message_object.messageOwner.message)
+            elif (
+                hasattr(message_object, "messageText") and message_object.messageText
+            ):
+                text = str(message_object.messageText)
+
+            if not text or not text.strip():
+                BulletinHelper.show_info("В сообщении нет текста")
+                return
+
+            clean_text = text.strip()
+            # Убираем префикс если уже был встроен
+            clean_text = re.sub(r"\n\n🌐 Перевод:[\s\S]*$", "", clean_text)
+            clean_text = re.sub(r"^🌐\s*", "", clean_text)
+
+            target_lang = self.get_target_lang()
+            BulletinHelper.show_info(f"Перевожу на [{target_lang.upper()}]...")
+
+            def worker():
+                translated, src = self._engine.translate_sync(clean_text, target_lang)
+
+                def show_dialog():
+                    try:
+                        fragment = get_last_fragment()
+                        act = (
+                            fragment.getParentActivity()
+                            if fragment
+                            else ApplicationLoader.applicationContext
+                        )
+                        if not act:
+                            return
+
+                        builder = AlertDialog.Builder(act)
+                        builder.setTitle(f"🌐 Перевод ({src.upper()} ➔ {target_lang.upper()})")
+                        builder.setMessage(translated)
+
+                        # Кнопка скопировать
+                        def on_copy(dialog, which):
+                            try:
+                                ctx = ApplicationLoader.applicationContext
+                                cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+                                clip = ClipData.newPlainText("translation", translated)
+                                cm.setPrimaryClip(clip)
+                                BulletinHelper.show_success("Перевод скопирован в буфер")
+                            except Exception as ce:
+                                BulletinHelper.show_error(f"Ошибка копирования: {ce}")
+
+                        builder.setPositiveButton("Скопировать", on_copy)
+                        builder.setNegativeButton("Закрыть", None)
+                        builder.show()
+                    except Exception as de:
+                        _log(f"show_dialog err: {de}")
+                        BulletinHelper.show_error(f"Ошибка окна перевода: {de}")
+
+                run_on_ui_thread(show_dialog)
+
+            threading.Thread(target=worker, daemon=True).start()
+        except Exception as exc:
+            _log(f"_on_context_menu_translate err: {exc}")
+            BulletinHelper.show_error(f"Ошибка: {exc}")
+
+    def _on_chat_action_toggle(self, fragment: Any):
+        """Включение / отключение автоперевода для текущего чата."""
+        try:
+            if not fragment:
+                return
+            dialog_id = None
+            if hasattr(fragment, "getDialogId"):
+                dialog_id = int(fragment.getDialogId())
+
+            if dialog_id is None:
+                BulletinHelper.show_info("Не удалось определить чат")
+                return
+
+            if dialog_id in self._disabled_dialog_ids:
+                self._disabled_dialog_ids.remove(dialog_id)
+                BulletinHelper.show_success("🌐 Автоперевод для этого чата ВКЛЮЧЁН")
+            else:
+                self._disabled_dialog_ids.add(dialog_id)
+                BulletinHelper.show_info("⏸️ Автоперевод для этого чата ОТКЛЮЧЁН")
+
+            # Перерисовываем экран
+            account = int(UserConfig.selectedAccount)
+            nc = NotificationCenter.getInstance(account)
+            nc.postNotificationName(
+                NotificationCenter.updateInterfaces,
+                MessagesController.UPDATE_MASK_MESSAGE_TEXT,
+            )
+        except Exception as e:
+            _log(f"toggle chat action error: {e}")
+
+    def create_settings(self) -> List[Any]:
+        """Интерфейс настроек плагина в ExteraGram / AyuGram."""
+        cached_count = self._engine.count() if self._engine else 0
+        target_idx = self.get_setting("target_lang_idx", 0)
+        target_name = (
+            LANG_NAMES[target_idx]
+            if 0 <= target_idx < len(LANG_NAMES)
+            else "Русский"
+        )
+
+        return [
+            Header(text="Основные настройки"),
+            Switch(
+                key="enabled",
+                text="Включить переводчик",
+                subtext="Главный переключатель работы плагина",
+                default=True,
+                icon="msg_translate",
+            ),
+            Switch(
+                key="native_bar",
+                text="Нативная плашка Telegram",
+                subtext="Разблокирует верхнюю полосу «Перевести весь чат» без Premium",
+                default=True,
+                icon="msg_premium",
+            ),
+            Divider(),
+            Header(text="Перевод входящих сообщений"),
+            Switch(
+                key="inline_translate",
+                text="Автоперевод в ленте чата",
+                subtext="Мгновенно переводит чужие сообщения на ваш язык",
+                default=True,
+                icon="msg_text",
+            ),
+            Switch(
+                key="replace_original",
+                text="Заменять оригинальный текст",
+                subtext="По умолчанию перевод добавляется под оригиналом",
+                default=False,
+                icon="msg_edit",
+            ),
+            Switch(
+                key="translate_own",
+                text="Переводить свои сообщения",
+                subtext="Обычно отключено, чтобы не переводить себя",
+                default=False,
+                icon="msg_user",
+            ),
+            Selector(
+                key="target_lang_idx",
+                text="Язык перевода (целевой)",
+                items=LANG_NAMES,
+                default=target_idx,
+            ),
+            Divider(),
+            Header(text="Отправка перевода (Исходящие)"),
+            Switch(
+                key="tr_command",
+                text="Команда .tr <текст>",
+                subtext="Напишите «.tr привет» — отправится на английском",
+                default=True,
+                icon="msg_send",
+            ),
+            Switch(
+                key="auto_tr_outgoing",
+                text="Автоперевод всех исходящих",
+                subtext="Автоматически переводит всё, что вы пишете, на английский",
+                default=False,
+                icon="msg_send",
+            ),
+            Divider(),
+            Header(text="Статистика и кэш"),
+            Text(
+                text="Кэш переводов",
+                subtext=f"Сохранено в памяти: {cached_count} сообщений",
+                icon="msg_folders",
+            ),
+            Text(
+                text="Очистить кэш переводов",
+                subtext="Сбросить сохранённые переводы и обновить текст",
+                icon="msg_delete",
+                accent=True,
+                on_click=lambda _: self._on_clear_cache_click(),
+            ),
+            Divider(),
+            Header(text="О плагине"),
+            Text(
+                text="Бункер Кота | VPN • Proxy • TG",
+                subtext="Разработано специально для подписчиков Бункера",
+                icon="msg_bot",
+            ),
+        ]
+
+    def _on_clear_cache_click(self):
+        if self._engine:
+            self._engine.clear_cache()
+        self._translated_msg_ids.clear()
+        BulletinHelper.show_success("Кэш переводов успешно очищен!")
+        try:
+            account = int(UserConfig.selectedAccount)
+            nc = NotificationCenter.getInstance(account)
+            nc.postNotificationName(
+                NotificationCenter.updateInterfaces,
+                MessagesController.UPDATE_MASK_MESSAGE_TEXT,
+            )
+        except Exception:
+            pass
