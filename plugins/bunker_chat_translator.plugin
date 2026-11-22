@@ -58,7 +58,7 @@ __description__ = (
 )
 __author__ = "@k0tlux & Бункер Кота"
 __version__ = "1.2.1"
-__icon__ = "exteraPlugins/1"
+__icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
 UPDATE_URL_GITHUB = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin"
