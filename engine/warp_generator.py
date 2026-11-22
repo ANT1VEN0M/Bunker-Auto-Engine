@@ -404,6 +404,7 @@ def build_warp_masque_clash(profile: dict, masque_ip: str = "162.159.198.1", por
 # Совместимо с Mihomo / Clash.Meta / Clash Verge Rev / Flclash
 # Протокол: RFC 9484 (CONNECT-IP over HTTP/2 & HTTP/3 QUIC) через Anycast Cloudflare
 # Ключи: ECDSA P-256 (secp256r1) сгенерированные по спецификации usque
+# Оптимизация: YAML-якоря (&base / <<: *base) для максимальной компактности
 # ==============================================================================
 
 port: 7890
@@ -412,6 +413,7 @@ allow-lan: false
 mode: rule
 log-level: info
 unified-delay: true
+tcp-concurrent: true
 
 dns:
   enable: true
@@ -424,127 +426,101 @@ dns:
     - https://1.1.1.1/dns-query
     - https://dns.google/dns-query
 
+# ==============================================================================
+# ⚓ БАЗОВЫЕ ШАБЛОНЫ (YAML-ЯКОРЯ ДЛЯ КОМПАКТНОСТИ)
+# ==============================================================================
+shared_masque: &masque_base
+  type: masque
+  server: {masque_ip}
+  port: {port}
+  private-key: "{priv}"
+  public-key: "{pub}"
+  ip: {ipv4_cidr}
+  ipv6: {ipv6_cidr}
+  mtu: 1280
+  udp: true
+  skip-cert-verify: true
+  remote-dns-resolve: true
+
+shared_h3: &masque_h3
+  <<: *masque_base
+  network: quic
+
+shared_h2: &masque_h2
+  <<: *masque_base
+  network: h2
+
+# ==============================================================================
+# 🚀 СПИСОК ПРОКСИ (ПРОФИЛИ С РАЗНЫМИ SNI)
+# ==============================================================================
 proxies:
-  - name: "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
+  # HTTP/3 (QUIC UDP) — Самый стабильный и быстрый протокол
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)"
+    <<: *masque_h3
     sni: zt-masque.cloudflareclient.com
-    skip-cert-verify: true
-    network: h2
-    remote-dns-resolve: true
 
-  - name: "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (API)"
+    <<: *masque_h3
+    sni: api.cloudflareclient.com
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+    <<: *masque_h3
+    sni: consumer-masque.cloudflareclient.com
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Google SNI)"
+    <<: *masque_h3
+    sni: www.gstatic.com
+
+  - name: "⚡ [WARP-MASQUE] Бункер H3 (Cloudflare SNI)"
+    <<: *masque_h3
+    sni: cdn.cloudflare.com
+
+  # HTTP/2 (TCP) — Резервный канал
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
+    <<: *masque_h2
     sni: zt-masque.cloudflareclient.com
-    skip-cert-verify: true
-    network: quic
-    remote-dns-resolve: true
 
-  - name: "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (API)"
+    <<: *masque_h2
     sni: api.cloudflareclient.com
-    skip-cert-verify: true
-    network: h2
-    remote-dns-resolve: true
 
-  - name: "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
-    sni: api.cloudflareclient.com
-    skip-cert-verify: true
-    network: quic
-    remote-dns-resolve: true
-
-  - name: "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
+  - name: "⚡ [WARP-MASQUE] Бункер H2 (Consumer)"
+    <<: *masque_h2
     sni: consumer-masque.cloudflareclient.com
-    skip-cert-verify: true
-    network: h2
-    remote-dns-resolve: true
 
-  - name: "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
-    type: masque
-    server: {masque_ip}
-    port: {port}
-    private-key: "{priv}"
-    public-key: "{pub}"
-    ip: {ipv4_cidr}
-    ipv6: {ipv6_cidr}
-    mtu: 1280
-    udp: true
-    sni: consumer-masque.cloudflareclient.com
-    skip-cert-verify: true
-    network: quic
-    remote-dns-resolve: true
-
+# ==============================================================================
+# 🎯 ГРУППЫ МАРШРУТИЗАЦИИ (АВТОВЫБОР С МИНИМАЛЬНЫМ ПИНГОМ)
+# ==============================================================================
 proxy-groups:
-  - name: "🚀 BUNKER-AUTO (Автовыбор)"
+  - name: "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
     type: url-test
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
     proxies:
-      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
-      - "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
-      - "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (API)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Google SNI)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Cloudflare SNI)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (API)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Consumer)"
 
   - name: "🛡️ BUNKER-MASQUE"
     type: select
     proxies:
-      - "🚀 BUNKER-AUTO (Автовыбор)"
-      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust) | ⚡35ms"
-      - "⚡ [WARP-MASQUE] Бункер H2 (API) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (API) | ⚡35ms"
-      - "⚡ [WARP-MASQUE] Бункер H2 (Consumer) | ⚡40ms"
-      - "⚡ [WARP-MASQUE] Бункер H3 (Consumer) | ⚡35ms"
+      - "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Google SNI)"
+      - "⚡ [WARP-MASQUE] Бункер H3 (Cloudflare SNI)"
+      - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
       - DIRECT
 
 rules:
   - GEOIP,private,DIRECT
   - GEOIP,RU,DIRECT
-  - MATCH,🚀 BUNKER-AUTO (Автовыбор)
+  - MATCH,🚀 BUNKER-AUTO (Автовыбор H2/H3)
 """
 
 
