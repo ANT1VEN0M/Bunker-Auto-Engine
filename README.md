@@ -1,30 +1,72 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
-> **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880)**.
+> **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify, Flclash и v2rayN.**  
+> Обновляется каждый час на GitHub Actions. **49 проверенных источников**, глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация, встроенный **Cloudflare WARP-MASQUE (HTTP/3 QUIC)** и **WARP+ (порт 880)**.
 
 ---
 
-### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac)
+### 🌐 Подключение в 1 клик для iPhone (iOS), iPad и ПК (Windows / Mac / Linux)
 Для быстрого подключения без ручного ввода ссылок используйте наш официальный портал:  
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows / macOS:** быстрый импорт в **Hiddify**, **v2rayN**, **Karing Desktop**.
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)**.
+* 💻 **Windows / macOS / Linux:** быстрый импорт в **Flclash**, **Clash Verge Rev**, **Hiddify**, **v2rayN**, **Karing Desktop**.
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.3.9](https://github.com/ANT1VEN0M/BunkerVPN)** или импорт в **Flclash** / **Karing**.
 
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-21 23:13:10 МСК` (`2026-11-21 20:13:10 UTC`)
-- 🟢 **Всего активных проверенных нод:** `171`
-- ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
+- 🕒 **Последнее авто-обновление:** `2026-11-22 17:25:00 МСК`
+- 🟢 **Всего активных проверенных нод:** `175`
+- ⚡ **WARP-MASQUE (HTTP/3 QUIC & H2):** Проверено и работает из коробки в **Flclash** и **Mihomo** (`235 ms`)
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `53`
 - 🌍 **Мировой Микс (YouTube / DPI):** `176`
 - 🤍 **Белый список (RU / BY):** `52`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `48`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `55`
 - 💬 **Пожарный канал для Telegram:** `42`
+
+---
+
+## ⚡ Cloudflare WARP-MASQUE (HTTP/3 QUIC & HTTP/2 CONNECT-IP)
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков с TLS SNI `zt-masque.cloudflareclient.com` (Zero Trust), `consumer-masque` и Google SNI (`www.gstatic.com`). Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов.
+> 
+> ✅ **Проверено тестерами: работает из коробки в Flclash / Mihomo с пингом ~235ms.** Встроен автоматический выбор лучшего узла через `URLTest` с фолбэком.
+
+- **Mihomo / Flclash / Clash Verge Rev (Компактный YAML с якорями):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
+- **Sing-box (v1.10+) Нативный JSON:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
+- **Подписка URI (Karing / Hiddify):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
+
+---
+
+## 🧩 Официальные плагины Бункера для Telegram
+Для модификаций **NimarkoGram**, **ExteraGram** и **AyuGram** доступен официальный репозиторий плагинов Бункера Кота.
+
+### 🌐 Bunker Chat Translator (v1.2.5)
+Плагин для мгновенного перевода сообщений в чатах, каналах и ЛС на лету:
+* 🚀 **Перевод на лету:** автоматический перевод текстовых сообщений прямо в ленте.
+* 💬 **Всплывающий перевод по тапу:** долгое нажатие на любое сообщение ➔ «🌐 Перевести в окне» с кнопкой копирования перевода.
+* ✍️ **Отправка перевода:** команда `.tr <текст>` переводит исходящее сообщение на английский перед отправкой.
+* 🔄 **Встроенный автоапдейтер:** автоматическое обновление плагина до свежих версий прямо из GitHub.
+* 🛡️ **Полная защита от вылетов:** поддержка Android 14/15/16, HyperOS и всех типов каналов.
+
+#### Как установить плагин:
+1. **Через репозиторий (Рекомендуется):**
+   * В Telegram перейди в: **Настройки** ➔ **Плагины** ➔ значок шестерёнки / меню ➔ **Репозитории**.
+   * Добавь ссылку на репозиторий Бункера:
+     ```text
+     https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json
+     ```
+   * Найди **Bunker Chat Translator 🌐** в каталоге и нажми «Установить».
+2. **Прямая установка файла:**
+   * Скачай [bunker_chat_translator.plugin](https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin) *(зеркало: [ghfast.top](https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin))* и открой его в Telegram.
 
 ---
 
@@ -106,23 +148,6 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d)
 - [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=dpi.server-space52.info&port=443&secret=00000000000000000000000000000000)
 
-
----
-
-## ⚡ Cloudflare WARP-MASQUE (HTTP/3 & HTTP/2 CONNECT-IP)
-> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443`).**  
-> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `zt-masque.cloudflareclient.com` (Zero Trust) и `consumer-masque`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
-
-- **Sing-box (v1.10+) Нативный JSON:**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
-- **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
-- **Подписка URI (Karing / Hiddify):**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
-
 ---
 
 ## 📦 Разделение по протоколам
@@ -136,6 +161,11 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ---
 
 ## 📲 Как подключить подписку?
+
+### В приложении Flclash / Clash Verge Rev (Windows / Android / Mac / Linux):
+1. Скопируй ссылку на `warp_masque.yaml` или `mix_b64.txt`.
+2. В приложении перейди в раздел **Profiles** ➔ **Import URL** ➔ вставь ссылку ➔ **Download**.
+3. Активируй профиль и выбери группу `🚀 BUNKER-AUTO`.
 
 ### В приложении Karing (iOS / Windows / Mac / Android):
 1. Скопируй ссылку на подписку.
@@ -160,4 +190,5 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 ## 🤝 Благодарности & Источники вдохновения (Credits)
 - 📡 **Никитка ([RKPchannel / URLSources](https://t.me/urlsources))** — за наработки по чистке конфигов Xray 26, двухпроходному Happ-спуфингу и базу 253 RU-хостингов.
+- ⚡ **Тестер «т»** — за ценное тестирование связки MASQUE HTTP/3 в Flclash, идею перехода на компактные YAML-якоря и калибровку SNI.
 - 🐈‍⬛ **Сообщество Бункера Кота ([@BUNKER_KOTA](https://t.me/BUNKER_KOTA))**

@@ -706,7 +706,7 @@
             ⬇️ Sing-box (.json)
           </a>
           <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml" download="warp_masque.yaml" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
-            ⬇️ Clash Meta (.yaml)
+            ⬇️ Flclash / Mihomo (.yaml)
           </a>
           <button onclick="copyMasqueUri()" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
             📋 URI (Karing / Hiddify)
@@ -716,11 +716,11 @@
         <div class="steps">
           <div class="step-item">
             <div class="step-num">1</div>
-            <div><b>Бронебойный протокол RFC 9484 (CONNECT-IP):</b> туннель инкапсулируется в легитимный HTTPS/QUIC поток (HTTP/3 и HTTP/2) к Anycast-шлюзам Cloudflare с TLS SNI <code>zt-masque.cloudflareclient.com</code> (Zero Trust) и <code>consumer-masque</code>. Для ТСПУ это обычный защищенный веб-трафик.</div>
+            <div><b>Бронебойный протокол RFC 9484 (CONNECT-IP):</b> туннель инкапсулируется в легитимный HTTPS/QUIC поток (HTTP/3 и HTTP/2) к Anycast-шлюзам Cloudflare с TLS SNI <code>zt-masque.cloudflareclient.com</code> (Zero Trust), <code>consumer-masque</code> и Google SNI. Для ТСПУ это обычный защищенный веб-трафик.</div>
           </div>
           <div class="step-item">
             <div class="step-num">2</div>
-            <div><b>Поддерживаемые клиенты:</b> <b>Sing-box 1.10+</b> (поддерживает нативно), <b>Mihomo / Clash Verge Rev / Flclash</b> (через YAML-конфиг), <b>Hiddify Next</b> и <b>Karing</b>.</div>
+            <div><b>Поддерживаемые клиенты:</b> <b>Flclash / Mihomo / Clash Verge Rev</b> (проверено: работает из коробки с пингом ~235ms через компактный YAML с якорями), <b>Sing-box 1.10+</b>, <b>Hiddify Next</b> и <b>Karing</b>.</div>
           </div>
         </div>
       </div>
@@ -777,7 +777,33 @@
       </div>
     </div>
 
-    <!-- 8. Share with Friends & Support -->
+    <!-- 8. TELEGRAM PLUGINS (Bunker Chat Translator) -->
+    <div class="card" id="card-plugins" style="border-color: rgba(168, 85, 247, 0.4);">
+      <div class="card-title">
+        <span>🧩 Плагины Бункера для Telegram</span>
+        <span class="tag" style="background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.3); color:#c084fc;">Extera / Nimarko / Ayu</span>
+      </div>
+
+      <p style="font-size:11.5px; color:var(--text-muted); line-height:1.4;">
+        Официальный репозиторий плагинов Бункера Кота для Telegram-модов. Включает <b>Bunker Chat Translator 🌐 v1.2.5</b>: автоперевод сообщений на лету, перевод в окне по долгому тапу с копированием, команду <code>.tr</code> и встроенный автоапдейтер.
+      </p>
+
+      <div class="sub-box">
+        <div class="sub-url" id="plugin-repo-url">https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json</div>
+        <button class="copy-btn" onclick="copyPluginRepoUrl()">Копировать</button>
+      </div>
+
+      <div class="btn-action-row" style="flex-wrap: wrap;">
+        <button onclick="copyPluginRepoUrl()" class="btn btn-primary" style="flex:1; min-width: 140px; font-size:12px;">
+          📋 Ссылка на Репозиторий
+        </button>
+        <a href="https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin" download="bunker_chat_translator.plugin" class="btn btn-secondary" style="flex:1; min-width: 140px; font-size:12px;">
+          ⬇️ Скачать плагин (.plugin)
+        </a>
+      </div>
+    </div>
+
+    <!-- 9. Share with Friends & Support -->
     <div class="card" style="background:#090d14; border-color:#182232;">
       <div class="card-title">
         <span>💬 Сообщество и Помощь</span>
@@ -793,13 +819,14 @@
       </div>
     </div>
 
-    <!-- 9. Credits & Partners -->
+    <!-- 10. Credits & Partners -->
     <div class="card" style="background:#090d14; border-color:#182232; margin-top:12px;">
       <div class="card-title" style="font-size:13px;">
         <span>🤝 Партнёры & Благодарности</span>
       </div>
       <div style="font-size:12px; color:#94a3b8; line-height:1.6;">
-        Особая благодарность <b>Никитке</b> (<a href="https://t.me/urlsources" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">@urlsources</a>) за вклад в архитектуру очистки Xray 26, двухпроходный Happ-спуфинг и базу 253 российских хостингов для Белого списка.
+        Особая благодарность <b>Никитке</b> (<a href="https://t.me/urlsources" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">@urlsources</a>) за вклад в архитектуру очистки Xray 26, двухпроходный Happ-спуфинг и базу 253 российских хостингов для Белого списка.<br>
+        Большой респект <b>тестеру «т»</b> за боевые тесты связки Cloudflare MASQUE HTTP/3 в Flclash / Mihomo, идею перехода на компактные YAML-якоря и калибровку Anycast SNI.
       </div>
     </div>
 
@@ -1183,9 +1210,19 @@
       copyText(url, "✅ Ссылка на Sing-box (WARP-MASQUE HTTP/3) скопирована!");
     }
 
+    function copyMasqueYamlUrl() {
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml";
+      copyText(url, "✅ Ссылка на Flclash / Mihomo (WARP-MASQUE) скопирована!");
+    }
+
     function copyMasqueUri() {
       const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.txt";
       copyText(url, "✅ Ссылка на подписку WARP-MASQUE (Karing / Hiddify) скопирована!");
+    }
+
+    function copyPluginRepoUrl() {
+      const url = "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json";
+      copyText(url, "✅ Ссылка на репозиторий плагинов Бункера скопирована! Добавьте в Telegram ➔ Плагины ➔ Репозитории 🐈‍⬛");
     }
 
     function copyAmneziaConf() {
