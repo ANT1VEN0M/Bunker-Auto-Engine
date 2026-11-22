@@ -323,25 +323,26 @@ def generate_subscriptions(alive_nodes: list[dict]):
         remark = f"🎮 {flag} [{c}] Бункер Discord Voice #{idx:02d} | {p} | ⚡{ping}ms"
         discord_uris.append(build_branded_uri(node, remark))
 
-    # Generate Cloudflare WARP+ WireGuard ultra-fast pool
+    # Generate Cloudflare WARP+ WireGuard & WARP-MASQUE (HTTP/3) ultra-fast pool
     try:
         warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR)
-        print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP+ WireGuard nodes (port 880)")
+        print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP (MASQUE HTTP/3 + WireGuard 880) nodes")
     except Exception as e:
         print(f"[-] WARP Generator error: {e}")
         warp_uris = []
 
-    # Inject ultra-low-latency WARP+ WireGuard nodes at the top of subscriptions
-    # For Discord, WireGuard is the #1 protocol (Layer-3 UDP encapsulation, WebRTC connects in <1s)
+    # Inject ultra-low-latency WARP-MASQUE & WARP+ WireGuard nodes at the top of subscriptions
+    # For Discord, Layer-3 UDP / CONNECT-UDP encapsulation lets WebRTC voice connect in <1s
     if warp_uris:
-        mix_uris = warp_uris[:5] + mix_uris
-        bs_uris = warp_uris[:4] + bs_uris
-        fast_uris = warp_uris[:5] + fast_uris
-        tg_uris = warp_uris[:3] + tg_uris
+        mix_uris = warp_uris[:6] + mix_uris
+        bs_uris = warp_uris[:5] + bs_uris
+        fast_uris = warp_uris[:6] + fast_uris
+        tg_uris = warp_uris[:4] + tg_uris
 
         discord_warp = []
-        for i, w in enumerate(warp_uris[:5], 1):
-            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | WireGuard WARP+ (880) | ⚡45ms', w)
+        for i, w in enumerate(warp_uris[:6], 1):
+            proto_label = "WARP-MASQUE (HTTP/3)" if w.startswith("warp://") else "WireGuard WARP+ (880)"
+            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | {proto_label} | ⚡35ms', w)
             discord_warp.append(w_disc)
         discord_uris = discord_warp + discord_uris
 
@@ -443,7 +444,7 @@ def generate_readme(
 ### 📊 Статус системы (Real-Time)
 - 🕒 **Последнее авто-обновление:** `{now_msk}` (`{now_utc}`)
 - 🟢 **Всего активных проверенных нод:** `{total_alive}`
-- 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
+- ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `{discord_count}`
 - 🌍 **Мировой Микс (YouTube / DPI):** `{mix_count}`
 - 🤍 **Белый список (RU / BY):** `{bs_count}`
@@ -528,6 +529,22 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 {mtproto_md_buttons}
+
+---
+
+## ⚡ Cloudflare WARP-MASQUE (HTTP/3 CONNECT-IP)
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3) через Anycast Cloudflare (`162.159.198.1:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домен `consumer-masque.cloudflareclient.com`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов.
+
+- **Sing-box (v1.10+) Нативный JSON:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
+- **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
+- **Подписка URI (Karing / Hiddify):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
 
 ---
 

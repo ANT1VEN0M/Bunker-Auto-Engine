@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SagerNet/sing-box/main/schemas/config.json",
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns-remote",
+        "address": "https://1.1.1.1/dns-query",
+        "address_resolver": "dns-direct"
+      },
+      {
+        "tag": "dns-direct",
+        "address": "local",
+        "detour": "direct"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "any",
+        "server": "dns-direct"
+      }
+    ],
+    "strategy": "prefer_ipv4"
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "inet4_address": "172.19.0.1/30",
+      "inet6_address": "fdfe:dcba:9876::1/126",
+      "auto_route": true,
+      "strict_route": true,
+      "stack": "system",
+      "sniff": true
+    },
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "127.0.0.1",
+      "listen_port": 2080
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "masque",
+      "tag": "⚡ [WARP-MASQUE] Бункер Ультра (HTTP/3)",
+      "server": "162.159.198.1",
+      "server_port": 443,
+      "address": "162.159.198.1",
+      "port": 443,
+      "tls": {
+        "enabled": true,
+        "server_name": "consumer-masque.cloudflareclient.com",
+        "insecure": false
+      },
+      "profile": {
+        "id": "19302bbe-7301-4551-81c5-e24904be65d0",
+        "auth_token": "5c79fbc9-c60d-4c30-b8bd-f06fb90dfd75"
+      },
+      "system": false,
+      "use_http2": false,
+      "udp_timeout": "5m0s",
+      "udp_keepalive_period": "30s"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "protocol": "dns",
+        "outbound": "dns-out"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      }
+    ],
+    "auto_detect_interface": true
+  }
+}

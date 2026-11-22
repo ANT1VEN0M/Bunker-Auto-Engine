@@ -651,14 +651,17 @@
       </p>
 
       <!-- Router Selector Tabs -->
-      <div style="display:flex; gap:6px; margin: 2px 0;">
-        <button id="tab-btn-amnezia" onclick="selectRouterTab('amnezia')" class="feed-pill active" style="flex:1; justify-content:center; font-size:11px;">
+      <div style="display:flex; gap:6px; margin: 2px 0; flex-wrap: wrap;">
+        <button id="tab-btn-amnezia" onclick="selectRouterTab('amnezia')" class="feed-pill active" style="flex:1; min-width: 110px; justify-content:center; font-size:11px;">
           AmneziaWG (QUIC i1)
         </button>
-        <button id="tab-btn-keenetic" onclick="selectRouterTab('keenetic')" class="feed-pill" style="flex:1; justify-content:center; font-size:11px;">
+        <button id="tab-btn-masque" onclick="selectRouterTab('masque')" class="feed-pill" style="flex:1; min-width: 110px; justify-content:center; font-size:11px;">
+          ⚡ WARP-MASQUE (HTTP/3)
+        </button>
+        <button id="tab-btn-keenetic" onclick="selectRouterTab('keenetic')" class="feed-pill" style="flex:1; min-width: 100px; justify-content:center; font-size:11px;">
           Keenetic (Entware)
         </button>
-        <button id="tab-btn-openwrt" onclick="selectRouterTab('openwrt')" class="feed-pill" style="flex:1; justify-content:center; font-size:11px;">
+        <button id="tab-btn-openwrt" onclick="selectRouterTab('openwrt')" class="feed-pill" style="flex:1; min-width: 80px; justify-content:center; font-size:11px;">
           OpenWrt
         </button>
       </div>
@@ -687,6 +690,37 @@
           <div class="step-item">
             <div class="step-num">2</div>
             <div><b>Бронебойная маскировка:</b> файл использует порт 880 и сигнатурный пакет <b>CPS i1 (QUIC HTTP/3)</b>, полностью обходящий блокировки ТСПУ РКН.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARP-MASQUE Panel -->
+      <div id="router-panel-masque" style="display:none; flex-direction:column; gap:10px;">
+        <div class="sub-box">
+          <div class="sub-url" id="masque-sub-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json</div>
+          <button class="copy-btn" onclick="copyMasqueJsonUrl()">Копировать</button>
+        </div>
+
+        <div class="btn-action-row" style="flex-wrap: wrap;">
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json" download="warp_masque.json" class="btn btn-primary" style="flex:1; min-width: 135px; font-size:12px;">
+            ⬇️ Sing-box (.json)
+          </a>
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml" download="warp_masque.yaml" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
+            ⬇️ Clash Meta (.yaml)
+          </a>
+          <button onclick="copyMasqueUri()" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
+            📋 URI (Karing / Hiddify)
+          </button>
+        </div>
+
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div><b>Бронебойный протокол RFC 9484 (CONNECT-IP):</b> туннель инкапсулируется в легитимный HTTPS/QUIC поток (HTTP/3) к Anycast-шлюзу Cloudflare с TLS SNI <code>consumer-masque.cloudflareclient.com</code>. Для ТСПУ это обычный защищенный веб-трафик.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div><b>Поддерживаемые клиенты:</b> <b>Sing-box 1.10+</b> (поддерживает нативно), <b>Mihomo / Clash Verge Rev / Flclash</b> (через YAML-конфиг), <b>Hiddify Next</b> и <b>Karing</b>.</div>
           </div>
         </div>
       </div>
@@ -1118,18 +1152,23 @@
     function selectRouterTab(tab) {
       triggerHaptic('selection');
       const amneziaTab = document.getElementById("tab-btn-amnezia");
+      const masqueTab = document.getElementById("tab-btn-masque");
       const keeneticTab = document.getElementById("tab-btn-keenetic");
       const openwrtTab = document.getElementById("tab-btn-openwrt");
       const amneziaPanel = document.getElementById("router-panel-amnezia");
+      const masquePanel = document.getElementById("router-panel-masque");
       const keeneticPanel = document.getElementById("router-panel-keenetic");
       const openwrtPanel = document.getElementById("router-panel-openwrt");
 
-      [amneziaTab, keeneticTab, openwrtTab].forEach(t => t?.classList.remove('active'));
-      [amneziaPanel, keeneticPanel, openwrtPanel].forEach(p => { if (p) p.style.display = 'none'; });
+      [amneziaTab, masqueTab, keeneticTab, openwrtTab].forEach(t => t?.classList.remove('active'));
+      [amneziaPanel, masquePanel, keeneticPanel, openwrtPanel].forEach(p => { if (p) p.style.display = 'none'; });
 
       if (tab === 'amnezia') {
         amneziaTab?.classList.add('active');
         if (amneziaPanel) amneziaPanel.style.display = 'flex';
+      } else if (tab === 'masque') {
+        masqueTab?.classList.add('active');
+        if (masquePanel) masquePanel.style.display = 'flex';
       } else if (tab === 'keenetic') {
         keeneticTab?.classList.add('active');
         if (keeneticPanel) keeneticPanel.style.display = 'flex';
@@ -1137,6 +1176,16 @@
         openwrtTab?.classList.add('active');
         if (openwrtPanel) openwrtPanel.style.display = 'flex';
       }
+    }
+
+    function copyMasqueJsonUrl() {
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json";
+      copyText(url, "✅ Ссылка на Sing-box (WARP-MASQUE HTTP/3) скопирована!");
+    }
+
+    function copyMasqueUri() {
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.txt";
+      copyText(url, "✅ Ссылка на подписку WARP-MASQUE (Karing / Hiddify) скопирована!");
     }
 
     function copyAmneziaConf() {

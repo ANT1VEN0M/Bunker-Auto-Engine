@@ -18,7 +18,7 @@
 ### 📊 Статус системы (Real-Time)
 - 🕒 **Последнее авто-обновление:** `2026-11-21 23:13:10 МСК` (`2026-11-21 20:13:10 UTC`)
 - 🟢 **Всего активных проверенных нод:** `171`
-- 🛡️ **Свежие Cloudflare WARP+ (порт 880):** 7 активных профилей с client_id в топе фидов
+- ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `53`
 - 🌍 **Мировой Микс (YouTube / DPI):** `176`
 - 🤍 **Белый список (RU / BY):** `52`
@@ -106,6 +106,22 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
 - [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=083fe0c452e2407d835537872f097c54)
 
+
+---
+
+## ⚡ Cloudflare WARP-MASQUE (HTTP/3 CONNECT-IP)
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3) через Anycast Cloudflare (`162.159.198.1:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домен `consumer-masque.cloudflareclient.com`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов.
+
+- **Sing-box (v1.10+) Нативный JSON:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
+- **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
+- **Подписка URI (Karing / Hiddify):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
 
 ---
 
