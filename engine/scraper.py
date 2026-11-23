@@ -183,7 +183,21 @@ SOURCES = [
     # 73. FreeCFGHub Master Matrix (2993 nodes)
     "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/FreeCFGHub.txt",
     # 74. FreeCFGHub All Base64 Matrix (1500+ nodes)
-    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/all_base64.txt"
+    "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/refs/heads/main/subscriptions/all_base64.txt",
+    # 75. Pozor Bond LexaVercelbot #1 (Hysteria 2 Direct Relay)
+    "https://pozor.bond/sub/ry2627uz9cp7",
+    # 76. Pozor Bond LexaVercelbot #2 (VLESS Reality & Fallback)
+    "https://pozor.bond/sub/h29399r90wnq",
+    # 77. Pozor Bond LexaVercelbot #3 (VLESS Anti-TSPU)
+    "https://pozor.bond/sub/utcwry9vug6k",
+    # 78. Pozor Bond LexaVercelbot #4 (VLESS High-Speed)
+    "https://pozor.bond/sub/fdxvhj7zoh",
+    # 79. Pozor Bond LexaVercelbot #5 (VLESS Cloud Node)
+    "https://pozor.bond/sub/5qsbui9cf4",
+    # 80. Pozor Bond LexaVercelbot #6 (VLESS Mega Matrix 580+ nodes)
+    "https://pozor.bond/sub/6i9dnv37cudz",
+    # 81. Pozor Bond LexaVercelbot #7 (VLESS Standby Relay)
+    "https://pozor.bond/sub/vzal49dpeu1f"
 ]
 
 def clean_source_url(url: str) -> str:
