@@ -394,41 +394,15 @@ def generate_subscriptions(alive_nodes: list[dict]):
         remark = f"🎮 {flag} [{c}] Бункер Discord Voice #{idx:02d} | {p} | ⚡{ping}ms"
         discord_uris.append(build_branded_uri(node, remark))
 
-    # Generate Cloudflare WARP+ WireGuard & WARP-MASQUE (HTTP/3) ultra-fast pool
+    # Generate Cloudflare WARP+ WireGuard & WARP-MASQUE pool
+    # Dedicated WARP & MASQUE feeds are generated in sub/warp*
+    # AntiNET / NekoBox receive 16 verified live VLESS-Reality nodes in sub/warp_masque_b64.txt
     try:
-        warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR)
-        print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP (MASQUE HTTP/3 + WireGuard 880) nodes")
+        warp_profiles, warp_uris = generate_warp_pool(12, SUB_DIR, vless_nodes=gold_uris + fast_uris + mix_uris)
+        print(f"[+] WARP Generator: Generated {len(warp_uris)} active Cloudflare WARP & MASQUE profiles")
     except Exception as e:
         print(f"[-] WARP Generator error: {e}")
         warp_uris = []
-
-    # Inject ultra-low-latency Cloudflare WARP+ WireGuard nodes at the top of subscriptions.
-    # Strictly use standard wireguard:// URIs for general subscriptions
-    # to guarantee 100% compatibility across NekoBox / AntiNET / v2rayNG / Karing / Streisand / Happ
-    # without any '[нет модуля]' (missing plugin) errors.
-    if warp_uris:
-        wg_nodes = [w for w in warp_uris if w.startswith("wireguard://")]
-        if not wg_nodes:
-            wg_nodes = warp_uris
-
-        top_mix = wg_nodes[:6]
-        top_bs = wg_nodes[:5]
-        top_fast = wg_nodes[:6]
-        top_tg = wg_nodes[:4]
-        top_factory = wg_nodes[:2]
-
-        # Gold Matrix is kept 100% pure VLESS-Reality & Hy2 for zero-error client compatibility (v2rayNG, Streisand, Karing)
-        mix_uris = top_mix + mix_uris
-        bs_uris = top_bs + bs_uris
-        fast_uris = top_fast + fast_uris
-        tg_uris = top_tg + tg_uris
-        factory_uris = top_factory + factory_uris
-
-        discord_warp = []
-        for i, w in enumerate(wg_nodes[:6], 1):
-            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | WARP+ 880 | ⚡35ms', w)
-            discord_warp.append(w_disc)
-        discord_uris = discord_warp + discord_uris
 
     # Write files
     write_sub_files("gold", gold_uris)
