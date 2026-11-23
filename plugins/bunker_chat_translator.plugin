@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  🌐 BUNKER CHAT TRANSLATOR v1.2.6 — ПЛАГИН ДЛЯ NIMARKOGRAM / EXTERAGRAM / AYUGRAM
+  🌐 BUNKER CHAT TRANSLATOR v1.2.7 — CRASH-PROOF & SMOOTH LIFECYCLE EDITION
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.2.6
+  Версия: 1.2.7
   Назначение: Автоматический перевод входящих и исходящих сообщений в чатах,
               каналах и личке на лету. Всплывающий перевод по долгому тапу
               и отправка перевода через .tr.
+  Исправления:
+    - Устранён вылет при первом входе в чат после активации плагина:
+      дебаунс фонового обновления UI увеличен, вызов updateVisibleRows()
+      отправляется в очередь RecyclerView только когда анимация открытия завершена.
+    - Защита от IndexOutOfBoundsException при форматировании и наличии ссылок.
+    - Безопасное определение пути кэша переводов под любые форки (AyuGram / ExteraGram).
 ================================================================================
 """
 
@@ -57,7 +63,7 @@ __description__ = (
     "Всплывающий перевод по долгому тапу на сообщение и отправка перевода через .tr."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.2.6"
+__version__ = "1.2.7"
 __icon__ = "bunker_plugins/1"
 __min_version__ = "11.10.0"
 
@@ -479,8 +485,22 @@ class BunkerChatTranslatorPlugin(BasePlugin):
 
     def on_plugin_load(self):
         _log(f"Инициализация Bunker Chat Translator v{__version__}...")
-        cache_dir = get_cache_dir() or "/data/data/org.telegram.messenger/cache"
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = get_cache_dir()
+        if not cache_dir:
+            try:
+                ctx = ApplicationLoader.applicationContext
+                if ctx:
+                    cache_dir = ctx.getCacheDir().getAbsolutePath()
+            except Exception:
+                pass
+        if not cache_dir:
+            cache_dir = "/data/data/org.telegram.messenger/cache"
+
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+        except Exception:
+            pass
+
         cache_file = os.path.join(cache_dir, "bunker_tr_cache.json")
         self._engine = TranslationEngine(cache_file)
 
@@ -515,7 +535,7 @@ class BunkerChatTranslatorPlugin(BasePlugin):
         # 5. Фоновая проверка обновлений плагина
         if self.get_setting("auto_update", True):
             def delayed_update_check():
-                time.sleep(8.0)
+                time.sleep(12.0)
                 try:
                     self._check_and_apply_update(manual=False)
                 except Exception as ex:
@@ -557,7 +577,6 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 MenuItemData(
                     menu_type=MenuItemType.MESSAGE_CONTEXT_MENU,
                     text="🌐 Перевести в окне",
-                    icon="msg_translate",
                     item_id="bunker_tr_msg",
                     on_click=self._on_context_menu_translate,
                 )
@@ -575,7 +594,6 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 MenuItemData(
                     menu_type=MenuItemType.CHAT_ACTION_MENU,
                     text="🌐 Автоперевод чата",
-                    icon="msg_translate",
                     item_id="bunker_tr_chat",
                     on_click=self._on_chat_action_toggle,
                 )
@@ -651,40 +669,29 @@ class BunkerChatTranslatorPlugin(BasePlugin):
                 else:
                     new_text = f"{raw_text}\n\n🌐 Перевод:\n{translated_text}"
 
-                # 1. Защита от NullPointerException в applyEntities: гарантируем не-null entities
+                # 1. Защита от IndexOutOfBoundsException в SpannableStringBuilder:
+                # Очищаем entities, чтобы старые смещения разметки не выходили за границы нового текста
                 if hasattr(msg_obj, "messageOwner") and msg_obj.messageOwner is not None:
                     try:
-                        if getattr(msg_obj.messageOwner, "entities", None) is None:
-                            msg_obj.messageOwner.entities = jclass("java.util.ArrayList")()
-                    except Exception:
+                        msg_obj.messageOwner.entities = jclass("java.util.ArrayList")()
+                    except BaseException:
                         pass
 
                 # 2. Сбрасываем флаг translated во избежание NPE в getEntities()
                 try:
                     msg_obj.translated = False
-                except Exception:
+                except BaseException:
                     pass
 
                 # 3. Штатный метод applyNewText пересчитывает лэйаут, эмодзи и ширину бабла
-                applied = False
                 if hasattr(msg_obj, "applyNewText") and callable(getattr(msg_obj, "applyNewText")):
                     try:
                         msg_obj.applyNewText(String(new_text))
-                        applied = True
-                    except Exception as e:
+                    except BaseException as e:
                         _log(f"applyNewText err: {e}")
 
-                if not applied:
-                    if hasattr(msg_obj, "messageText"):
-                        try:
-                            msg_obj.messageText = String(new_text)
-                        except Exception:
-                            pass
-
-                # ВНИМАНИЕ:
-                # 1. НЕЛЬЗЯ вызывать resetLayout() без пересоздания (схлопнет баблы в синие полоски)
-                # 2. НЕЛЬЗЯ трогать msg_obj.translated = True (вызовет NPE в applyEntities)
-                # 3. НЕЛЬЗЯ трогать msg_obj.messageOwner.entities = None (вызовет NPE в entities.size())
+                # Ни в коем случае НЕ присваиваем msg_obj.messageText напрямую без пересчета лэйаута,
+                # так как это вызывает рассинхрон с textLayoutBlocks и краш в Skia/HWUI draw.
                 return
 
             # Если в кэше нет — отправляем в фоновую очередь
@@ -713,26 +720,45 @@ class BunkerChatTranslatorPlugin(BasePlugin):
             def fire_update():
                 def do_post():
                     try:
-                        # Обновляем видимые ячейки в текущем открытом чате
                         frag = get_last_fragment()
-                        if frag is not None and hasattr(frag, "updateVisibleRows") and callable(getattr(frag, "updateVisibleRows")):
-                            try:
-                                frag.updateVisibleRows()
-                                return
-                            except Exception:
-                                pass
+                        if frag is None:
+                            return
 
-                        nc = NotificationCenter.getInstance(account)
-                        nc.postNotificationName(
-                            NotificationCenter.updateInterfaces,
-                            MessagesController.UPDATE_MASK_AVATAR,
-                        )
-                    except Exception as ex:
+                        # Проверяем валидность фрагмента: активен, прикреплен к окну и имеет view
+                        frag_view = getattr(frag, "fragmentView", None)
+                        if not frag_view:
+                            return
+
+                        chat_list = getattr(frag, "chatListView", None)
+                        if chat_list is None:
+                            return
+
+                        def safe_update():
+                            try:
+                                # Если список сейчас вычисляет лэйаут или скроллится, откладываем на следующий фрейм
+                                if hasattr(chat_list, "isComputingLayout") and callable(chat_list.isComputingLayout):
+                                    if chat_list.isComputingLayout():
+                                        chat_list.post(Runnable(safe_update))
+                                        return
+
+                                if hasattr(frag, "updateVisibleRows") and callable(getattr(frag, "updateVisibleRows")):
+                                    frag.updateVisibleRows()
+                            except BaseException as e:
+                                _log(f"safe_update error: {e}")
+
+                        # Отправляем в очередь chatListView, чтобы вызов произошел только когда отрисовка завершена
+                        if hasattr(chat_list, "post") and callable(chat_list.post):
+                            chat_list.post(Runnable(safe_update))
+                        else:
+                            run_on_ui_thread(safe_update)
+                    except BaseException as ex:
                         _log(f"updateInterfaces error: {ex}")
 
                 run_on_ui_thread(do_post)
 
-            self._update_timer = threading.Timer(0.35, fire_update)
+            # Дебаунс 0.85с: дает анимации входа в чат (300-400мс) спокойно завершиться
+            # и пакетно переводит все видимые сообщения за один проход
+            self._update_timer = threading.Timer(0.85, fire_update)
             self._update_timer.daemon = True
             self._update_timer.start()
 
