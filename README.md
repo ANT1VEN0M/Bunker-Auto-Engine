@@ -18,16 +18,16 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-23 12:15:00 МСК` (`2026-11-23 09:15:00 UTC`)
-- 🟢 **Всего активных проверенных нод:** `91+`
-- 👑 **Золотая выборка (TOP VIP):** 100% гарантированно чистый VLESS-Reality & Hysteria 2 (HTTP 204 verified, без xHTTP и без мусора)
+- 🕒 **Последнее авто-обновление:** `2026-11-23 15:32:13 МСК` (`2026-11-23 12:32:13 UTC`)
+- 🟢 **Всего активных проверенных нод:** `75`
+- 👑 **Золотая выборка (TOP-25 VIP):** `3`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `53`
-- 🌍 **Мировой Микс (YouTube / DPI):** `97`
-- 🤍 **Белый список (RU / BY):** `52`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `49`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `47`
+- 🌍 **Мировой Микс (YouTube / DPI):** `81`
+- 🤍 **Белый список (RU / BY):** `47`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `44`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `42`
+- 💬 **Пожарный канал для Telegram:** `39`
 
 ---
 
@@ -35,8 +35,8 @@
 
 Добавь эти ссылки в своё приложение один раз. При обновлении подписки ты всегда будешь получать самые свежие и быстрые серверы!
 
-### 👑 1. Золотая Выборка (TOP VIP • Германия, Нидерланды, Финляндия, США)
-*Флагманский элитный пул 100% гарантированно рабочих серверов.* Исключительно чистые протоколы **VLESS-Reality** (с проверенными SNI `deepl.com`, `nvidia.com`, `okcdn.ru`, `fontanka.ru`) и **Hysteria 2 (QUIC)**. Проходят глубокий автоматический тест реальным HTTP 204 трафиком через Xray Core. Полностью исключены несовместимые экспериментальные протоколы (xHTTP) и мусорные узлы. Максимальная скорость, ультранизкий пинг и 100% совместимость со всеми приложениями (v2rayNG, Streisand, Karing, Nekobox, Hiddify, BunkerVPN).
+### 👑 1. Золотая Выборка (TOP-25 VIP • Германия, Нидерланды, Финляндия, США)
+*Элитный пул из ТОП-25 самых быстрых и стабильных серверов.* Только протоколы **VLESS-Reality**, **Hysteria 2 (QUIC)** и **Trojan TLS** на портах `443` и `8443` с ультранизким пингом и 100% устойчивостью к блокировкам ТСПУ.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold_b64.txt
 ```
@@ -129,9 +129,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
 
 
 ---
@@ -155,10 +155,10 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ## 🔌 Плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
 
 Фирменные плагины для Telegram-клиентов на движке exteraGram:
-- 💫 **[Bunker Neon Loader v1.3.1](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа (Crash-proof edition для AyuGram, сочные цвета, OLED-подложка).
+- 💫 **[Bunker Neon Loader v1.2.0](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа, автообновление, кастомная палитра.
 - 🌐 **[Bunker Chat Translator v1.2.6](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_chat_translator.plugin)** — Инлайн-переводчик чатов в реальном времени без сторонних API-ключей.
 - 📋 **Репозиторий плагинов (URL для добавления в клиент):**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json`
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/extera-plugins.json`
 
 ---
 
