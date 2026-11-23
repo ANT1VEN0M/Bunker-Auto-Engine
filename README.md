@@ -10,9 +10,10 @@
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.6](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)**.
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.7](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление, Web Desktop).
+* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)** (Кастомные обои, Stealth OLED, WARP+ 880, адаптивная иконка Pixel Material You).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
+* 💖 **Поддержать Бункер Кота:** [СБП перевод в 1 клик (Озон Банк)](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6) • [Telegram Boost](https://t.me/boost/BUNKER_KOTA)
 
 ---
 
@@ -166,6 +167,14 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - 💬 **Чат сообщества:** [@BUNKER_K0TA](https://t.me/BUNKER_K0TA)
 - 🤖 **Telegram Бот:** [@BunkerCatOSBot](https://t.me/BunkerCatOSBot)
 - 👑 **Создатель:** [@k0tlux](https://t.me/k0tlux)
+
+---
+
+## 💖 Поддержка проекта Бункер Кота (Донаты)
+Бункер развивается полностью независимо на чистом энтузиазме! Если наши конфиги, приложения и плагины помогают тебе оставаться на связи на максимальной скорости — поддержи проект:
+- 💳 **Перевести по СБП (Озон Банк в 1 клик):** [https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6)
+- 🚀 **Прокачать канал (Telegram Boost):** [https://t.me/boost/BUNKER_KOTA](https://t.me/boost/BUNKER_KOTA)
+- 💎 **Криптовалюта (USDT / TON) и прямая связь:** [@k0tlux](https://t.me/k0tlux)
 
 ---
 
