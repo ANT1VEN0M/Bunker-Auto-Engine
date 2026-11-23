@@ -18,15 +18,15 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-23 05:51:25 МСК` (`2026-11-23 02:51:25 UTC`)
-- 🟢 **Всего активных проверенных нод:** `136`
+- 🕒 **Последнее авто-обновление:** `2026-11-23 09:06:39 МСК` (`2026-11-23 06:06:39 UTC`)
+- 🟢 **Всего активных проверенных нод:** `129`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `55`
-- 🌍 **Мировой Микс (YouTube / DPI):** `142`
-- 🤍 **Белый список (RU / BY):** `55`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `52`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `54`
+- 🌍 **Мировой Микс (YouTube / DPI):** `135`
+- 🤍 **Белый список (RU / BY):** `58`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `55`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `45`
+- 💬 **Пожарный канал для Telegram:** `43`
 
 ---
 
@@ -104,9 +104,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.201.116&port=443&secret=083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
 
 
 ---

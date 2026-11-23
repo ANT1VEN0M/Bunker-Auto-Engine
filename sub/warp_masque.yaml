@@ -33,10 +33,10 @@ shared_masque: &masque_base
   type: masque
   server: 162.159.198.1
   port: 443
-  private-key: "MHcCAQEEIKZzA4aKDeBPKBKhex9j88h6c9yowNISBJspyyonGdyAoAoGCCqGSM49AwEHoUQDQgAEnYCxgev6h7BoeBHx4nrWFOM3dID7UWO8JkbFqoR9YPCdqwegkW2lG7kOzUQkT/w+ZHB5QlEHD6pJ60/s7s6wIg=="
+  private-key: "MHcCAQEEIOdYHydB9RRqwI6X5KopbUywmYYpyMqZ54sFjoFEvnfRoAoGCCqGSM49AwEHoUQDQgAE5xQ2hKfozDM1rtSzKvL+rxyVkrH/Am4+o96Rie8SIjubv2MJ6Q5AV3HYixn3hUXFE15YXKPavVIZm5JgEZORZA=="
   public-key: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w=="
   ip: 172.16.0.2/32
-  ipv6: 2606:4700:110:872f:dc1d:c635:5047:7a88/128
+  ipv6: 2606:4700:110:83bb:8c57:24cc:ce8d:2bcb/128
   mtu: 1280
   udp: true
   skip-cert-verify: true
