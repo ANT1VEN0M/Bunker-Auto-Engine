@@ -18,15 +18,16 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-23 09:06:39 МСК` (`2026-11-23 06:06:39 UTC`)
-- 🟢 **Всего активных проверенных нод:** `129`
+- 🕒 **Последнее авто-обновление:** `2026-11-23 10:38:24 МСК` (`2026-11-23 07:38:24 UTC`)
+- 🟢 **Всего активных проверенных нод:** `135`
+- 👑 **Золотая выборка (TOP-25 VIP):** `25`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `54`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `19`
 - 🌍 **Мировой Микс (YouTube / DPI):** `135`
-- 🤍 **Белый список (RU / BY):** `58`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `55`
-- ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `43`
+- 🤍 **Белый список (RU / BY):** `48`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `48`
+- ⚡ **Турбо-серверы (Минимальный пинг):** `50`
+- 💬 **Пожарный канал для Telegram:** `11`
 
 ---
 
@@ -34,7 +35,31 @@
 
 Добавь эти ссылки в своё приложение один раз. При обновлении подписки ты всегда будешь получать самые свежие и быстрые серверы!
 
-### 1. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
+### 👑 1. Золотая Выборка (TOP-25 VIP • Германия, Нидерланды, Финляндия, США)
+*Элитный пул из ТОП-25 самых быстрых и стабильных серверов.* Только протоколы **VLESS-Reality**, **Hysteria 2 (QUIC)** и **Trojan TLS** на портах `443` и `8443` с ультранизким пингом и 100% устойчивостью к блокировкам ТСПУ.
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold_b64.txt
+```
+*В открытом виде (список ключей):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold.txt
+```
+*JSON формат (Sing-box / Hiddify / Amnezia):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold.json
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/gold_b64.txt
+```
+
+---
+
+### 2. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
 *Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
@@ -50,7 +75,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/discord_b64.
 
 ---
 
-### 2. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
+### 3. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
 Рекомендуется для повседневного сёрфинга и тяжёлого видео в 4K.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
@@ -66,7 +91,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/mix_b64.txt
 
 ---
 
-### 3. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
+### 4. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
 Серверы в России и Беларуси. Трафик идёт как внутрироссийский, вышки сотовой связи его не трогают.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
@@ -82,7 +107,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/bs_b64.txt
 
 ---
 
-### 4. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
+### 5. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
 Строго серверы на портах `443` (стандартный HTTPS) и `53` (DNS), спасающие возле режимных объектов, проходных и заводов, где глушат нестандартные порты.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_b64.txt
@@ -90,14 +115,14 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 
 ---
 
-### 5. ⚡ Турбо (Топ самых низкопинговых серверов)
+### 6. ⚡ Турбо (Топ самых низкопинговых серверов)
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
 
 ---
 
-### 6. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+### 7. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
 Специальный канал связи для гарантированной работы Telegram:
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
@@ -105,8 +130,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 - [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
 
 
 ---

@@ -239,6 +239,28 @@ def generate_subscriptions(alive_nodes: list[dict]):
         priority = 0 if p == "hy2" else (1 if is_reality else 2)
         return (priority, node.get("ping_ms", 9999))
     
+    # Sort Gold Matrix: Tier-1 anti-censorship nodes (NL, DE, FI, SE, AT, NO, PL, US, CH, FR, GB)
+    def gold_sort_key(node):
+        c = node.get("country", "UN")
+        p = node.get("proto", "")
+        raw_l = node.get("raw", "").lower()
+        is_reality = "security=reality" in raw_l
+        ping = node.get("ping_ms", 9999)
+        tier1 = c in ["NL", "DE", "FI", "SE", "AT", "NO", "PL"]
+        if (is_reality or p == "hy2") and tier1 and ping < 90:
+            priority = 0
+        elif (is_reality or p == "hy2") and tier1:
+            priority = 1
+        elif is_reality or p == "hy2":
+            priority = 2
+        elif tier1 and ping < 110:
+            priority = 3
+        elif c in ["US", "GB", "FR", "CH"]:
+            priority = 4
+        else:
+            priority = 5
+        return (priority, ping)
+
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
     mix_nodes.sort(key=mix_sort_key)
@@ -248,7 +270,16 @@ def generate_subscriptions(alive_nodes: list[dict]):
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
     fast_candidates.sort(key=fast_sort_key)
 
+    gold_tier_countries = ["NL", "DE", "FI", "SE", "AT", "NO", "PL", "US", "GB", "FR", "CH"]
+    gold_candidates = [
+        n for n in alive_nodes
+        if n.get("proto") in ("vless", "hy2", "trojan")
+        and n.get("country", "UN") in gold_tier_countries
+    ]
+    gold_candidates.sort(key=gold_sort_key)
+
     # Limit lists
+    limit_gold = gold_candidates[:25]
     limit_mix = mix_nodes[:250]
     limit_bs = bs_nodes[:120]
     limit_factory = factory_nodes[:80]
@@ -257,6 +288,15 @@ def generate_subscriptions(alive_nodes: list[dict]):
     limit_discord = discord_nodes[:75]
 
     # Build branded URIs
+    gold_uris = []
+    for idx, node in enumerate(limit_gold, 1):
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
+        p = node.get("proto", "").upper()
+        ping = node.get("ping_ms", 0)
+        remark = f"👑 {flag} [{c}] Бункер GOLD #{idx:02d} | {p} | ⚡{ping}ms"
+        gold_uris.append(build_branded_uri(node, remark))
+
     mix_uris = []
     for idx, node in enumerate(limit_mix, 1):
         flag = get_flag_emoji(node.get("country", "UN"))
@@ -338,12 +378,14 @@ def generate_subscriptions(alive_nodes: list[dict]):
         wg_nodes = [w for w in warp_uris if w.startswith("wireguard://")]
 
         # Smart blend: both cutting-edge MASQUE (HTTP/3) and standard WireGuard (880 with UDP noise)
+        top_gold = (masque_nodes[:2] + wg_nodes[:1]) if (masque_nodes and wg_nodes) else warp_uris[:3]
         top_mix = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         top_bs = (masque_nodes[:3] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:5]
         top_fast = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         top_tg = (masque_nodes[:2] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:4]
         top_factory = masque_nodes[:2] if masque_nodes else []
 
+        gold_uris = top_gold + gold_uris
         mix_uris = top_mix + mix_uris
         bs_uris = top_bs + bs_uris
         fast_uris = top_fast + fast_uris
@@ -359,12 +401,26 @@ def generate_subscriptions(alive_nodes: list[dict]):
         discord_uris = discord_warp + discord_uris
 
     # Write files
+    write_sub_files("gold", gold_uris)
     write_sub_files("mix", mix_uris)
     write_sub_files("bs", bs_uris)
     write_sub_files("factory", factory_uris)
     write_sub_files("fast", fast_uris)
     write_sub_files("tg", tg_uris)
     write_sub_files("discord", discord_uris)
+
+    # Export gold.json for Sing-box / Hiddify / Amnezia
+    try:
+        gold_json_path = os.path.join(SUB_DIR, "gold.json")
+        with open(gold_json_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "name": "Bunker Gold Matrix",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "count": len(gold_uris),
+                "uris": gold_uris
+            }, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[-] Error writing gold.json: {e}")
 
     # Generate router WireGuard config (Keenetic / OpenWrt / MikroTik)
     if warp_profiles:
@@ -404,6 +460,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Generate README dashboard
     generate_readme(
         len(alive_nodes),
+        len(gold_uris),
         len(mix_uris),
         len(bs_uris),
         len(factory_uris),
@@ -415,6 +472,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
 def generate_readme(
     total_alive: int,
+    gold_count: int,
     mix_count: int,
     bs_count: int,
     factory_count: int,
@@ -458,6 +516,7 @@ def generate_readme(
 ### 📊 Статус системы (Real-Time)
 - 🕒 **Последнее авто-обновление:** `{now_msk}` (`{now_utc}`)
 - 🟢 **Всего активных проверенных нод:** `{total_alive}`
+- 👑 **Золотая выборка (TOP-25 VIP):** `{gold_count}`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `{discord_count}`
 - 🌍 **Мировой Микс (YouTube / DPI):** `{mix_count}`
@@ -472,7 +531,31 @@ def generate_readme(
 
 Добавь эти ссылки в своё приложение один раз. При обновлении подписки ты всегда будешь получать самые свежие и быстрые серверы!
 
-### 1. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
+### 👑 1. Золотая Выборка (TOP-25 VIP • Германия, Нидерланды, Финляндия, США)
+*Элитный пул из ТОП-25 самых быстрых и стабильных серверов.* Только протоколы **VLESS-Reality**, **Hysteria 2 (QUIC)** и **Trojan TLS** на портах `443` и `8443` с ультранизким пингом и 100% устойчивостью к блокировкам ТСПУ.
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold_b64.txt
+```
+*В открытом виде (список ключей):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold.txt
+```
+*JSON формат (Sing-box / Hiddify / Amnezia):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/gold.json
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/gold_b64.txt
+```
+
+---
+
+### 2. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
 *Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
@@ -488,7 +571,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/discord_b64.
 
 ---
 
-### 2. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
+### 3. 🌍 Мировой Микс (YouTube, Instagram, Обход ТСПУ/DPI)
 Рекомендуется для повседневного сёрфинга и тяжёлого видео в 4K.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/mix_b64.txt
@@ -504,7 +587,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/mix_b64.txt
 
 ---
 
-### 3. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
+### 4. 🤍 Белый список «БС» (Работа в условиях глушения мобильного интернета)
 Серверы в России и Беларуси. Трафик идёт как внутрироссийский, вышки сотовой связи его не трогают.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/bs_b64.txt
@@ -520,7 +603,7 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/bs_b64.txt
 
 ---
 
-### 4. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
+### 5. 🏭 Завод / Проходная (Бронебойный фильтр 443 и 53 портов)
 Строго серверы на портах `443` (стандартный HTTPS) и `53` (DNS), спасающие возле режимных объектов, проходных и заводов, где глушат нестандартные порты.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_b64.txt
@@ -528,14 +611,14 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/factory_
 
 ---
 
-### 5. ⚡ Турбо (Топ самых низкопинговых серверов)
+### 6. ⚡ Турбо (Топ самых низкопинговых серверов)
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/fast_b64.txt
 ```
 
 ---
 
-### 6. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
+### 7. 💬 Пожарный канал Telegram SOS (Когда всё остальное лежит)
 Специальный канал связи для гарантированной работы Telegram:
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.txt
