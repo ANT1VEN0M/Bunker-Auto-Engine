@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-  💫 BUNKER NEON LOADER v1.3.0 — ULTRA-SAFE ANTI-CRASH EDITION
+  💫 BUNKER NEON LOADER v1.3.1 — CRASH-PROOF & FULL-COLOR EDITION
 ================================================================================
   Автор: Бункер Кота (@BUNKER_K0TA / @k0tlux)
-  Версия: 1.3.0
+  Версия: 1.3.1
   Назначение: Ультимативная кастомизация лоадеров, спиннеров и кнопок загрузки
               медиа (фото, видео, кружочки Video Notes, файлы) в чатах.
               Неоновые цвета, плавная RGB-радуга, iOS-минимализм, настраиваемая
               толщина кольца, OLED-подложка.
   Совместимость: AyuGram / ExteraGram / NimarkoGram / NekoX.
-  Особенности: 100% устойчивость к вылетам, полная совместимость с любым
-               количеством сторонних плагинов и аппаратным ускорением HWUI.
 ================================================================================
 """
 
@@ -41,10 +39,10 @@ __id__ = "bunker_neon_loader"
 __name__ = "Bunker Neon Loader 💫"
 __description__ = (
     "Кастомный лоадер и спиннер загрузки медиа (фото, видео, кружочки) в стиле "
-    "Неон, RGB-Радуга, iOS Minimal, Sunset и Cyberpunk. Ультра-стабильная версия."
+    "Неон, RGB-Радуга, iOS Minimal, Sunset и Cyberpunk. 100% совместимость."
 )
 __author__ = "@k0tlux & Бункер Кота"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __icon__ = "bunker_plugins/loader"
 __min_version__ = "11.10.0"
 
@@ -120,8 +118,8 @@ def _hsv_to_argb(h: float, s: float, v: float, a: int = 255) -> int:
 
 class RadialProgress2DrawHook(MethodHook):
     """
-    Безопасный перехватчик отрисовки RadialProgress2.draw(Canvas).
-    НЕ вызывает setColors() внутри draw(), чтобы избежать рекурсивных циклов отрисовки.
+    Перехватывает RadialProgress2.draw(Canvas).
+    Применяет кастомные цвета непосредственно перед отрисовкой в чате.
     """
 
     def __init__(self, plugin: "BunkerNeonLoaderPlugin"):
@@ -136,59 +134,69 @@ class RadialProgress2DrawHook(MethodHook):
             if rp2 is None:
                 return
 
-            # Настраиваем circlePaint подложки (без вызова setColors)
-            if self.plugin.get_setting("custom_backdrop", True):
-                backdrop = self.plugin.get_backdrop_color()
-                try:
-                    cp = rp2.circlePaint
-                except Exception:
-                    cp = get_private_field(rp2, "circlePaint")
-                if cp is not None:
-                    cp.setColor(backdrop)
-
-            # Синхронизируем MediaActionDrawable перед вызовом его отрисовки
-            try:
-                mad = rp2.mediaActionDrawable
-            except Exception:
-                mad = get_private_field(rp2, "mediaActionDrawable")
-            if mad is not None:
-                color = self.plugin.get_current_color()
-                self.plugin.tune_media_action_drawable(mad, color)
-
-        except Exception:
-            pass
-
-
-# ==============================================================================
-# ХУКИ ДЛЯ MediaActionDrawable (Отрисовка дуги прогресса, стрелочки и иконки)
-# ==============================================================================
-
-class MediaActionDrawableDrawHook(MethodHook):
-    """
-    Перехватывает MediaActionDrawable.draw(Canvas).
-    Срабатывает непосредственно перед вызовом canvas.drawArc(...) и canvas.drawLine.
-    Гарантирует толщину, цвет и круглые концы без использования опасного setShadowLayer.
-    """
-
-    def __init__(self, plugin: "BunkerNeonLoaderPlugin"):
-        super().__init__()
-        self.plugin = plugin
-
-    def before_hooked_method(self, param):
-        if not self.plugin.is_enabled():
-            return
-        try:
-            mad = param.thisObject
-            if mad is None:
-                return
             color = self.plugin.get_current_color()
-            self.plugin.tune_media_action_drawable(mad, color)
+            backdrop = self.plugin.get_backdrop_color()
+
+            # 1. Устанавливаем цвета в объект RadialProgress2
+            try:
+                rp2.setColors(backdrop, backdrop, color, color)
+            except Exception:
+                pass
+
+            # 2. Настраиваем circlePaint подложки
+            try:
+                cp = rp2.circlePaint
+            except Exception:
+                cp = get_private_field(rp2, "circlePaint")
+            if cp is not None:
+                cp.setColor(backdrop)
+
+            # 3. Настраиваем толщину и круглые концы для MediaActionDrawable
+            try:
+                mad = None
+                try:
+                    mad = rp2.getMediaActionDrawable()
+                except Exception:
+                    pass
+                if mad is None:
+                    try:
+                        mad = rp2.mediaActionDrawable
+                    except Exception:
+                        mad = get_private_field(rp2, "mediaActionDrawable")
+
+                if mad is not None:
+                    try:
+                        mad.setColor(color)
+                    except Exception:
+                        pass
+                    try:
+                        mad.setBackColor(backdrop)
+                    except Exception:
+                        pass
+
+                    p = None
+                    try:
+                        p = mad.paint
+                    except Exception:
+                        p = get_private_field(mad, "paint")
+                    if p is not None:
+                        p.setStyle(Paint.Style.STROKE)
+                        p.setStrokeCap(Paint.Cap.ROUND)
+                        p.setStrokeWidth(self.plugin.get_stroke_width())
+                        p.setColor(color)
+                        try:
+                            p.clearShadowLayer()
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
         except Exception:
             pass
 
 
-class MediaActionDrawableSetColorHook(MethodHook):
-    """Перехватывает MediaActionDrawable.setColor(int) и подменяет аргумент."""
+class RadialProgress2SetColorsHook(MethodHook):
+    """Перехватывает попытки Telegram установить цвета через setColors."""
 
     def __init__(self, plugin: "BunkerNeonLoaderPlugin"):
         super().__init__()
@@ -198,26 +206,42 @@ class MediaActionDrawableSetColorHook(MethodHook):
         if not self.plugin.is_enabled():
             return
         try:
-            if param.args is not None and len(param.args) > 0:
-                param.args[0] = self.plugin.get_current_color()
+            color = self.plugin.get_current_color()
+            backdrop = self.plugin.get_backdrop_color()
+            if param.args is not None and len(param.args) >= 4:
+                param.args[0] = backdrop
+                param.args[1] = backdrop
+                param.args[2] = color
+                param.args[3] = color
         except Exception:
             pass
 
 
-class MediaActionDrawableSetBackColorHook(MethodHook):
-    """Перехватывает MediaActionDrawable.setBackColor(int) и подменяет аргумент."""
+class RadialProgress2SetColorKeysHook(MethodHook):
+    """
+    Срабатывает ПОСЛЕ того, как Telegram привязал ключи темы через setColorKeys.
+    Возвращает наши цвета обратно без опасной подмены ключей на -1.
+    """
 
     def __init__(self, plugin: "BunkerNeonLoaderPlugin"):
         super().__init__()
         self.plugin = plugin
 
-    def before_hooked_method(self, param):
+    def after_hooked_method(self, param):
         if not self.plugin.is_enabled():
             return
         try:
-            if self.plugin.get_setting("custom_backdrop", True):
-                if param.args is not None and len(param.args) > 0:
-                    param.args[0] = self.plugin.get_backdrop_color()
+            rp2 = param.thisObject
+            if rp2 is None:
+                return
+
+            color = self.plugin.get_current_color()
+            backdrop = self.plugin.get_backdrop_color()
+
+            try:
+                rp2.setColors(backdrop, backdrop, color, color)
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -243,6 +267,11 @@ class RadialProgressViewDrawHook(MethodHook):
 
             color = self.plugin.get_current_color()
             stroke_width = self.plugin.get_stroke_width()
+
+            try:
+                rpv.setProgressColor(color)
+            except Exception:
+                pass
 
             try:
                 paint = rpv.progressPaint
@@ -283,56 +312,82 @@ class BunkerNeonLoaderPlugin(BasePlugin):
         self._alive = False
 
     def is_enabled(self) -> bool:
-        return bool(self._alive and self.get_setting("enabled", True))
+        if not self._alive:
+            return False
+        val = self.get_setting("enabled", True)
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            return val.lower() in ("true", "1", "yes")
+        if isinstance(val, (int, float)):
+            return bool(val)
+        return True
+
+    def get_style(self) -> int:
+        """Безопасно извлекает выбранный стиль как целочисленный индекс."""
+        val = self.get_setting("style", self.STYLE_RGB_RAINBOW)
+        if isinstance(val, int):
+            return val
+        if isinstance(val, str):
+            val_s = val.strip()
+            if val_s.isdigit():
+                return int(val_s)
+            if "Радуга" in val_s or "RGB" in val_s:
+                return self.STYLE_RGB_RAINBOW
+            elif "Киберпанк" in val_s or "Cyan" in val_s:
+                return self.STYLE_NEON_CYAN
+            elif "iOS" in val_s:
+                return self.STYLE_IOS_MINIMAL
+            elif "закат" in val_s or "Sunset" in val_s:
+                return self.STYLE_SUNSET_FIRE
+            elif "Изумруд" in val_s or "Matrix" in val_s or "Emerald" in val_s:
+                return self.STYLE_EMERALD_MATRIX
+            elif "Аметист" in val_s or "Purple" in val_s or "Velvet" in val_s:
+                return self.STYLE_PURPLE_VELVET
+            elif "янтарь" in val_s or "Gold" in val_s:
+                return self.STYLE_ELECTRIC_GOLD
+        return self.STYLE_RGB_RAINBOW
 
     def on_plugin_load(self):
         self._alive = True
-        _log(f"Bunker Neon Loader v{__version__} loading hooks...")
+        _log(f"Bunker Neon Loader v{__version__} loading...")
 
-        # 1. Хук RadialProgress2 (ChatMessageCell) — только метод draw
+        # 1. Хуки RadialProgress2 (ChatMessageCell)
         try:
             rp2_cls = find_class("org.telegram.ui.Components.RadialProgress2")
             if rp2_cls is not None:
                 h_draw = self.hook_all_methods(rp2_cls, "draw", RadialProgress2DrawHook(self))
                 if h_draw:
                     self._hooks.extend(h_draw)
-                _log("RadialProgress2 hooked safely")
+
+                h_colors = self.hook_all_methods(rp2_cls, "setColors", RadialProgress2SetColorsHook(self))
+                if h_colors:
+                    self._hooks.extend(h_colors)
+
+                h_keys = self.hook_all_methods(rp2_cls, "setColorKeys", RadialProgress2SetColorKeysHook(self))
+                if h_keys:
+                    self._hooks.extend(h_keys)
+
+                _log("RadialProgress2 hooked successfully")
         except Exception as e:
             _log(f"Failed to hook RadialProgress2: {e}")
 
-        # 2. Хуки MediaActionDrawable (отрисовка дуги и иконок)
-        try:
-            mad_cls = find_class("org.telegram.ui.Components.MediaActionDrawable")
-            if mad_cls is not None:
-                h_draw = self.hook_all_methods(mad_cls, "draw", MediaActionDrawableDrawHook(self))
-                if h_draw:
-                    self._hooks.extend(h_draw)
-
-                h_color = self.hook_all_methods(mad_cls, "setColor", MediaActionDrawableSetColorHook(self))
-                if h_color:
-                    self._hooks.extend(h_color)
-
-                h_back = self.hook_all_methods(mad_cls, "setBackColor", MediaActionDrawableSetBackColorHook(self))
-                if h_back:
-                    self._hooks.extend(h_back)
-
-                _log("MediaActionDrawable hooked safely")
-        except Exception as e:
-            _log(f"Failed to hook MediaActionDrawable: {e}")
-
-        # 3. Хуки RadialProgressView (PhotoViewer)
+        # 2. Хуки RadialProgressView (PhotoViewer)
         try:
             rpv_cls = find_class("org.telegram.ui.Components.RadialProgressView")
             if rpv_cls is not None:
-                h_draw = self.hook_all_methods(rpv_cls, "onDraw", RadialProgressViewDrawHook(self))
-                if h_draw:
-                    self._hooks.extend(h_draw)
-                _log("RadialProgressView hooked safely")
+                h_draw1 = self.hook_all_methods(rpv_cls, "onDraw", RadialProgressViewDrawHook(self))
+                if h_draw1:
+                    self._hooks.extend(h_draw1)
+                h_draw2 = self.hook_all_methods(rpv_cls, "draw", RadialProgressViewDrawHook(self))
+                if h_draw2:
+                    self._hooks.extend(h_draw2)
+                _log("RadialProgressView hooked successfully")
         except Exception as e:
             _log(f"Failed to hook RadialProgressView: {e}")
 
         # Фоновая проверка обновлений
-        if self.get_setting("auto_update", True):
+        if bool(self.get_setting("auto_update", True)):
             def delayed_check():
                 time.sleep(3.0)
                 try:
@@ -356,7 +411,7 @@ class BunkerNeonLoaderPlugin(BasePlugin):
     def get_current_color(self) -> int:
         """Вычисляет текущий цвет спиннера на основе выбранного стиля и тайминга."""
         try:
-            style = self.get_setting("style", self.STYLE_RGB_RAINBOW)
+            style = self.get_style()
             now = SystemClock.uptimeMillis()
 
             if style == self.STYLE_RGB_RAINBOW:
@@ -399,9 +454,12 @@ class BunkerNeonLoaderPlugin(BasePlugin):
     def get_backdrop_color(self) -> int:
         """Возвращает цвет подложки лоадера."""
         try:
-            style = self.get_setting("style", self.STYLE_RGB_RAINBOW)
-            if style == self.STYLE_IOS_MINIMAL:
+            if not bool(self.get_setting("custom_backdrop", True)):
                 return _to_signed_32(0x55000000)
+
+            style = self.get_style()
+            if style == self.STYLE_IOS_MINIMAL:
+                return _to_signed_32(0x40000000)
             elif style == self.STYLE_NEON_CYAN:
                 return _to_signed_32(0xD0030C16)
             elif style == self.STYLE_SUNSET_FIRE:
@@ -413,9 +471,19 @@ class BunkerNeonLoaderPlugin(BasePlugin):
     def get_stroke_width(self) -> float:
         """Возвращает толщину линии спиннера."""
         try:
-            stroke_idx = self.get_setting("stroke_width", 1)
-            style = self.get_setting("style", self.STYLE_RGB_RAINBOW)
+            stroke_val = self.get_setting("stroke_width", 1)
+            stroke_idx = 1
+            if isinstance(stroke_val, int):
+                stroke_idx = stroke_val
+            elif isinstance(stroke_val, str) and stroke_val.isdigit():
+                stroke_idx = int(stroke_val)
+            elif isinstance(stroke_val, str):
+                if "Тонкий" in stroke_val:
+                    stroke_idx = 0
+                elif "Жирный" in stroke_val:
+                    stroke_idx = 2
 
+            style = self.get_style()
             if style == self.STYLE_IOS_MINIMAL and stroke_idx == 1:
                 return float(AndroidUtilities.dp(1.8))
 
@@ -426,64 +494,6 @@ class BunkerNeonLoaderPlugin(BasePlugin):
             return float(AndroidUtilities.dp(3.0))
         except Exception:
             return 8.0
-
-    def tune_media_action_drawable(self, mad: Any, color: int):
-        """Настраивает Paint объекты внутри MediaActionDrawable максимально безопасно."""
-        try:
-            stroke_width = self.get_stroke_width()
-            pulse = bool(self.get_setting("pulse_enabled", True))
-            colorize_icon = bool(self.get_setting("colorize_icon", True))
-
-            # 1. Дуга спиннера (paint)
-            try:
-                paint = mad.paint
-            except Exception:
-                paint = get_private_field(mad, "paint")
-
-            if paint is not None:
-                paint.setStyle(Paint.Style.STROKE)
-                paint.setStrokeCap(Paint.Cap.ROUND)
-                paint.setStrokeWidth(stroke_width)
-                paint.setColor(color)
-                paint.setShader(None)
-
-                # ВНИМАНИЕ: setShadowLayer намеренно убран, так как он вызывает SIGSEGV
-                # в аппаратном рендерере (HWUI/Skia/Vulkan) на Android 12-15!
-                try:
-                    paint.clearShadowLayer()
-                except Exception:
-                    pass
-
-                if pulse:
-                    now = SystemClock.uptimeMillis()
-                    p = 0.86 + 0.14 * math.sin(now / 220.0)
-                    paint.setAlpha(int(255 * p))
-
-            # 2. Иконка внутри (стрелочка скачивания/выгрузки, пауза, крестик)
-            if colorize_icon:
-                try:
-                    paint2 = mad.paint2
-                except Exception:
-                    paint2 = get_private_field(mad, "paint2")
-                if paint2 is not None:
-                    paint2.setColor(color)
-
-                try:
-                    paint3 = get_private_field(mad, "paint3")
-                    if paint3 is not None:
-                        paint3.setColor(color)
-                except Exception:
-                    pass
-
-                try:
-                    text_paint = get_private_field(mad, "textPaint")
-                    if text_paint is not None:
-                        text_paint.setColor(color)
-                except Exception:
-                    pass
-
-        except Exception:
-            pass
 
     def _copy_repo_url(self):
         """Копирует ссылку на репозиторий плагинов Бункера в буфер обмена."""
@@ -635,25 +645,11 @@ class BunkerNeonLoaderPlugin(BasePlugin):
             Divider(),
             Header(text="Эффекты анимации"),
             Switch(
-                key="pulse_enabled",
-                text="Пульсация при ожидании",
-                subtext="Плавное дыхание кольца загрузки при передаче данных",
-                default=True,
-                icon="msg_motion",
-            ),
-            Switch(
                 key="custom_backdrop",
                 text="OLED-подложка",
                 subtext="Стильный затемнённый высококонтрастный фон вместо стандартного серого",
                 default=True,
                 icon="msg_theme",
-            ),
-            Switch(
-                key="colorize_icon",
-                text="Окрашивать иконку (стрелочку/паузу)",
-                subtext="Применяет цвет спиннера к внутренней стрелке, крестику и процентам",
-                default=True,
-                icon="msg_download",
             ),
             Divider(),
             Header(text="Обновления плагина"),
@@ -682,7 +678,7 @@ class BunkerNeonLoaderPlugin(BasePlugin):
             Divider(),
             Header(text="О плагине"),
             Text(
-                text="Bunker Neon Loader v1.3.0 (Anti-Crash Edition)",
+                text="Bunker Neon Loader v1.3.1 (Full Color & Crash-Proof)",
                 subtext="Бункер Кота (@BUNKER_K0TA / @k0tlux)",
                 icon="msg_info",
             ),
