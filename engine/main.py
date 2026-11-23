@@ -82,32 +82,42 @@ def run_pipeline():
         p = cfg.get("port", 0)
         proto = cfg.get("proto", "")
         raw = cfg.get("raw", "")
+        raw_l = raw.lower()
 
-        # Priority 0: Russian Whitelist Hostings (Selectel, Timeweb, etc.) on port 443/53
-        if is_wl and p in (443, 53):
+        is_reality = (proto == "vless" and "security=reality" in raw_l and "pbk=" in raw_l)
+        is_xhttp = ("type=xhttp" in raw_l or "mode=packet-up" in raw_l)
+
+        # Priority 0: Clean VLESS Reality on 443 (pure TCP/Vision anti-censorship)
+        if is_reality and not is_xhttp and p == 443:
             return 0
-        # Priority 1: Russian Whitelist Hostings on other ports
-        if is_wl:
+        # Priority 1: Hysteria 2 (UDP anti-censorship)
+        if proto == "hy2":
             return 1
-        # Priority 2: VLESS Reality on port 443
-        if proto == "vless" and "security=reality" in raw and p == 443:
+        # Priority 2: Russian Whitelist Hostings on 443/53
+        if is_wl and p in (443, 53):
             return 2
-        # Priority 3: Fresh feeds (CloudFront doroguuuuu, NPVS decrypted, etc.)
-        if "cloudfront" in raw or "doroguuuuu" in raw or "wergmb" in raw:
+        # Priority 3: Other clean VLESS Reality
+        if is_reality and not is_xhttp:
             return 3
-        # Priority 4: Trojan on port 443 or 8443
-        if proto == "trojan" and p in (443, 8443):
+        # Priority 4: Russian Whitelist Hostings on other ports
+        if is_wl:
             return 4
-        # Priority 5: VLESS / Trojan / VMess on standard TLS / anti-censorship ports
-        if proto in ("vless", "trojan") and p in (53, 8443, 2053, 2083, 2087, 2096):
+        # Priority 5: Fresh feeds (CloudFront doroguuuuu, NPVS decrypted, etc.)
+        if "cloudfront" in raw or "doroguuuuu" in raw or "wergmb" in raw:
             return 5
-        # Priority 6: Any other VLESS / Trojan
-        if proto in ("vless", "trojan"):
+        # Priority 6: Trojan on port 443 or 8443
+        if proto == "trojan" and p in (443, 8443):
             return 6
-        # Priority 7: VMess
-        if proto == "vmess":
+        # Priority 7: VLESS / Trojan / VMess on standard TLS ports
+        if proto in ("vless", "trojan") and p in (53, 8443, 2053, 2083, 2087, 2096):
             return 7
-        return 8
+        # Priority 8: Any other VLESS / Trojan
+        if proto in ("vless", "trojan"):
+            return 8
+        # Priority 9: VMess
+        if proto == "vmess":
+            return 9
+        return 10
 
     alive.sort(key=deep_candidate_priority)
     logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep Xray testing.")

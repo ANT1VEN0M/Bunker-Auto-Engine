@@ -240,26 +240,65 @@ def generate_subscriptions(alive_nodes: list[dict]):
         return (priority, node.get("ping_ms", 9999))
     
     # Sort Gold Matrix: Tier-1 anti-censorship nodes (NL, DE, FI, SE, AT, NO, PL, US, CH, FR, GB)
+    # STRICT FILTER:
+    # 1. ONLY pure VLESS-Reality (with pbk=) or Hysteria 2 (hy2) - zero plain TLS, zero WS, zero VMess
+    # 2. Absolutely NO xHTTP (type=xhttp / mode=packet-up breaks standard clients like v2rayNG/Streisand/Karing)
+    # 3. Absolutely NO Iranian (.ir), honeypot, or local loopback domains
+    # 4. Strictly enforce ping: 0 < ping <= 500ms
+    # 5. Deduplicate host:port to prevent duplicate servers
+    gold_tier_countries = ["NL", "DE", "FI", "SE", "AT", "NO", "PL", "US", "GB", "FR", "CH"]
+    gold_candidates = []
+    seen_gold_eps = set()
+
+    for n in alive_nodes:
+        raw_l = n.get("raw", "").lower()
+        p = n.get("proto", "").lower()
+        c = n.get("country", "UN")
+        ping = n.get("ping_ms", 9999)
+        host = n.get("host", "").lower()
+        port = n.get("port", 0)
+
+        # Must be Reality (with pbk) or Hysteria 2
+        is_reality = ("security=reality" in raw_l) and ("pbk=" in raw_l)
+        is_hy2 = (p == "hy2")
+        if not (is_reality or is_hy2):
+            continue
+
+        # Strictly reject xHTTP / mode=packet-up (breaks mobile clients like v2rayNG/Streisand/Karing)
+        if "type=xhttp" in raw_l or "mode=packet-up" in raw_l:
+            continue
+
+        # Strictly reject Iranian, local, or invalid hosts/SNIs
+        if host.endswith(".ir") or ".ir/" in raw_l or ".ir?" in raw_l or ".ir&" in raw_l or ".ir:" in raw_l or ("sni=" in raw_l and ".ir" in raw_l):
+            continue
+        if "127.0.0.1" in host or "localhost" in host or "0.0.0.0" in host:
+            continue
+
+        # Strictly enforce ping
+        if ping <= 0 or ping > 500:
+            continue
+
+        # Strictly check country
+        if c not in gold_tier_countries:
+            continue
+
+        # Deduplicate host:port
+        ep = f"{host}:{port}"
+        if ep in seen_gold_eps:
+            continue
+        seen_gold_eps.add(ep)
+
+        gold_candidates.append(n)
+
+    # Sort strictly: Tier 1 European countries first (NL, DE, FI, SE, AT, NO, PL), then lowest ping
     def gold_sort_key(node):
         c = node.get("country", "UN")
-        p = node.get("proto", "")
-        raw_l = node.get("raw", "").lower()
-        is_reality = "security=reality" in raw_l
         ping = node.get("ping_ms", 9999)
         tier1 = c in ["NL", "DE", "FI", "SE", "AT", "NO", "PL"]
-        if (is_reality or p == "hy2") and tier1 and ping < 90:
-            priority = 0
-        elif (is_reality or p == "hy2") and tier1:
-            priority = 1
-        elif is_reality or p == "hy2":
-            priority = 2
-        elif tier1 and ping < 110:
-            priority = 3
-        elif c in ["US", "GB", "FR", "CH"]:
-            priority = 4
-        else:
-            priority = 5
-        return (priority, ping)
+        prio = 0 if tier1 else 1
+        return (prio, ping)
+
+    gold_candidates.sort(key=gold_sort_key)
 
     bs_nodes.sort(key=bs_sort_key)
     factory_nodes.sort(key=bs_sort_key)
@@ -269,14 +308,6 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
     fast_candidates.sort(key=fast_sort_key)
-
-    gold_tier_countries = ["NL", "DE", "FI", "SE", "AT", "NO", "PL", "US", "GB", "FR", "CH"]
-    gold_candidates = [
-        n for n in alive_nodes
-        if n.get("proto") in ("vless", "hy2", "trojan")
-        and n.get("country", "UN") in gold_tier_countries
-    ]
-    gold_candidates.sort(key=gold_sort_key)
 
     # Limit lists
     limit_gold = gold_candidates[:25]
@@ -378,14 +409,13 @@ def generate_subscriptions(alive_nodes: list[dict]):
         wg_nodes = [w for w in warp_uris if w.startswith("wireguard://")]
 
         # Smart blend: both cutting-edge MASQUE (HTTP/3) and standard WireGuard (880 with UDP noise)
-        top_gold = (masque_nodes[:2] + wg_nodes[:1]) if (masque_nodes and wg_nodes) else warp_uris[:3]
         top_mix = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         top_bs = (masque_nodes[:3] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:5]
         top_fast = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         top_tg = (masque_nodes[:2] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:4]
         top_factory = masque_nodes[:2] if masque_nodes else []
 
-        gold_uris = top_gold + gold_uris
+        # Gold Matrix is kept 100% pure VLESS-Reality & Hy2 for zero-error client compatibility (v2rayNG, Streisand, Karing)
         mix_uris = top_mix + mix_uris
         bs_uris = top_bs + bs_uris
         fast_uris = top_fast + fast_uris
