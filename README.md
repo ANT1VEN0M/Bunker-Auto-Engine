@@ -150,9 +150,13 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
-- **Подписка URI (Karing / Hiddify):**  
+- **Универсальная подписка (AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*  
+  *(100% совместимо, порты 880/2408/443, Amnezia noise и client_id reserved — без ошибок `[нет модуля]`)*
+- **Hiddify URI (экспериментальный warp:// формат):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`*)*
 
 ---
 

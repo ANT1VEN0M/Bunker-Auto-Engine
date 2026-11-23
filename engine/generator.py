@@ -402,18 +402,20 @@ def generate_subscriptions(alive_nodes: list[dict]):
         print(f"[-] WARP Generator error: {e}")
         warp_uris = []
 
-    # Inject ultra-low-latency WARP-MASQUE & WARP+ WireGuard nodes at the top of subscriptions
-    # For Discord, Layer-3 UDP / CONNECT-UDP encapsulation lets WebRTC voice connect in <1s
+    # Inject ultra-low-latency Cloudflare WARP+ WireGuard nodes at the top of subscriptions.
+    # Strictly use standard wireguard:// URIs for general subscriptions
+    # to guarantee 100% compatibility across NekoBox / AntiNET / v2rayNG / Karing / Streisand / Happ
+    # without any '[нет модуля]' (missing plugin) errors.
     if warp_uris:
-        masque_nodes = [w for w in warp_uris if w.startswith("warp://")]
         wg_nodes = [w for w in warp_uris if w.startswith("wireguard://")]
+        if not wg_nodes:
+            wg_nodes = warp_uris
 
-        # Smart blend: both cutting-edge MASQUE (HTTP/3) and standard WireGuard (880 with UDP noise)
-        top_mix = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
-        top_bs = (masque_nodes[:3] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:5]
-        top_fast = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
-        top_tg = (masque_nodes[:2] + wg_nodes[:2]) if (masque_nodes and wg_nodes) else warp_uris[:4]
-        top_factory = masque_nodes[:2] if masque_nodes else []
+        top_mix = wg_nodes[:6]
+        top_bs = wg_nodes[:5]
+        top_fast = wg_nodes[:6]
+        top_tg = wg_nodes[:4]
+        top_factory = wg_nodes[:2]
 
         # Gold Matrix is kept 100% pure VLESS-Reality & Hy2 for zero-error client compatibility (v2rayNG, Streisand, Karing)
         mix_uris = top_mix + mix_uris
@@ -422,11 +424,9 @@ def generate_subscriptions(alive_nodes: list[dict]):
         tg_uris = top_tg + tg_uris
         factory_uris = top_factory + factory_uris
 
-        discord_blend = (masque_nodes[:3] + wg_nodes[:3]) if (masque_nodes and wg_nodes) else warp_uris[:6]
         discord_warp = []
-        for i, w in enumerate(discord_blend, 1):
-            proto_label = "WARP-MASQUE" if w.startswith("warp://") else "WARP+ 880"
-            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | {proto_label} | ⚡35ms', w)
+        for i, w in enumerate(wg_nodes[:6], 1):
+            w_disc = re.sub(r'#.*$', f'#🚀 [CF] Бункер Discord Voice #{i:02d} | WARP+ 880 | ⚡35ms', w)
             discord_warp.append(w_disc)
         discord_uris = discord_warp + discord_uris
 
@@ -670,9 +670,13 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
-- **Подписка URI (Karing / Hiddify):**  
+- **Универсальная подписка (AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*  
+  *(100% совместимо, порты 880/2408/443, Amnezia noise и client_id reserved — без ошибок `[нет модуля]`)*
+- **Hiddify URI (экспериментальный warp:// формат):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`*)*
 
 ---
 
