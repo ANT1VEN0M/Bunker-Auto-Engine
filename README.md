@@ -155,10 +155,10 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ## 🔌 Плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
 
 Фирменные плагины для Telegram-клиентов на движке exteraGram:
-- 💫 **[Bunker Neon Loader v1.2.0](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа, автообновление, кастомная палитра.
+- 💫 **[Bunker Neon Loader v1.3.1](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа (Crash-proof edition для AyuGram, сочные цвета, OLED-подложка).
 - 🌐 **[Bunker Chat Translator v1.2.6](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_chat_translator.plugin)** — Инлайн-переводчик чатов в реальном времени без сторонних API-ключей.
 - 📋 **Репозиторий плагинов (URL для добавления в клиент):**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/extera-plugins.json`
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json`
 
 ---
 

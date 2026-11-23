@@ -2,7 +2,7 @@
 
 > **Дата обновления:** 23 ноября 2026 г.  
 > **Аудитория:** 1400+ подписчиков  
-> **Версии:** Windows PC v1.0.6 | Android v1.4.1 | Web-портал & TMA 74 источника
+> **Версии:** Windows PC v1.0.7 | Android v1.4.1 | Web-портал & TMA 81 источник (👑 Gold Matrix TOP-25 VIP)
 
 ---
 
@@ -14,7 +14,8 @@
 🐈‍⬛ Официальный бот экосистемы «Бункер Кота» (1400+ подписчиков).
 
 ⚡ Бесплатный скоростной VPN и автопилот подписок без рекламы и цензуры.
-💻 BunkerVPN для Windows (v1.0.6 PC Edition)
+👑 Золотая Выборка (TOP-25 VIP) без мусора и задержек
+💻 BunkerVPN для Windows (v1.0.7 PC Edition)
 📱 BunkerVPN для Android (v1.4.1 Stealth Edition)
 🍏 Подключение для iPhone / iOS в 1 клик
 🛡️ Обход блокировок ТСПУ: YouTube 4K, Discord Voice, Telegram SOS, WARP+ (порт 880) & MASQUE.
@@ -48,7 +49,7 @@
 
 🌐 НАШИ ПРИЛОЖЕНИЯ И ПОДКЛЮЧЕНИЯ:
 
-💻 1. BUNKERVPN ДЛЯ WINDOWS (v1.0.6 PC EDITION)
+💻 1. BUNKERVPN ДЛЯ WINDOWS (v1.0.7 PC EDITION)
 Полноценный TUN-режим (WinTUN), фикс Discord Voice (Full-Cone UDP), автосортировка по пингу, виджет сервисов ТСПУ и умный обход сайтов РФ (банки и Госуслуги напрямую).
 👉 Команда: /pc
 
@@ -72,7 +73,7 @@ OLED-минимализм, кастомные обои (Pixel 8 / Android 14–1
 
 ### 💻 Сообщение для ПК (`/pc`):
 ```text
-💻 BUNKERVPN FOR WINDOWS (PC EDITION v1.0.6) 🚀
+💻 BUNKERVPN FOR WINDOWS (PC EDITION v1.0.7) 🚀
 
 Нативный, мощный и лёгкий клиент для Windows 10 / 11!
 
@@ -86,12 +87,12 @@ OLED-минимализм, кастомные обои (Pixel 8 / Android 14–1
 📦 СКАЧАТЬ ДЛЯ WINDOWS:
 
 📥 Установщик (Setup.exe):
-👉 https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.6/BunkerVPN-Windows-v1.0.6-Setup.exe
-(Зеркало РФ: https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.6/BunkerVPN-Windows-v1.0.6-Setup.exe)
+👉 https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.7/BunkerVPN-Windows-v1.0.7-Setup.exe
+(Зеркало РФ: https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.7/BunkerVPN-Windows-v1.0.7-Setup.exe)
 
 🧰 Портативная версия (ZIP):
-👉 https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.6/BunkerVPN-Windows-v1.0.6-Portable.zip
-(Зеркало РФ: https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.6/BunkerVPN-Windows-v1.0.6-Portable.zip)
+👉 https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.7/BunkerVPN-Windows-v1.0.7-Portable.zip
+(Зеркало РФ: https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN-Windows/releases/download/v1.0.7/BunkerVPN-Windows-v1.0.7-Portable.zip)
 
 🌐 Официальный репозиторий:
 👉 https://github.com/ANT1VEN0M/BunkerVPN-Windows
