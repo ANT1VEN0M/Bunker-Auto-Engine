@@ -10,7 +10,7 @@
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.7](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление, Web Desktop).
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)** (Кастомные обои, Stealth OLED, WARP+ 880, адаптивная иконка Pixel Material You).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
 * 💖 **Поддержать Бункер Кота:** [СБП перевод в 1 клик (Озон Банк)](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6) • [Telegram Boost](https://t.me/boost/BUNKER_KOTA)
@@ -59,10 +59,14 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/gold_b64.txt
 
 ---
 
-### 2. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
-*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
+### 2. 🎮 Game Booster & Discord Voice (Специальный фикс для Discord, Brawl Stars и игр)
+*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC», Brawl Stars летает без задержек.
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
+```
+*Альтернативная ссылка Game Booster:*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/game_b64.txt
 ```
 *Зеркало для РФ без блокировок (ghfast.top):*
 ```text

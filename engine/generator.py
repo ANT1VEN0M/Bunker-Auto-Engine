@@ -438,6 +438,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     write_sub_files("fast", fast_uris)
     write_sub_files("tg", tg_uris)
     write_sub_files("discord", discord_uris)
+    write_sub_files("game", discord_uris)
 
     # Export gold.json for Sing-box / Hiddify / Amnezia
     try:
@@ -536,7 +537,7 @@ def generate_readme(
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.7](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление, Web Desktop).
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)** (Кастомные обои, Stealth OLED, WARP+ 880, адаптивная иконка Pixel Material You).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
 * 💖 **Поддержать Бункер Кота:** [СБП перевод в 1 клик (Озон Банк)](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6) • [Telegram Boost](https://t.me/boost/BUNKER_KOTA)
