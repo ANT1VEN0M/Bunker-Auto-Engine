@@ -450,6 +450,7 @@ def generate_readme(
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.6](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (TUN, Discord Voice, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
 * 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)**.
+* 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
 
 ---
 
@@ -596,10 +597,22 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ---
 
 ## 👑 Сообщество Бункера Кота
-- 📢 **Telegram-канал:** [@BUNKER_KOTA](https://t.me/BUNKER_KOTA)
+- 📢 **Telegram-канал:** [@BUNKER_KOTA](https://t.me/BUNKER_KOTA) *(1400+ подписчиков)*
 - 💬 **Чат сообщества:** [@BUNKER_K0TA](https://t.me/BUNKER_K0TA)
 - 🤖 **Telegram Бот:** [@BunkerCatOSBot](https://t.me/BunkerCatOSBot)
 - 👑 **Создатель:** [@k0tlux](https://t.me/k0tlux)
+
+---
+
+## ⚡ Взаимопиар и Реклама | Открыт к сотрудничеству
+- 👥 **Аудитория канала:** 1400+ подписчиков
+- 🤝 **Взаимопиар:** условия обсуждаются индивидуально
+- 💰 **Прайс на рекламу в «Бункере Кота»:**
+  - ▫️ 1 рекламный пост — **50 ₽**
+  - ▫️ 2 рекламных поста — **80 ₽**
+  - ▫️ 3 рекламных поста — **120 ₽**
+  - ▫️ Закреп на 24 часа — **+30 ₽**
+- 📩 **По вопросам рекламы и сотрудничества:** [@k0tlux](https://t.me/k0tlux)
 
 ---
 
