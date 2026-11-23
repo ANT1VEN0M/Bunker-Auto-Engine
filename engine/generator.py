@@ -538,7 +538,8 @@ def generate_readme(
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
-* 🤖 **Android:** загрузка фирменного клиента **[BunkerVPN v1.4.1](https://github.com/ANT1VEN0M/BunkerVPN)** (Кастомные обои, Stealth OLED, WARP+ 880, адаптивная иконка Pixel Material You).
+* 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.2 Hotfix](https://github.com/ANT1VEN0M/BunkerVPN)** (Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker для кастомных обоев, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
+* 📡 **Мониторинг сети:** утилита **[Bunker URL Test v1.1.2 Universal](https://github.com/ANT1VEN0M/Bunker-Url-Test)** (Live Network Monitor доступности сервисов и цензуры ТСПУ для Android: Edge-to-Edge UI, параллельные проверки 4 сервисов, постоянная цифровая подпись до 2054 г.).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
 * 💖 **Поддержать Бункер Кота:** [СБП перевод в 1 клик (Озон Банк)](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6) • [Telegram Boost](https://t.me/boost/BUNKER_KOTA)
 
@@ -683,8 +684,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ## 🔌 Плагины для Telegram (AyuGram / ExteraGram / NimarkoGram)
 
 Фирменные плагины для Telegram-клиентов на движке exteraGram:
-- 💫 **[Bunker Neon Loader v1.2.0](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Неоновый RGB-спиннер/лоадер загрузки медиа, автообновление, кастомная палитра.
-- 🌐 **[Bunker Chat Translator v1.2.6](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_chat_translator.plugin)** — Инлайн-переводчик чатов в реальном времени без сторонних API-ключей.
+- 💫 **[Bunker Neon Loader v1.3.1](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_neon_loader.plugin)** — Ультра-стабильный неоновый RGB-спиннер/лоадер загрузки медиа (фото, видео, кружочки, файлы) для AyuGram/ExteraGram.
+- 🌐 **[Bunker Chat Translator v1.2.7](https://github.com/ANT1VEN0M/Bunker-Auto-Engine/raw/main/plugins/bunker_chat_translator.plugin)** — Инлайн-переводчик чатов в реальном времени (Anti-Crash Edition, плавный запуск без сбоев жизненного цикла).
 - 📋 **Репозиторий плагинов (URL для добавления в клиент):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/extera-plugins.json`
 
