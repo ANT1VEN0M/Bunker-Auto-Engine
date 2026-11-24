@@ -405,6 +405,7 @@ def build_warp_masque_clash(profile: dict, masque_ip: str = "162.159.198.1", por
 # Протокол: RFC 9484 (CONNECT-IP over HTTP/2 & HTTP/3 QUIC) через Anycast Cloudflare
 # Ключи: ECDSA P-256 (secp256r1) сгенерированные по спецификации usque
 # Оптимизация: YAML-якоря (&base / <<: *base) для максимальной компактности
+# Настройки оптимизированы с учётом рекомендаций Тестировщика Т (Bunker QA Team)
 # ==============================================================================
 
 port: 7890
@@ -414,25 +415,40 @@ mode: rule
 log-level: info
 unified-delay: true
 tcp-concurrent: true
+ipv6: true
 
 dns:
   enable: true
-  listen: :1053
-  ipv6: false
+  ipv6: true
+  prefer-h3: false
+  cache-algorithm: arc
+  use-hosts: false
+  use-system-hosts: true
+  respect-rules: false
   nameserver:
-    - 77.88.8.8
-    - 1.1.1.1
-  fallback:
-    - https://1.1.1.1/dns-query
-    - https://dns.google/dns-query
+    - https://76.76.2.11/p0
+    - https://76.76.10.11/p0
+
+tun:
+  enable: true
+  device: Mihomo
+  stack: mips
+  mtu: 9000
+  gso: true
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  strict-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  endpoint-independent-nat: false
 
 # ==============================================================================
 # ⚓ БАЗОВЫЕ ШАБЛОНЫ (YAML-ЯКОРЯ ДЛЯ КОМПАКТНОСТИ)
 # ==============================================================================
 shared_masque: &masque_base
   type: masque
-  server: {masque_ip}
-  port: {port}
   private-key: "{priv}"
   public-key: "{pub}"
   ip: {ipv4_cidr}
@@ -442,30 +458,36 @@ shared_masque: &masque_base
   skip-cert-verify: true
   remote-dns-resolve: true
 
+# 162.159.198.1 оптимизирован для QUIC/H3
 shared_h3: &masque_h3
+  server: 162.159.198.1
+  port: {port}
   <<: *masque_base
   network: quic
 
+# 162.159.198.2 оптимизирован для TCP/H2
 shared_h2: &masque_h2
+  server: 162.159.198.2
+  port: {port}
   <<: *masque_base
   network: h2
 
 # ==============================================================================
-# 🚀 СПИСОК ПРОКСИ (ПРОФИЛИ С РАЗНЫМИ SNI)
+# 🚀 СПИСОК ПРОКСИ (ПРОФИЛИ С БЕЛЫМИ SNI)
 # ==============================================================================
 proxies:
   # HTTP/3 (QUIC UDP) — Самый стабильный и быстрый протокол
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)"
     <<: *masque_h3
-    sni: zt-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (API)"
     <<: *masque_h3
-    sni: api.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
     <<: *masque_h3
-    sni: consumer-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Google SNI)"
     <<: *masque_h3
@@ -478,15 +500,15 @@ proxies:
   # HTTP/2 (TCP) — Резервный канал
   - name: "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
     <<: *masque_h2
-    sni: zt-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H2 (API)"
     <<: *masque_h2
-    sni: api.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H2 (Consumer)"
     <<: *masque_h2
-    sni: consumer-masque.cloudflareclient.com
+    sni: vk.com
 
 # ==============================================================================
 # 🎯 ГРУППЫ МАРШРУТИЗАЦИИ (АВТОВЫБОР С МИНИМАЛЬНЫМ ПИНГОМ)
@@ -516,9 +538,25 @@ proxy-groups:
       - "⚡ [WARP-MASQUE] Бункер H3 (Cloudflare SNI)"
       - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
       - DIRECT
+    exclude-type: direct
+
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    TLS:
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+    QUIC:
+      ports: [443, 8443]
 
 rules:
-  - GEOIP,private,DIRECT
+  - GEOSITE,private,DIRECT
+  - GEOSITE,category-ru,DIRECT
+  - GEOIP,LAN,DIRECT,no-resolve
   - GEOIP,RU,DIRECT
   - MATCH,🚀 BUNKER-AUTO (Автовыбор H2/H3)
 """

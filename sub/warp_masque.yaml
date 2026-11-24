@@ -1,10 +1,10 @@
 # ==============================================================================
-# 🛡️ BUNKER VPN — CLOUDFLARE WARP-MASQUE (RFC 9484 CONNECT-IP)
+# 🛡️ BUNKER VPN — CLOUDFLARE WARP-MASQUE PRO (MIHOMO EXTREME / LOW-PING)
 # ==============================================================================
-# Совместимо с Mihomo / Clash.Meta / Clash Verge Rev / Flclash
+# Автор конфигурации: Тестировщик Т & Bunker VPN Team
+# Совместимо с: Mihomo (Clash.Meta) / Clash Verge Rev / Flclash
 # Протокол: RFC 9484 (CONNECT-IP over HTTP/2 & HTTP/3 QUIC) через Anycast Cloudflare
-# Ключи: ECDSA P-256 (secp256r1) сгенерированные по спецификации usque
-# Оптимизация: YAML-якоря (&base / <<: *base) для максимальной компактности
+# Ключи: ECDSA P-256 (secp256r1)
 # ==============================================================================
 
 port: 7890
@@ -14,58 +14,87 @@ mode: rule
 log-level: info
 unified-delay: true
 tcp-concurrent: true
+ipv6: true   # Доступ к IPv6 ресурсам через глобальный бэкбон WARP даже при наличии только IPv4
 
 dns:
   enable: true
-  listen: :1053
-  ipv6: false
+  ipv6: true
+  prefer-h3: false
+  cache-algorithm: arc
+  use-hosts: false
+  use-system-hosts: true
+  respect-rules: false
+
+  # Зашифрованный DoH по прямому IP (исключает перехват UDP 53 провайдером и проблему bootstrap)
   nameserver:
-    - 77.88.8.8
-    - 1.1.1.1
-  fallback:
-    - https://1.1.1.1/dns-query
-    - https://dns.google/dns-query
+    - https://76.76.2.11/p0        # Основной ControlD-1 без фильтрации
+    - https://76.76.10.11/p0       # Основной ControlD-2 без фильтрации
+  # Резервные резолверы при необходимости:
+  # - https://9.9.9.10/dns-query   # Quad9 без фильтрации
+  # - https://185.222.222.222/dns-query  # DNS.SB
+
+tun:
+  enable: true
+  device: Mihomo
+  stack: mips                      # Высокопроизводительный userspace стек
+  mtu: 9000                        # Jumbo Frames для максимальной пропускной способности (ПК/Linux)
+  gso: true                        # Generic Segmentation Offload (Linux)
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  strict-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  endpoint-independent-nat: false
 
 # ==============================================================================
-# ⚓ БАЗОВЫЕ ШАБЛОНЫ (YAML-ЯКОРЯ ДЛЯ КОМПАКТНОСТИ)
+# ⚓ БАЗОВЫЕ ШАБЛОНЫ (YAML-ЯКОРЯ)
 # ==============================================================================
+# Заметки по точкам доступа:
+# 162.159.198.1 & 162.159.199.1 — оптимальны для H3 (QUIC/UDP)
+# 162.159.198.2 & 162.159.199.2 — оптимальны для H2 (TCP)
+# Рабочие порты MASQUE: 443, 500, 1701, 4500, 4443, 8443, 8095 (443 основной)
+
 shared_masque: &masque_base
   type: masque
-  server: 162.159.198.1
-  port: 443
-  private-key: "MHcCAQEEIE/J8ubZjF43CliIzgQK2K21pYaRE0HcqXjYLpUaSBHPoAoGCCqGSM49AwEHoUQDQgAESTgoXVKsB9xN3e39VO7jvzRW45CBhbEKXunYXhwUG/89Pz3oONlbFEgwXgnLrR/+FbX8l1YNnGOvAzgCL+rXFw=="
+  private-key: "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw=="
   public-key: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w=="
   ip: 172.16.0.2/32
-  ipv6: 2606:4700:110:8b3f:44d0:9cc9:a820:f563/128
+  ipv6: 2606:4700:110:8fff:3b92:d99b:b47f:831f/128
   mtu: 1280
   udp: true
   skip-cert-verify: true
   remote-dns-resolve: true
 
 shared_h3: &masque_h3
+  server: 162.159.198.1
+  port: 443
   <<: *masque_base
   network: quic
 
 shared_h2: &masque_h2
+  server: 162.159.198.2
+  port: 443
   <<: *masque_base
   network: h2
 
 # ==============================================================================
-# 🚀 СПИСОК ПРОКСИ (ПРОФИЛИ С РАЗНЫМИ SNI)
+# 🚀 СПИСОК ПРОКСИ (ОБХОД БЛОКИРОВОК ЧЕРЕЗ БЕЛЫЙ SNI)
 # ==============================================================================
 proxies:
-  # HTTP/3 (QUIC UDP) — Самый стабильный и быстрый протокол
+  # HTTP/3 (QUIC UDP)
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)"
     <<: *masque_h3
-    sni: zt-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (API)"
     <<: *masque_h3
-    sni: api.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
     <<: *masque_h3
-    sni: consumer-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H3 (Google SNI)"
     <<: *masque_h3
@@ -75,21 +104,21 @@ proxies:
     <<: *masque_h3
     sni: cdn.cloudflare.com
 
-  # HTTP/2 (TCP) — Резервный канал
+  # HTTP/2 (TCP)
   - name: "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
     <<: *masque_h2
-    sni: zt-masque.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H2 (API)"
     <<: *masque_h2
-    sni: api.cloudflareclient.com
+    sni: vk.com
 
   - name: "⚡ [WARP-MASQUE] Бункер H2 (Consumer)"
     <<: *masque_h2
-    sni: consumer-masque.cloudflareclient.com
+    sni: vk.com
 
 # ==============================================================================
-# 🎯 ГРУППЫ МАРШРУТИЗАЦИИ (АВТОВЫБОР С МИНИМАЛЬНЫМ ПИНГОМ)
+# 🎯 ГРУППЫ МАРШРУТИЗАЦИИ
 # ==============================================================================
 proxy-groups:
   - name: "🚀 BUNKER-AUTO (Автовыбор H2/H3)"
@@ -116,8 +145,27 @@ proxy-groups:
       - "⚡ [WARP-MASQUE] Бункер H3 (Cloudflare SNI)"
       - "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)"
       - DIRECT
+    exclude-type: direct
+
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    TLS:
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+    QUIC:
+      ports: [443, 8443]
 
 rules:
-  - GEOIP,private,DIRECT
+  # Гео-фильтрация РФ ресурсов напрямую
+  - GEOSITE,private,DIRECT
+  - GEOSITE,category-ru,DIRECT
+  - GEOIP,LAN,DIRECT,no-resolve
   - GEOIP,RU,DIRECT
+
+  # Финальное правило
   - MATCH,🚀 BUNKER-AUTO (Автовыбор H2/H3)
