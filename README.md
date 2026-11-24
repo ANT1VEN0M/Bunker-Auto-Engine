@@ -19,14 +19,14 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-24 03:56:17 МСК` (`2026-11-24 00:56:17 UTC`)
-- 🟢 **Всего активных проверенных нод:** `107`
-- 👑 **Золотая выборка (TOP-25 VIP):** `5`
+- 🕒 **Последнее авто-обновление:** `2026-11-24 14:02:12 МСК` (`2026-11-24 11:02:12 UTC`)
+- 🟢 **Всего активных проверенных нод:** `66`
+- 👑 **Золотая выборка (TOP-25 VIP):** `2`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `27`
-- 🌍 **Мировой Микс (YouTube / DPI):** `107`
-- 🤍 **Белый список (RU / BY):** `31`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `31`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `28`
+- 🌍 **Мировой Микс (YouTube / DPI):** `66`
+- 🤍 **Белый список (RU / BY):** `28`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `28`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
 - 💬 **Пожарный канал для Telegram:** `26`
 
@@ -131,8 +131,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 - [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=168.113.215.75&port=443&secret=1ebcd2a01a85039bb749e056116e51cf)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=2.27.12.116&port=443&secret=ee19130c695cf699d93f5a31ecf380d4426d742e736b6f746f62617a2e7275)
 
 
 ---
