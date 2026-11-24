@@ -210,11 +210,17 @@ def build_warp_masque_uri(profile: dict, remarks: str, masque_ip: str = "162.159
 
 
 def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", port: int = 443) -> dict:
-    device_id = profile.get('device_id', '')
-    token = profile.get('token', '')
     priv = profile.get('private_key', '')
-    pub = profile.get('public_key', '')
-    
+    pub = profile.get('public_key', 'bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=')
+    v4 = profile.get('ipv4_cidr', '172.16.0.2/32')
+    v6 = profile.get('ipv6_cidr', '2606:4700:110::2/128')
+    reserved = profile.get('reserved', [0, 0, 0])
+    if isinstance(reserved, str):
+        try:
+            reserved = [int(x.strip()) for x in reserved.split(',')]
+        except Exception:
+            reserved = [0, 0, 0]
+
     return {
         "$schema": "https://raw.githubusercontent.com/SagerNet/sing-box/main/schemas/config.json",
         "log": {
@@ -225,7 +231,7 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
             "servers": [
                 {
                     "tag": "dns-remote",
-                    "address": "https://1.1.1.1/dns-query",
+                    "address": "https://76.76.2.11/p0",
                     "address_resolver": "dns-direct"
                 },
                 {
@@ -246,8 +252,10 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
             {
                 "type": "tun",
                 "tag": "tun-in",
-                "inet4_address": "172.19.0.1/30",
-                "inet6_address": "fdfe:dcba:9876::1/126",
+                "address": [
+                    "172.19.0.1/30",
+                    "fdfe:dcba:9876::1/126"
+                ],
                 "auto_route": True,
                 "strict_route": True,
                 "stack": "system",
@@ -265,106 +273,58 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
                 "type": "urltest",
                 "tag": "🚀 BUNKER-AUTO (Автовыбор)",
                 "outbounds": [
-                    "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
-                    "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
-                    "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
-                    "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+                    "⚡ [WARP] Бункер #01 (Port 880)",
+                    "⚡ [WARP] Бункер #02 (Port 2408)",
+                    "⚡ [WARP] Бункер #03 (Port 443)",
+                    "⚡ [WARP] Бункер #04 (Port 880)"
                 ],
                 "url": "https://www.gstatic.com/generate_204",
                 "interval": "5m",
                 "tolerance": 50
             },
             {
-                "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
-                "server": masque_ip,
-                "server_port": port,
-                "address": masque_ip,
-                "port": port,
-                "tls": {
-                    "enabled": True,
-                    "server_name": MASQUE_SNI_ZT,
-                    "insecure": True
-                },
-                "profile": {
-                    "id": device_id,
-                    "auth_token": token
-                },
+                "type": "wireguard",
+                "tag": "⚡ [WARP] Бункер #01 (Port 880)",
+                "server": "162.159.198.1",
+                "server_port": 880,
+                "local_address": [v4, v6],
                 "private_key": priv,
-                "public_key": pub,
-                "system": False,
-                "use_http2": True,
-                "udp_timeout": "5m0s",
-                "udp_keepalive_period": "30s"
+                "peer_public_key": pub if len(pub) == 44 else "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+                "reserved": reserved,
+                "mtu": 1280
             },
             {
-                "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
-                "server": masque_ip,
-                "server_port": port,
-                "address": masque_ip,
-                "port": port,
-                "tls": {
-                    "enabled": True,
-                    "server_name": MASQUE_SNI_ZT,
-                    "insecure": True
-                },
-                "profile": {
-                    "id": device_id,
-                    "auth_token": token
-                },
+                "type": "wireguard",
+                "tag": "⚡ [WARP] Бункер #02 (Port 2408)",
+                "server": "162.159.198.2",
+                "server_port": 2408,
+                "local_address": [v4, v6],
                 "private_key": priv,
-                "public_key": pub,
-                "system": False,
-                "use_http2": False,
-                "udp_timeout": "5m0s",
-                "udp_keepalive_period": "30s"
+                "peer_public_key": pub if len(pub) == 44 else "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+                "reserved": reserved,
+                "mtu": 1280
             },
             {
-                "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
-                "server": masque_ip,
-                "server_port": port,
-                "address": masque_ip,
-                "port": port,
-                "tls": {
-                    "enabled": True,
-                    "server_name": MASQUE_SNI_CONSUMER,
-                    "insecure": True
-                },
-                "profile": {
-                    "id": device_id,
-                    "auth_token": token
-                },
+                "type": "wireguard",
+                "tag": "⚡ [WARP] Бункер #03 (Port 443)",
+                "server": "162.159.199.1",
+                "server_port": 443,
+                "local_address": [v4, v6],
                 "private_key": priv,
-                "public_key": pub,
-                "system": False,
-                "use_http2": True,
-                "udp_timeout": "5m0s",
-                "udp_keepalive_period": "30s"
+                "peer_public_key": pub if len(pub) == 44 else "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+                "reserved": reserved,
+                "mtu": 1280
             },
             {
-                "type": "masque",
-                "tag": "⚡ [WARP-MASQUE] Бункер H3 (Consumer)",
-                "server": masque_ip,
-                "server_port": port,
-                "address": masque_ip,
-                "port": port,
-                "tls": {
-                    "enabled": True,
-                    "server_name": MASQUE_SNI_CONSUMER,
-                    "insecure": True
-                },
-                "profile": {
-                    "id": device_id,
-                    "auth_token": token
-                },
+                "type": "wireguard",
+                "tag": "⚡ [WARP] Бункер #04 (Port 880)",
+                "server": "162.159.199.2",
+                "server_port": 880,
+                "local_address": [v4, v6],
                 "private_key": priv,
-                "public_key": pub,
-                "system": False,
-                "use_http2": False,
-                "udp_timeout": "5m0s",
-                "udp_keepalive_period": "30s"
+                "peer_public_key": pub if len(pub) == 44 else "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+                "reserved": reserved,
+                "mtu": 1280
             },
             {
                 "type": "direct",
@@ -382,13 +342,184 @@ def build_warp_masque_singbox(profile: dict, masque_ip: str = "162.159.198.1", p
                     "outbound": "dns-out"
                 },
                 {
-                    "ip_is_private": True,
+                    "geosite": "category-ru",
+                    "outbound": "direct"
+                },
+                {
+                    "geoip": ["private", "ru"],
                     "outbound": "direct"
                 }
             ],
             "auto_detect_interface": True,
             "final": "🚀 BUNKER-AUTO (Автовыбор)"
         }
+    }
+
+
+def build_warp_masque_xray(profile: dict) -> dict:
+    priv = profile.get('private_key', '')
+    pub = profile.get('public_key', '')
+    v4 = profile.get('ipv4_cidr', '172.16.0.2/32')
+    v6 = profile.get('ipv6_cidr', '2606:4700:110::2/128')
+    
+    return {
+      "log": {
+        "loglevel": "warning",
+        "dnsLog": False
+      },
+      "dns": {
+        "queryStrategy": "UseIP",
+        "disableCache": False,
+        "useSystemHosts": True,
+        "disableFallback": True,
+        "disableFallbackIfMatch": False,
+        "servers": [
+          {
+            "tag": "controld-1",
+            "address": "https://76.76.2.11/p0"
+          },
+          {
+            "tag": "controld-2",
+            "address": "https://76.76.10.11/p0"
+          }
+        ]
+      },
+      "inbounds": [
+        {
+          "tag": "tun-in",
+          "protocol": "tun",
+          "settings": {
+            "name": "xray0",
+            "mtu": 9000,
+            "stack": "system",
+            "gateway": ["172.19.0.1/30", "fd00::1/64"],
+            "autoSystemRoutingTable": ["0.0.0.0/0", "::/0"],
+            "autoOutboundsInterface": "auto"
+          },
+          "sniffing": {
+            "enabled": True,
+            "destOverride": ["http", "tls", "quic"],
+            "metadataOnly": False,
+            "routeOnly": True
+          }
+        }
+      ],
+      "outbounds": [
+        {
+          "protocol": "masque",
+          "tag": "masque-h3",
+          "settings": {
+            "address": "162.159.198.1",
+            "port": 443
+          },
+          "streamSettings": {
+            "network": "masque",
+            "masqueSettings": {
+              "warp": {
+                "privateKey": priv,
+                "publicKey": pub,
+                "address": [v4, v6]
+              }
+            },
+            "security": "tls",
+            "tlsSettings": {
+              "serverName": "vk.com",
+              "alpn": ["h3"],
+              "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+            }
+          }
+        },
+        {
+          "protocol": "masque",
+          "tag": "masque-h2",
+          "settings": {
+            "address": "162.159.198.2",
+            "port": 443
+          },
+          "streamSettings": {
+            "network": "masque",
+            "masqueSettings": {
+              "warp": {
+                "privateKey": priv,
+                "publicKey": pub,
+                "address": [v4, v6]
+              }
+            },
+            "security": "tls",
+            "tlsSettings": {
+              "serverName": "vk.com",
+              "alpn": ["h2"],
+              "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+            }
+          }
+        },
+        {
+          "tag": "direct",
+          "protocol": "freedom",
+          "streamSettings": {
+            "sockopt": {
+              "domainStrategy": "UseIP"
+            }
+          }
+        },
+        {
+          "tag": "reject",
+          "protocol": "blackhole"
+        },
+        {
+          "tag": "dns-out",
+          "protocol": "dns"
+        }
+      ],
+      "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+          {
+            "type": "field",
+            "inboundTag": ["tun-in"],
+            "network": "udp,tcp",
+            "port": 53,
+            "outboundTag": "dns-out"
+          },
+          {
+            "type": "field",
+            "domain": [
+              "regexp:.*\\.ru$",
+              "regexp:.*\\.su$",
+              "regexp:.*\\.xn--p1ai$",
+              "geosite:private",
+              "geosite:category-ru"
+            ],
+            "outboundTag": "direct"
+          },
+          {
+            "type": "field",
+            "ip": ["geoip:private", "geoip:ru"],
+            "outboundTag": "direct"
+          },
+          {
+            "type": "field",
+            "network": "udp,tcp",
+            "balancerTag": "b-1"
+          }
+        ],
+        "balancers": [
+          {
+            "tag": "b-1",
+            "selector": ["masque-h3", "masque-h2"],
+            "strategy": {
+              "type": "leastPing"
+            }
+          }
+        ]
+      },
+      "observatory": {
+        "subjectSelector": ["masque-h3", "masque-h2"],
+        "probeUrl": "https://www.gstatic.com/generate_204",
+        "probeInterval": "3m",
+        "tolerance": 50,
+        "enableConcurrency": True
+      }
     }
 
 
@@ -834,12 +965,21 @@ def generate_warp_pool(count: int = 8, sub_dir: str = None, vless_nodes: list = 
 
         # Save dedicated WARP-MASQUE subscription & config files
         if masque_prof:
-            # 1. Sing-box JSON (v1.10+)
+            # 1. Sing-box JSON (v1.10+) - Valid WireGuard over Port 880/2408
+            sb_data = build_warp_masque_singbox(masque_prof)
             sb_path = os.path.join(sub_dir, "warp_masque.json")
             with open(sb_path, "w", encoding="utf-8") as f:
-                json.dump(build_warp_masque_singbox(masque_prof), f, ensure_ascii=False, indent=2)
+                json.dump(sb_data, f, ensure_ascii=False, indent=2)
+            sb_path2 = os.path.join(sub_dir, "warp_singbox.json")
+            with open(sb_path2, "w", encoding="utf-8") as f:
+                json.dump(sb_data, f, ensure_ascii=False, indent=2)
 
-            # 2. Mihomo / Clash Meta YAML
+            # 2. Xray 26.11+ Native MASQUE JSON (RFC 9484 CONNECT-IP over H2/H3)
+            xray_path = os.path.join(sub_dir, "warp_masque_xray.json")
+            with open(xray_path, "w", encoding="utf-8") as f:
+                json.dump(build_warp_masque_xray(masque_prof), f, ensure_ascii=False, indent=2)
+
+            # 3. Mihomo / Clash Meta YAML (MASQUE with Low-Ping optimizations)
             clash_path = os.path.join(sub_dir, "warp_masque.yaml")
             with open(clash_path, "w", encoding="utf-8") as f:
                 f.write(build_warp_masque_clash(masque_prof))

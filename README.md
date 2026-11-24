@@ -138,19 +138,25 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ---
 
 ## ⚡ Cloudflare WARP-MASQUE (HTTP/3 & HTTP/2 CONNECT-IP)
-> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443`).**  
-> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `zt-masque.cloudflareclient.com` (Zero Trust) и `consumer-masque`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443` и `162.159.198.2:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `vk.com`, `2gis.ru`, `cdn.cloudflare.com` и `zt-masque.cloudflareclient.com`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
 
-- **Sing-box (v1.10+) Нативный JSON:**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
-- **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
+- **Mihomo / Clash.Meta / Clash Verge Rev / Flclash YAML (Нативный MASQUE):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
-- **Универсальная подписка (AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*  
+  *(PRO-версия от Т с mips tun и низким пингом ~145мс:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_pro.yaml`*)*
+- **Xray-core (v26.11+) Нативный JSON (CONNECT-IP MASQUE):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json`*)*  
+  *(С поддержкой `pinnedPeerCertSha256`, spoofed SNI `vk.com`, H3+H2 шлюзами и dual-stack IPv4/IPv6)*
+- **Sing-box (v1.10+) Нативный JSON (WireGuard 880/2408/443):**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_singbox.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_singbox.json` / `warp_masque.json`*)*  
+  *(100% валидный конфиг с исправленным полем `address` в tun, портами 880/2408/443 и ControlD DoH)*
+- **Универсальная подписка (BunkerVPN / AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*  
-  *(100% совместимо, порты 880/2408/443, Amnezia noise и client_id reserved — без ошибок `[нет модуля]`)*
+  *(100% совместимо, проверенные ноды на 443 порту — моментальный зелёный пинг 35–45 мс)*
 - **Hiddify URI (экспериментальный warp:// формат):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`*)*

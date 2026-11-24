@@ -759,30 +759,33 @@
       <!-- WARP-MASQUE Panel -->
       <div id="router-panel-masque" style="display:none; flex-direction:column; gap:10px;">
         <div class="sub-box">
-          <div class="sub-url" id="masque-sub-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json</div>
-          <button class="copy-btn" onclick="copyMasqueJsonUrl()">Копировать</button>
+          <div class="sub-url" id="masque-sub-url">https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml</div>
+          <button class="copy-btn" onclick="copyMasqueYamlUrl()">Копировать</button>
         </div>
 
         <div class="btn-action-row" style="flex-wrap: wrap;">
-          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json" download="warp_masque.json" class="btn btn-primary" style="flex:1; min-width: 135px; font-size:12px;">
-            ⬇️ Sing-box (.json)
-          </a>
-          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml" download="warp_masque.yaml" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml" download="warp_masque.yaml" class="btn btn-primary" style="flex:1; min-width: 135px; font-size:12px;">
             ⬇️ Flclash / Mihomo (.yaml)
           </a>
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json" download="warp_masque_xray.json" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
+            ⬇️ Xray 26.11+ (.json)
+          </a>
+          <a href="https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json" download="warp_masque.json" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
+            ⬇️ Sing-box (.json)
+          </a>
           <button onclick="copyMasqueUri()" class="btn btn-secondary" style="flex:1; min-width: 135px; font-size:12px;">
-            📋 Подписка (AntiNET / Neko / Karing)
+            📋 Подписка (Bunker / AntiNET / Karing)
           </button>
         </div>
 
         <div class="steps">
           <div class="step-item">
             <div class="step-num">1</div>
-            <div><b>Бронебойный протокол RFC 9484 (CONNECT-IP):</b> туннель инкапсулируется в легитимный HTTPS/QUIC поток (HTTP/3 и HTTP/2) к Anycast-шлюзам Cloudflare с TLS SNI <code>zt-masque.cloudflareclient.com</code> (Zero Trust), <code>consumer-masque</code> и Google SNI. Для ТСПУ это обычный защищенный веб-трафик.</div>
+            <div><b>Бронебойный протокол RFC 9484 (CONNECT-IP):</b> туннель инкапсулируется в легитимный HTTPS/QUIC поток (HTTP/3 и HTTP/2) к Anycast-шлюзам Cloudflare с TLS SNI <code>vk.com</code>, <code>2gis.ru</code>, <code>cdn.cloudflare.com</code> и Google SNI. Для ТСПУ это обычный защищенный веб-трафик.</div>
           </div>
           <div class="step-item">
             <div class="step-num">2</div>
-            <div><b>Поддерживаемые клиенты:</b> <b>Flclash / Mihomo / Clash Verge Rev</b> (проверено: работает из коробки с пингом ~235ms через компактный YAML с якорями), <b>Sing-box 1.10+</b>, <b>Hiddify Next</b>, <b>Karing</b>, а универсальная подписка полностью адаптирована под <b>AntiNET / NekoBox / v2rayNG</b> (16 проверенных нод VLESS-Reality на порту 443 — моментальный зелёный пинг 35–45мс, 0 ошибок «нет модуля»).</div>
+            <div><b>Поддерживаемые клиенты:</b> <b>Flclash / Mihomo / Clash Verge Rev</b> (нативный MASQUE H2/H3 с пингом ~145ms), <b>Xray 26.11+</b> (нативный MASQUE с пиннингом хэша сертификата), <b>Sing-box 1.10+</b> (WireGuard 880/2408), а универсальная подписка полностью адаптирована под <b>BunkerVPN / AntiNET / NekoBox / Karing</b> (проверенные ноды VLESS-Reality на порту 443 — моментальный зелёный пинг 35–45мс).</div>
           </div>
         </div>
       </div>
@@ -1333,6 +1336,11 @@
     function copyMasqueYamlUrl() {
       const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml";
       copyText(url, "✅ Ссылка на Flclash / Mihomo (WARP-MASQUE) скопирована!");
+    }
+
+    function copyMasqueXrayUrl() {
+      const url = "https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json";
+      copyText(url, "✅ Ссылка на Xray 26.11+ (WARP-MASQUE) скопирована!");
     }
 
     function copyMasqueUri() {

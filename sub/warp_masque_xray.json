@@ -28,13 +28,23 @@
         "name": "xray0",
         "mtu": 9000,
         "stack": "system",
-        "gateway": ["172.19.0.1/30", "fd00::1/64"],
-        "autoSystemRoutingTable": ["0.0.0.0/0", "::/0"],
+        "gateway": [
+          "172.19.0.1/30",
+          "fd00::1/64"
+        ],
+        "autoSystemRoutingTable": [
+          "0.0.0.0/0",
+          "::/0"
+        ],
         "autoOutboundsInterface": "auto"
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls", "quic"],
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
         "metadataOnly": false,
         "routeOnly": true
       }
@@ -52,15 +62,20 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
+            "privateKey": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-            "address": ["172.16.0.2/32", "2606:4700:110:8fff:3b92:d99b:b47f:831f/128"]
+            "address": [
+              "172.16.0.2/32",
+              "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+            ]
           }
         },
         "security": "tls",
         "tlsSettings": {
           "serverName": "vk.com",
-          "alpn": ["h3"],
+          "alpn": [
+            "h3"
+          ],
           "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
         }
       }
@@ -76,15 +91,20 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEIHuhjwmA8J3G39sDS8cp9+Y1Cidw+MOPNFBc0kjiQh2MoAoGCCqGSM49AwEHoUQDQgAEMzNTt/rbQjkNwaTVqTAzcQJgv8AbsnbeU9JQTQZV+IvXo21ruYsNz5klAlgJc3miwLEPkkVXCVLu7QsmjEnFXw==",
+            "privateKey": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-            "address": ["172.16.0.2/32", "2606:4700:110:8fff:3b92:d99b:b47f:831f/128"]
+            "address": [
+              "172.16.0.2/32",
+              "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+            ]
           }
         },
         "security": "tls",
         "tlsSettings": {
           "serverName": "vk.com",
-          "alpn": ["h2"],
+          "alpn": [
+            "h2"
+          ],
           "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
         }
       }
@@ -112,7 +132,9 @@
     "rules": [
       {
         "type": "field",
-        "inboundTag": ["tun-in"],
+        "inboundTag": [
+          "tun-in"
+        ],
         "network": "udp,tcp",
         "port": 53,
         "outboundTag": "dns-out"
@@ -130,7 +152,10 @@
       },
       {
         "type": "field",
-        "ip": ["geoip:private", "geoip:ru"],
+        "ip": [
+          "geoip:private",
+          "geoip:ru"
+        ],
         "outboundTag": "direct"
       },
       {
@@ -142,7 +167,10 @@
     "balancers": [
       {
         "tag": "b-1",
-        "selector": ["masque-h3", "masque-h2"],
+        "selector": [
+          "masque-h3",
+          "masque-h2"
+        ],
         "strategy": {
           "type": "leastPing"
         }
@@ -150,7 +178,10 @@
     ]
   },
   "observatory": {
-    "subjectSelector": ["masque-h3", "masque-h2"],
+    "subjectSelector": [
+      "masque-h3",
+      "masque-h2"
+    ],
     "probeUrl": "https://www.gstatic.com/generate_204",
     "probeInterval": "3m",
     "tolerance": 50,

@@ -8,7 +8,7 @@
     "servers": [
       {
         "tag": "dns-remote",
-        "address": "https://1.1.1.1/dns-query",
+        "address": "https://76.76.2.11/p0",
         "address_resolver": "dns-direct"
       },
       {
@@ -29,8 +29,10 @@
     {
       "type": "tun",
       "tag": "tun-in",
-      "inet4_address": "172.19.0.1/30",
-      "inet6_address": "fdfe:dcba:9876::1/126",
+      "address": [
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
       "auto_route": true,
       "strict_route": true,
       "stack": "system",
@@ -48,106 +50,86 @@
       "type": "urltest",
       "tag": "🚀 BUNKER-AUTO (Автовыбор)",
       "outbounds": [
-        "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
-        "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
-        "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
-        "⚡ [WARP-MASQUE] Бункер H3 (Consumer)"
+        "⚡ [WARP] Бункер #01 (Port 880)",
+        "⚡ [WARP] Бункер #02 (Port 2408)",
+        "⚡ [WARP] Бункер #03 (Port 443)",
+        "⚡ [WARP] Бункер #04 (Port 880)"
       ],
       "url": "https://www.gstatic.com/generate_204",
       "interval": "5m",
       "tolerance": 50
     },
     {
-      "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H2 (Zero Trust)",
+      "type": "wireguard",
+      "tag": "⚡ [WARP] Бункер #01 (Port 880)",
       "server": "162.159.198.1",
-      "server_port": 443,
-      "address": "162.159.198.1",
-      "port": 443,
-      "tls": {
-        "enabled": true,
-        "server_name": "zt-masque.cloudflareclient.com",
-        "insecure": true
-      },
-      "profile": {
-        "id": "d0a93cea-7e75-4dc4-8a30-491084310402",
-        "auth_token": "59893bd4-4362-4ff8-b4be-f985d3d4e8cf"
-      },
-      "private_key": "MHcCAQEEIG//wrLdYolsvoe4IvGtbgDZvsRiuKnl015rb8q3Cqd1oAoGCCqGSM49AwEHoUQDQgAEvVerYKnBffJ3+cLezsOCaRRJDtePdT3hVKFkMTvoJqCipCAtuvF3ywVBGZWwejaXswmgIgBUVX8gU07jt9K63A==",
-      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-      "system": false,
-      "use_http2": true,
-      "udp_timeout": "5m0s",
-      "udp_keepalive_period": "30s"
+      "server_port": 880,
+      "local_address": [
+        "172.16.0.2/32",
+        "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+      ],
+      "private_key": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
+      "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+      "reserved": [
+        0,
+        0,
+        0
+      ],
+      "mtu": 1280
     },
     {
-      "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H3 (Zero Trust)",
-      "server": "162.159.198.1",
-      "server_port": 443,
-      "address": "162.159.198.1",
-      "port": 443,
-      "tls": {
-        "enabled": true,
-        "server_name": "zt-masque.cloudflareclient.com",
-        "insecure": true
-      },
-      "profile": {
-        "id": "d0a93cea-7e75-4dc4-8a30-491084310402",
-        "auth_token": "59893bd4-4362-4ff8-b4be-f985d3d4e8cf"
-      },
-      "private_key": "MHcCAQEEIG//wrLdYolsvoe4IvGtbgDZvsRiuKnl015rb8q3Cqd1oAoGCCqGSM49AwEHoUQDQgAEvVerYKnBffJ3+cLezsOCaRRJDtePdT3hVKFkMTvoJqCipCAtuvF3ywVBGZWwejaXswmgIgBUVX8gU07jt9K63A==",
-      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-      "system": false,
-      "use_http2": false,
-      "udp_timeout": "5m0s",
-      "udp_keepalive_period": "30s"
+      "type": "wireguard",
+      "tag": "⚡ [WARP] Бункер #02 (Port 2408)",
+      "server": "162.159.198.2",
+      "server_port": 2408,
+      "local_address": [
+        "172.16.0.2/32",
+        "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+      ],
+      "private_key": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
+      "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+      "reserved": [
+        0,
+        0,
+        0
+      ],
+      "mtu": 1280
     },
     {
-      "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H2 (Consumer)",
-      "server": "162.159.198.1",
+      "type": "wireguard",
+      "tag": "⚡ [WARP] Бункер #03 (Port 443)",
+      "server": "162.159.199.1",
       "server_port": 443,
-      "address": "162.159.198.1",
-      "port": 443,
-      "tls": {
-        "enabled": true,
-        "server_name": "consumer-masque.cloudflareclient.com",
-        "insecure": true
-      },
-      "profile": {
-        "id": "d0a93cea-7e75-4dc4-8a30-491084310402",
-        "auth_token": "59893bd4-4362-4ff8-b4be-f985d3d4e8cf"
-      },
-      "private_key": "MHcCAQEEIG//wrLdYolsvoe4IvGtbgDZvsRiuKnl015rb8q3Cqd1oAoGCCqGSM49AwEHoUQDQgAEvVerYKnBffJ3+cLezsOCaRRJDtePdT3hVKFkMTvoJqCipCAtuvF3ywVBGZWwejaXswmgIgBUVX8gU07jt9K63A==",
-      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-      "system": false,
-      "use_http2": true,
-      "udp_timeout": "5m0s",
-      "udp_keepalive_period": "30s"
+      "local_address": [
+        "172.16.0.2/32",
+        "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+      ],
+      "private_key": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
+      "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+      "reserved": [
+        0,
+        0,
+        0
+      ],
+      "mtu": 1280
     },
     {
-      "type": "masque",
-      "tag": "⚡ [WARP-MASQUE] Бункер H3 (Consumer)",
-      "server": "162.159.198.1",
-      "server_port": 443,
-      "address": "162.159.198.1",
-      "port": 443,
-      "tls": {
-        "enabled": true,
-        "server_name": "consumer-masque.cloudflareclient.com",
-        "insecure": true
-      },
-      "profile": {
-        "id": "d0a93cea-7e75-4dc4-8a30-491084310402",
-        "auth_token": "59893bd4-4362-4ff8-b4be-f985d3d4e8cf"
-      },
-      "private_key": "MHcCAQEEIG//wrLdYolsvoe4IvGtbgDZvsRiuKnl015rb8q3Cqd1oAoGCCqGSM49AwEHoUQDQgAEvVerYKnBffJ3+cLezsOCaRRJDtePdT3hVKFkMTvoJqCipCAtuvF3ywVBGZWwejaXswmgIgBUVX8gU07jt9K63A==",
-      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
-      "system": false,
-      "use_http2": false,
-      "udp_timeout": "5m0s",
-      "udp_keepalive_period": "30s"
+      "type": "wireguard",
+      "tag": "⚡ [WARP] Бункер #04 (Port 880)",
+      "server": "162.159.199.2",
+      "server_port": 880,
+      "local_address": [
+        "172.16.0.2/32",
+        "2606:4700:110:857f:c863:3a72:eb37:2d9c/128"
+      ],
+      "private_key": "MHcCAQEEIKrFprbHzQTWdYOBcZ0zu5q9DwSMqEigBIdN0PhFG4/EoAoGCCqGSM49AwEHoUQDQgAEIERbXXYPSPhPdh22udrjfu/axoZNLJ6+Q0KSaHVCppStH2O4AGQ3fAUhi8UsPEtIRhpJzLpc70vQ2w3KAINr5w==",
+      "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+      "reserved": [
+        0,
+        0,
+        0
+      ],
+      "mtu": 1280
     },
     {
       "type": "direct",
@@ -165,7 +147,14 @@
         "outbound": "dns-out"
       },
       {
-        "ip_is_private": true,
+        "geosite": "category-ru",
+        "outbound": "direct"
+      },
+      {
+        "geoip": [
+          "private",
+          "ru"
+        ],
         "outbound": "direct"
       }
     ],
