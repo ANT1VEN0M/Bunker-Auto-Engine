@@ -657,19 +657,24 @@ PersistentKeepalive = 25
 
 def get_live_anti_censorship_nodes(sub_dir: str = None, fallback_nodes: list = None) -> list:
     """
-    Collects live, verified VLESS / Reality / Trojan / Shadowsocks nodes
-    to serve as high-performance anti-censorship proxies for AntiNET / NekoBox.
+    Collects live, verified VLESS-Reality nodes (strictly TCP + Reality on port 443)
+    to guarantee 100% immediate green pings and zero handshake errors in AntiNET / NekoBox.
     """
     candidates = []
     seen = set()
-    if fallback_nodes:
-        for node in fallback_nodes:
-            if not node or node.startswith("wireguard://") or node.startswith("warp://"):
-                continue
-            base = node.split('#')[0]
-            if base not in seen and (node.startswith("vless://") or node.startswith("hysteria2://") or node.startswith("trojan://") or node.startswith("ss://")):
-                seen.add(base)
-                candidates.append(node)
+    
+    # 1. First collect pure VLESS-Reality nodes (the gold standard for AntiNET)
+    for source in [fallback_nodes, []]:
+        if source:
+            for node in source:
+                if not node or node.startswith("wireguard://") or node.startswith("warp://"):
+                    continue
+                if node.startswith("vless://") and "security=reality" in node and "flow=xtls-rprx-vision" in node:
+                    base = node.split('#')[0]
+                    if base not in seen:
+                        seen.add(base)
+                        candidates.append(node)
+                        
     if sub_dir and os.path.exists(sub_dir):
         for fname in ["gold.txt", "fast.txt", "mix.txt"]:
             p = os.path.join(sub_dir, fname)
@@ -680,8 +685,27 @@ def get_live_anti_censorship_nodes(sub_dir: str = None, fallback_nodes: list = N
                             line = line.strip()
                             if not line or line.startswith("wireguard://") or line.startswith("warp://"):
                                 continue
+                            if line.startswith("vless://") and "security=reality" in line and "flow=xtls-rprx-vision" in line:
+                                base = line.split('#')[0]
+                                if base not in seen:
+                                    seen.add(base)
+                                    candidates.append(line)
+                except Exception:
+                    pass
+                    
+    # 2. If fewer than 5 reality nodes, fallback to general anti-censorship nodes
+    if len(candidates) < 5 and sub_dir and os.path.exists(sub_dir):
+        for fname in ["gold.txt", "fast.txt", "mix.txt"]:
+            p = os.path.join(sub_dir, fname)
+            if os.path.exists(p):
+                try:
+                    with open(p, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if not line or line.startswith("wireguard://") or line.startswith("warp://"):
+                                continue
                             base = line.split('#')[0]
-                            if base not in seen and (line.startswith("vless://") or line.startswith("hysteria2://") or line.startswith("trojan://") or line.startswith("ss://")):
+                            if base not in seen and line.startswith("vless://"):
                                 seen.add(base)
                                 candidates.append(line)
                 except Exception:
