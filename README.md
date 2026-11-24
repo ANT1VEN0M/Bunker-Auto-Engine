@@ -19,16 +19,16 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-24 14:02:12 МСК` (`2026-11-24 11:02:12 UTC`)
-- 🟢 **Всего активных проверенных нод:** `66`
-- 👑 **Золотая выборка (TOP-25 VIP):** `2`
+- 🕒 **Последнее авто-обновление:** `2026-11-25 00:17:16 МСК` (`2026-11-24 21:17:16 UTC`)
+- 🟢 **Всего активных проверенных нод:** `202`
+- 👑 **Золотая выборка (TOP-25 VIP):** `5`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `28`
-- 🌍 **Мировой Микс (YouTube / DPI):** `66`
-- 🤍 **Белый список (RU / BY):** `28`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `28`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `52`
+- 🌍 **Мировой Микс (YouTube / DPI):** `202`
+- 🤍 **Белый список (RU / BY):** `58`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `58`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
-- 💬 **Пожарный канал для Telegram:** `26`
+- 💬 **Пожарный канал для Telegram:** `47`
 
 ---
 
@@ -130,33 +130,27 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=2.27.12.116&port=443&secret=ee19130c695cf699d93f5a31ecf380d4426d742e736b6f746f62617a2e7275)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
 
 
 ---
 
 ## ⚡ Cloudflare WARP-MASQUE (HTTP/3 & HTTP/2 CONNECT-IP)
-> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443` и `162.159.198.2:443`).**  
-> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `vk.com`, `2gis.ru`, `cdn.cloudflare.com` и `zt-masque.cloudflareclient.com`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
+> **Бронебойный протокол RFC 9484 (CONNECT-IP over QUIC / HTTP/3 & HTTP/2) через Anycast Cloudflare (`162.159.198.1:443`).**  
+> Трафик инкапсулируется внутри легитимных HTTPS/QUIC-потоков на домены `zt-masque.cloudflareclient.com` (Zero Trust) и `consumer-masque`. Для ТСПУ и DPI это неотличимо от обычного защищенного веб-сёрфинга, что позволяет обходить блокировки WireGuard и нестандартных UDP-портов. Встроен автотест через `https://www.gstatic.com/generate_204` с автоматическим переключением на H2 (TCP) при глушении UDP.
 
-- **Mihomo / Clash.Meta / Clash Verge Rev / Flclash YAML (Нативный MASQUE):**  
+- **Sing-box (v1.10+) Нативный JSON:**  
+  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.json`*)*
+- **Mihomo / Clash.Meta / Clash Verge Rev YAML:**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*  
-  *(PRO-версия от Т с mips tun и низким пингом ~145мс:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_pro.yaml`*)*
-- **Xray-core (v26.11+) Нативный JSON (CONNECT-IP MASQUE):**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_xray.json`*)*  
-  *(С поддержкой `pinnedPeerCertSha256`, spoofed SNI `vk.com`, H3+H2 шлюзами и dual-stack IPv4/IPv6)*
-- **Sing-box (v1.10+) Нативный JSON (WireGuard 880/2408/443):**  
-  `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_singbox.json`  
-  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_singbox.json` / `warp_masque.json`*)*  
-  *(100% валидный конфиг с исправленным полем `address` в tun, портами 880/2408/443 и ControlD DoH)*
-- **Универсальная подписка (BunkerVPN / AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
+  *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque.yaml`*)*
+- **Универсальная подписка (AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*  
-  *(100% совместимо, проверенные ноды на 443 порту — моментальный зелёный пинг 35–45 мс)*
+  *(100% совместимо, порты 880/2408/443, Amnezia noise и client_id reserved — без ошибок `[нет модуля]`)*
 - **Hiddify URI (экспериментальный warp:// формат):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`*)*
