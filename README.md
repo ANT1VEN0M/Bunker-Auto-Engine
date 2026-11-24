@@ -19,16 +19,16 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-23 15:32:13 МСК` (`2026-11-23 12:32:13 UTC`)
-- 🟢 **Всего активных проверенных нод:** `75`
-- 👑 **Золотая выборка (TOP-25 VIP):** `3`
+- 🕒 **Последнее авто-обновление:** `2026-11-24 03:56:17 МСК` (`2026-11-24 00:56:17 UTC`)
+- 🟢 **Всего активных проверенных нод:** `107`
+- 👑 **Золотая выборка (TOP-25 VIP):** `5`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `47`
-- 🌍 **Мировой Микс (YouTube / DPI):** `81`
-- 🤍 **Белый список (RU / BY):** `47`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `44`
-- ⚡ **Турбо-серверы (Минимальный пинг):** `56`
-- 💬 **Пожарный канал для Telegram:** `39`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `27`
+- 🌍 **Мировой Микс (YouTube / DPI):** `107`
+- 🤍 **Белый список (RU / BY):** `31`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `31`
+- ⚡ **Турбо-серверы (Минимальный пинг):** `50`
+- 💬 **Пожарный канал для Telegram:** `26`
 
 ---
 
@@ -60,14 +60,10 @@ https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/gold_b64.txt
 
 ---
 
-### 2. 🎮 Game Booster & Discord Voice (Специальный фикс для Discord, Brawl Stars и игр)
-*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC», Brawl Stars летает без задержек.
+### 2. 🎮 Discord Voice & Gaming (Специальный фикс голосовых каналов и стримов)
+*Идеально для Discord, онлайн-игр и стримов.* Серверы с обязательной поддержкой **Full-Cone UDP**, протоколы **Hysteria 2 (QUIC)** и **Cloudflare WARP+ (WireGuard)**. Голосовой канал подключается мгновенно без зависания на «Подключение к RTC».
 ```text
 https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/discord_b64.txt
-```
-*Альтернативная ссылка Game Booster:*
-```text
-https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/game_b64.txt
 ```
 *Зеркало для РФ без блокировок (ghfast.top):*
 ```text
@@ -134,9 +130,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=51.158.202.129&port=443&secret=dd083fe0c452e2407d835537872f097c54)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=89.19.217.206&port=443&secret=44f63df50ec68c8fa7d7ea1347ef6ea4)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=168.113.215.75&port=443&secret=1ebcd2a01a85039bb749e056116e51cf)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
 
 
 ---
@@ -154,7 +150,7 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 - **Универсальная подписка (AntiNET / NekoBox / v2rayNG / Karing / Streisand / Happ):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_b64.txt`*)*  
-  *(100% совместимо с AntiNET / NekoBox / v2rayNG: 16 проверенных нод VLESS-Reality на порту 443 — моментальный зелёный пинг 35–45 мс, 0 ошибок `[нет модуля]`, гарантированный обход ТСПУ)*
+  *(100% совместимо, порты 880/2408/443, Amnezia noise и client_id reserved — без ошибок `[нет модуля]`)*
 - **Hiddify URI (экспериментальный warp:// формат):**  
   `https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`  
   *(Зеркало РФ:* `https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/warp_masque_hiddify_b64.txt`*)*
