@@ -19,17 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-25 22:17:34 МСК` (`2026-11-25 19:17:34 UTC`)
-- 🟢 **Всего активных проверенных нод:** `70`
-- 👑 **Золотая выборка (TOP-25 VIP):** `0`
+- 🕒 **Последнее авто-обновление:** `2026-11-26 02:15:55 МСК` (`2026-11-25 23:15:55 UTC`)
+- 🟢 **Всего активных проверенных нод:** `165`
+- 👑 **Золотая выборка (TOP-25 VIP):** `5`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `24`
-- 🌍 **Мировой Микс (YouTube / DPI):** `70`
-- 🤍 **Белый список (RU / BY):** `25`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `25`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `32`
+- 🌍 **Мировой Микс (YouTube / DPI):** `165`
+- 🤍 **Белый список (RU / BY):** `36`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `36`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
 - 📺 **YouTube 4K Ultra (Без буферизации):** `40`
-- 💬 **Пожарный канал для Telegram:** `24`
+- 💬 **Пожарный канал для Telegram:** `30`
 
 ---
 
@@ -131,8 +131,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=w1.hiesen-proxy.ru&port=443&secret=ee19f35317df4dff3cab0202fa96ee51de676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=w1.hiesen-proxy.ru&port=443&secret=ee19f35317df4dff3cab0202fa96ee51de676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.221.191.138&port=443&secret=dd104462821249bd7ac519130220c25d09)
 - [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
 
 
