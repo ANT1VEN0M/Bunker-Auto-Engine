@@ -77,6 +77,39 @@
     .tg-banner.active {
       display: flex;
     }
+
+    /* Winter Theme & Snow */
+    .winter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 999px;
+      font-size: 11.5px;
+      color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      margin-top: 6px;
+      margin-bottom: 2px;
+    }
+    .winter-badge:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+    #snow-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
     .tg-user {
       display: flex;
       align-items: center;
@@ -441,6 +474,7 @@
   </style>
 </head>
 <body>
+  <canvas id="snow-canvas"></canvas>
 
   <div class="container">
     <!-- Telegram Mini App Greeting -->
@@ -454,7 +488,10 @@
 
     <div class="header">
       <div class="badge">
-        <span class="dot"></span> 👥 1400+ Подписчиков • 81 источник • WARP-MASQUE & WireGuard 880
+        <span class="dot"></span> 👥 1400+ Подписчиков • 81 источник • WARP-MASQUE &amp; WireGuard 880
+      </div>
+      <div class="winter-badge" onclick="toggleSnow()">
+        ❄️ <b>ЗИМНИЙ БУНКЕР 2027</b> • До Нового Года: <span id="ny-countdown">36 дней</span> 🎄 <span id="snow-status-label" style="opacity:0.8; font-size:10px;">[Снег: ВКЛ]</span>
       </div>
       <h1>Бункер VPN</h1>
       <p class="subtitle">Универсальный портал авто-подключения без рекламы и ограничений.</p>
@@ -2608,8 +2645,110 @@ PersistentKeepalive = 25
       setTimeout(() => toast.classList.remove("show"), 2200);
     }
 
+    // Winter Snowfall & New Year Countdown
+    let snowActive = localStorage.getItem('bunker_snow') !== 'off';
+    let snowAnimationId = null;
+
+    function initWinter() {
+      updateCountdown();
+      setInterval(updateCountdown, 60000);
+      if (snowActive) startSnow();
+      updateSnowLabel();
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const target = new Date(Date.UTC(2027, 0, 1, 0, 0, 0));
+      const diff = target - now;
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / 1000 / 60) % 60);
+        const el = document.getElementById('ny-countdown');
+        if (el) el.innerText = `${days}д ${hours}ч ${mins}м`;
+      }
+    }
+
+    function updateSnowLabel() {
+      const el = document.getElementById('snow-status-label');
+      if (el) el.innerText = snowActive ? '[Снег: ВКЛ]' : '[Снег: ВЫКЛ]';
+    }
+
+    function toggleSnow() {
+      triggerHaptic('selection');
+      snowActive = !snowActive;
+      localStorage.setItem('bunker_snow', snowActive ? 'on' : 'off');
+      updateSnowLabel();
+      if (snowActive) {
+        startSnow();
+        showToast('❄️ Зимний снегопад включён!');
+      } else {
+        stopSnow();
+        showToast('❄️ Снегопад выключен');
+      }
+    }
+
+    function startSnow() {
+      const canvas = document.getElementById('snow-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      });
+
+      const flakes = [];
+      const flakeCount = Math.min(45, Math.floor(w / 12));
+      for (let i = 0; i < flakeCount; i++) {
+        flakes.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 2.5 + 1,
+          d: Math.random() + 0.5,
+          color: Math.random() > 0.3 ? 'rgba(255, 255, 255, 0.7)' : 'rgba(56, 189, 248, 0.6)',
+          tilt: Math.random() * 10 - 5
+        });
+      }
+
+      function draw() {
+        if (!snowActive) return;
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < flakes.length; i++) {
+          const f = flakes[i];
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, false);
+          ctx.fillStyle = f.color;
+          ctx.fill();
+
+          f.y += f.d * 0.9;
+          f.x += Math.sin(f.y * 0.02) * 0.6;
+
+          if (f.y > h) {
+            f.y = -5;
+            f.x = Math.random() * w;
+          }
+        }
+        snowAnimationId = requestAnimationFrame(draw);
+      }
+      if (snowAnimationId) cancelAnimationFrame(snowAnimationId);
+      draw();
+    }
+
+    function stopSnow() {
+      if (snowAnimationId) cancelAnimationFrame(snowAnimationId);
+      const canvas = document.getElementById('snow-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
     // Initialize UI on load
     updateUI();
+    initWinter();
   </script>
 </body>
 </html>
