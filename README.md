@@ -10,8 +10,8 @@
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.13](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Live Speedometer, Copilot &amp; AI Bloat Killer, Кнопка «Тест сети HTTP 204», Game Booster, WinTUN, Real TLS-Ping, Anti-Freeze, 1-Click Автообновление).
-* 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.4](https://github.com/ANT1VEN0M/BunkerVPN)** (Прямой импорт .conf файлов WireGuard, Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
+* 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.2 Hotfix](https://github.com/ANT1VEN0M/BunkerVPN)** (Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker для кастомных обоев, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
 * 📡 **Мониторинг сети:** утилита **[Bunker URL Test v1.1.2 Universal](https://github.com/ANT1VEN0M/Bunker-Url-Test)** (Live Network Monitor доступности сервисов и цензуры ТСПУ для Android: Edge-to-Edge UI, параллельные проверки 4 сервисов, постоянная цифровая подпись до 2054 г.).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
 * 💖 **Поддержать Бункер Кота:** [СБП перевод в 1 клик (Озон Банк)](https://finance.ozon.ru/apps/sbp/ozonbankpay/01a1daa7-59df-7009-9fee-796763044ce6) • [Telegram Boost](https://t.me/boost/BUNKER_KOTA)
@@ -19,16 +19,16 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-25 07:17:08 МСК` (`2026-11-25 04:17:08 UTC`)
-- 🟢 **Всего активных проверенных нод:** `135`
-- 👑 **Золотая выборка (TOP-25 VIP):** `2`
+- 🕒 **Последнее авто-обновление:** `2026-11-25 17:23:18 МСК` (`2026-11-25 14:23:18 UTC`)
+- 🟢 **Всего активных проверенных нод:** `85`
+- 👑 **Золотая выборка (TOP-25 VIP):** `3`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `49`
-- 🌍 **Мировой Микс (YouTube / DPI):** `135`
-- 🤍 **Белый список (RU / BY):** `55`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `55`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `32`
+- 🌍 **Мировой Микс (YouTube / DPI):** `85`
+- 🤍 **Белый список (RU / BY):** `32`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `32`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
-- 💬 **Пожарный канал для Telegram:** `45`
+- 💬 **Пожарный канал для Telegram:** `32`
 
 ---
 
@@ -131,8 +131,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 - [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=w1.hiesen-proxy.ru&port=443&secret=ee19f35317df4dff3cab0202fa96ee51de676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=190.2.144.63&port=443&secret=eea3c15217ac9f487f3a9c2a1cab661ebb7777772e676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=212.118.53.195&port=443&secret=dd4482437e89f9af8929514eee7faaf61f)
 
 
 ---
