@@ -197,7 +197,11 @@ SOURCES = [
     # 80. Pozor Bond LexaVercelbot #6 (VLESS Mega Matrix 580+ nodes)
     "https://pozor.bond/sub/6i9dnv37cudz",
     # 81. Pozor Bond LexaVercelbot #7 (VLESS Standby Relay)
-    "https://pozor.bond/sub/vzal49dpeu1f"
+    "https://pozor.bond/sub/vzal49dpeu1f",
+    # 82. st0rer Clash Matrix (Hysteria 2 / VLESS)
+    "https://gist.github.com/st0rer/52759ee3f68c3d4b2f2d53c307867471/raw/clash.yaml",
+    # 83. skysph-dev V2Ray Aggregator (Trojan / VLESS)
+    "https://gist.github.com/skysph-dev/5b55986287442543485b30468db3eb65/raw/v2ray.txt"
 ]
 
 def clean_source_url(url: str) -> str:
