@@ -11,6 +11,7 @@
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
+* 🛡️ **Прямой обход ТСПУ (Windows):** утилита **[Bunker Anti-DPI v1.0](https://t.me/BUNKER_KOTA/1181)** (Прямой обход без серверов и VPN: YouTube 4K 60fps, Discord Voice & Media, автозапуск тихой службы).
 * 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.2 Hotfix](https://github.com/ANT1VEN0M/BunkerVPN)** (Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker для кастомных обоев, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
 * 📡 **Мониторинг сети:** утилита **[Bunker URL Test v1.1.2 Universal](https://github.com/ANT1VEN0M/Bunker-Url-Test)** (Live Network Monitor доступности сервисов и цензуры ТСПУ для Android: Edge-to-Edge UI, параллельные проверки 4 сервисов, постоянная цифровая подпись до 2054 г.).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
