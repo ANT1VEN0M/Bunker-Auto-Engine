@@ -10,7 +10,7 @@
 👉 **[https://ant1ven0m.github.io/Bunker-Auto-Engine/](https://ant1ven0m.github.io/Bunker-Auto-Engine/)**
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
-* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.13](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Live Speedometer, Copilot &amp; AI Bloat Killer, Кнопка «Тест сети HTTP 204», Game Booster, WinTUN, Real TLS-Ping, Anti-Freeze, 1-Click Автообновление).
+* 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.14](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Live Speedometer, Copilot &amp; AI Bloat Killer, Кнопка «Тест сети HTTP 204», Game Booster, WinTUN, Real TLS-Ping, Anti-Freeze, 1-Click Автообновление).
 * 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.4](https://github.com/ANT1VEN0M/BunkerVPN)** (Прямой импорт .conf файлов WireGuard, Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
 * 📡 **Мониторинг сети:** утилита **[Bunker URL Test v1.1.2 Universal](https://github.com/ANT1VEN0M/Bunker-Url-Test)** (Live Network Monitor доступности сервисов и цензуры ТСПУ для Android: Edge-to-Edge UI, параллельные проверки 4 сервисов, постоянная цифровая подпись до 2054 г.).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
