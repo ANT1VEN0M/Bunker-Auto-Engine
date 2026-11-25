@@ -469,6 +469,9 @@
         <button class="feed-pill active gold-pill" onclick="selectFeed('gold', this)">
           👑 Золотая Выборка
         </button>
+        <button class="feed-pill" style="border-color:rgba(239,68,68,0.4); color:#f87171;" onclick="selectFeed('youtube', this)">
+          📺 YouTube 4K Ultra
+        </button>
         <button class="feed-pill" onclick="selectFeed('mix', this)">
           🌍 Мировой Микс
         </button>
@@ -625,11 +628,28 @@
         <a href="https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_chat_translator.plugin" class="btn btn-secondary" style="font-size:12px; text-align:left;">
           🌐 <b>Bunker Chat Translator v1.2.7</b> — Плавный автоперевод чатов без вылетов
         </a>
+        <a href="https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/kot_proxy_v3.plugin" class="btn btn-secondary" style="font-size:12px; text-align:left;">
+          📡 <b>Bunker Proxy Publisher v3.3.0</b> — Публикация прокси в топики форумов с кликабельными ссылками
+        </a>
       </div>
       <div class="sub-box" style="margin-top:10px;">
         <div class="sub-url">https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json</div>
         <button class="copy-btn" onclick="navigator.clipboard.writeText('https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/extera-plugins.json'); triggerHaptic('impact');">Репозиторий</button>
       </div>
+    </div>
+
+    <!-- Telegram Bot Assistant -->
+    <div class="card" id="card-bot" style="border-color: rgba(0, 136, 204, 0.4); background: linear-gradient(145deg, rgba(16, 24, 39, 0.7) 0%, rgba(7, 9, 14, 0.9) 100%);">
+      <div class="card-title">
+        <span>🤖 Официальный Telegram-бот</span>
+        <span class="tag" style="background:rgba(0,136,204,0.15); color:#38bdf8; border-color:rgba(0,136,204,0.3);">@BunkerCatOSBot</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Умный помощник экосистемы Бункера в Telegram: выдача свежих подписок в 1 клик, прямое скачивание Bunker Anti-DPI для ПК и поддержка проекта.
+      </p>
+      <a href="https://t.me/BunkerCatOSBot" target="_blank" class="btn btn-primary" style="background:#0088cc; border-color:#0088cc; text-align:center;" onclick="triggerHaptic('impact')">
+        ✈️ Открыть @BunkerCatOSBot в Telegram
+      </a>
     </div>
 
     <!-- 4. Selected Feed Link Box with QR button -->
@@ -1064,6 +1084,12 @@
         label: "👑 Золотая Выборка (TOP-25 VIP)",
         file: "gold_b64.txt",
         desc: "Элитный пул из ТОП-25 самых быстрых серверов (Германия, Нидерланды, Финляндия, Швеция, США) с минимальным пингом и 100% Reality/Hysteria2."
+      },
+      youtube: {
+        name: "Bunker VPN | YouTube 4K Ultra",
+        label: "📺 YouTube 4K Ultra (Без буферизации)",
+        file: "youtube_b64.txt",
+        desc: "Специальный пул серверов, прошедших сквозной тест пробития ТСПУ на видеопотоках YouTube (4K 60fps без зависаний)."
       },
       mix: {
         name: "Bunker VPN | Микс",

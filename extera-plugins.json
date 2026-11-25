@@ -22,6 +22,16 @@
       "category": "appearance",
       "icon": "bunker_plugins/loader",
       "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/bunker_neon_loader.plugin"
+    },
+    {
+      "id": "kot_proxy_publisher",
+      "name": "Bunker Proxy Publisher 📡",
+      "version": "3.3.0",
+      "description": "Автоматическая публикация прокси в топики форумов и каналы с кликабельными синими ссылками. Поддержка AyuGram, ExteraGram и NimarkoGram.",
+      "author": "@k0tlux & Бункер Кота",
+      "category": "tools",
+      "icon": "bunker_plugins/proxy",
+      "download_url": "https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/plugins/kot_proxy_v3.plugin"
     }
   ]
 }

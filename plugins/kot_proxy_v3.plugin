@@ -1,0 +1,940 @@
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+  🐾 KOT PROXY PUBLISHER v3.3 — 100% NATIVE BLUE LINKS IN EXACT FORUM TOPICS
+================================================================================
+  Автор: @k0tlux (KOT ANTIDOT)
+  Версия: 3.3.0
+  Назначение: Персональный плагин для сбора рабочих прокси из Telegram и
+              моментальной публикации компактного поста с синими кликабельными
+              ссылками через SendMessagesHelper напрямую в текущий топик/чат.
+  Совместимость: ExteraGram / AyuGram / NimarkoGram / NekoX.
+================================================================================
+"""
+
+import html
+import json
+import os
+import re
+import sys
+import threading
+import time
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+# Android SDK & Java bridge
+from android.content import ClipData, Context
+from android.widget import Toast
+
+from android_utils import log, run_on_ui_thread
+from base_plugin import (
+    BasePlugin,
+    HookResult,
+    HookStrategy,
+    MenuItemData,
+    MenuItemType,
+)
+from client_utils import get_last_fragment
+from hook_utils import get_private_field
+from java import jclass
+from java.lang import Runnable
+
+from org.telegram.messenger import (
+    ApplicationLoader,
+    NotificationsController,
+    SendMessagesHelper,
+    SharedConfig,
+    UserConfig,
+)
+from org.telegram.tgnet import TLRPC
+from ui.settings import Divider, Header, Selector, Switch, Text
+
+__id__ = "kot_proxy_v33"
+__name__ = "Kot Proxy Publisher v3.3 ⚡️"
+__description__ = (
+    "Личный плагин для мгновенного сбора рабочих прокси из Telegram и "
+    "публикации чистого поста с синими кликабельными ссылками строго в открытый топик или чат."
+)
+__author__ = "@k0tlux (KOT ANTIDOT)"
+__version__ = "3.3.0"
+__icon__ = "msg_share"
+__min_version__ = "11.0.0"
+
+
+def _log(msg: str):
+    """Логирование в системный лог Android."""
+    try:
+        log(f"[KotProxyV33] {msg}")
+    except Exception:
+        pass
+
+
+def safe_notify(msg: str):
+    """Всплывающее уведомление (Toast) на UI-потоке."""
+    try:
+        def _toast():
+            try:
+                ctx = ApplicationLoader.applicationContext
+                if ctx:
+                    Toast.makeText(ctx, str(msg), Toast.LENGTH_SHORT).show()
+            except Exception:
+                pass
+        run_on_ui_thread(_toast)
+    except Exception:
+        _log(f"Notify: {msg}")
+
+
+def copy_to_clipboard(text: str):
+    """Копирование текста в буфер обмена Android."""
+    try:
+        def _copy():
+            ctx = ApplicationLoader.applicationContext
+            if ctx:
+                mgr = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+                if mgr:
+                    clip = ClipData.newPlainText("Telegram Proxies", text)
+                    mgr.setPrimaryClip(clip)
+        run_on_ui_thread(_copy)
+    except Exception as ex:
+        _log(f"Clipboard err: {ex}")
+
+
+def utf16_len(s: str) -> int:
+    """Точная длина строки в кодовых единицах UTF-16 (для MTProto смещений)."""
+    return len(s.encode("utf-16-le")) // 2
+
+
+def extract_context_info(ctx: Any = None, frag: Any = None) -> Tuple[int, int, Any]:
+    """
+    Глубокое и надежное извлечение (dialog_id, topic_id, thread_message_object):
+    1. dialog_id: ID чата/супергруппы/канала/ЛС
+    2. topic_id: точный ID темы в форуме
+    3. thread_message_object: MessageObject темы форума для SendMessageParams
+    """
+    dialog_id = 0
+    topic_id = 0
+    thread_msg_obj = None
+
+    if not frag and ctx is not None:
+        get_fn = getattr(ctx, "get", None)
+        if callable(get_fn):
+            try:
+                frag = get_fn("fragment")
+            except Exception:
+                pass
+
+    if not frag:
+        try:
+            frag = get_last_fragment()
+        except Exception:
+            pass
+
+    # -------------------------------------------------------------------------
+    # 1. Извлечение dialog_id
+    # -------------------------------------------------------------------------
+    try:
+        if ctx is not None:
+            get_fn = getattr(ctx, "get", None)
+            if callable(get_fn):
+                for key in ("dialog_id", "dialogId", "chat_id", "chatId", "peer_id", "peerId", "id"):
+                    try:
+                        v = get_fn(key)
+                        if v is not None:
+                            val = int(str(v).strip())
+                            if val != 0:
+                                dialog_id = val
+                                break
+                    except Exception:
+                        pass
+
+                if not dialog_id:
+                    for entity_key in ("chat", "currentChat", "user", "currentUser"):
+                        try:
+                            ent = get_fn(entity_key)
+                            if ent is not None:
+                                eid = getattr(ent, "id", None)
+                                if eid is not None:
+                                    val = int(str(eid).strip())
+                                    if val != 0:
+                                        dialog_id = -abs(val) if "chat" in entity_key.lower() else val
+                                        break
+                        except Exception:
+                            pass
+
+        if not dialog_id and frag is not None:
+            if hasattr(frag, "getDialogId") and callable(getattr(frag, "getDialogId")):
+                try:
+                    did = int(frag.getDialogId())
+                    if did != 0:
+                        dialog_id = did
+                except Exception:
+                    pass
+
+            if not dialog_id:
+                try:
+                    did = get_private_field(frag, "dialog_id")
+                    if did is not None:
+                        val = int(str(did).strip())
+                        if val != 0:
+                            dialog_id = val
+                except Exception:
+                    pass
+
+            if not dialog_id:
+                try:
+                    c = getattr(frag, "currentChat", None)
+                    if c is not None:
+                        cid = getattr(c, "id", 0)
+                        if cid:
+                            dialog_id = -abs(int(cid))
+                except Exception:
+                    pass
+
+            if not dialog_id:
+                try:
+                    u = getattr(frag, "currentUser", None)
+                    if u is not None:
+                        uid = getattr(u, "id", 0)
+                        if uid:
+                            dialog_id = int(uid)
+                except Exception:
+                    pass
+    except Exception as e_did:
+        _log(f"dialog_id extraction err: {e_did}")
+
+    # -------------------------------------------------------------------------
+    # 2. Извлечение topic_id и thread_message_object
+    # -------------------------------------------------------------------------
+    try:
+        if frag is not None:
+            # A. Проверяем методы ChatActivity
+            if hasattr(frag, "getTopicId") and callable(getattr(frag, "getTopicId")):
+                try:
+                    tid = int(frag.getTopicId())
+                    if tid > 0:
+                        topic_id = tid
+                        _log(f"topic_id from frag.getTopicId(): {topic_id}")
+                except Exception:
+                    pass
+
+            if not topic_id and hasattr(frag, "getThreadId") and callable(getattr(frag, "getThreadId")):
+                try:
+                    tid = int(frag.getThreadId())
+                    if tid > 0:
+                        topic_id = tid
+                        _log(f"topic_id from frag.getThreadId(): {topic_id}")
+                except Exception:
+                    pass
+
+            # B. Проверяем MessageObject темы
+            try:
+                if hasattr(frag, "getThreadMessage") and callable(getattr(frag, "getThreadMessage")):
+                    thread_msg_obj = frag.getThreadMessage()
+                if not thread_msg_obj:
+                    thread_msg_obj = getattr(frag, "threadMessageObject", None) or get_private_field(frag, "threadMessageObject")
+                if not thread_msg_obj:
+                    thread_msg_obj = getattr(frag, "replyingMessageObject", None) or get_private_field(frag, "replyingMessageObject")
+
+                if thread_msg_obj is not None and not topic_id:
+                    t_id = getattr(thread_msg_obj, "getId", None)
+                    if callable(t_id):
+                        val = int(t_id())
+                        if val > 0:
+                            topic_id = val
+                            _log(f"topic_id from thread_msg_obj.getId(): {topic_id}")
+            except Exception as e_th:
+                _log(f"thread_msg_obj err: {e_th}")
+
+            # C. Проверяем прямые поля ChatActivity
+            if not topic_id:
+                for fld in ("threadMessageId", "topicId", "topic_id", "currentTopicId"):
+                    try:
+                        val = getattr(frag, fld, 0)
+                        if not val:
+                            val = get_private_field(frag, fld)
+                        if val and int(val) > 0:
+                            topic_id = int(val)
+                            _log(f"topic_id from frag.{fld}: {topic_id}")
+                            break
+                    except Exception:
+                        pass
+
+            # D. Проверяем объект forumTopic / currentTopic
+            if not topic_id:
+                for tfld in ("forumTopic", "currentTopic", "topic"):
+                    try:
+                        top = getattr(frag, tfld, None) or get_private_field(frag, tfld)
+                        if top is not None:
+                            for idf in ("id", "top_message", "topic_id"):
+                                val = getattr(top, idf, 0)
+                                if val and int(val) > 0:
+                                    topic_id = int(val)
+                                    _log(f"topic_id from frag.{tfld}.{idf}: {topic_id}")
+                                    break
+                        if topic_id:
+                            break
+                    except Exception:
+                        pass
+
+            # E. Проверяем ChatActivityEnterView
+            if not topic_id:
+                try:
+                    ev = getattr(frag, "chatActivityEnterView", None) or get_private_field(frag, "chatActivityEnterView")
+                    if ev is not None:
+                        for evf in ("topicId", "topic_id", "currentTopicId", "threadId", "threadMessageId"):
+                            val = getattr(ev, evf, 0) or get_private_field(ev, evf)
+                            if val and int(val) > 0:
+                                topic_id = int(val)
+                                _log(f"topic_id from enter_view.{evf}: {topic_id}")
+                                break
+                except Exception:
+                    pass
+
+            # F. Проверяем getArguments() Bundle
+            if not topic_id:
+                try:
+                    args = frag.getArguments() if hasattr(frag, "getArguments") else None
+                    if args is not None:
+                        for k in ("topic_id", "topicId", "threadMessageId", "thread_id", "message_thread_id"):
+                            for getter in ("getLong", "getInt"):
+                                try:
+                                    v = getattr(args, getter)(k, 0)
+                                    if v and int(v) > 0:
+                                        topic_id = int(v)
+                                        _log(f"topic_id from args.{k}: {topic_id}")
+                                        break
+                                except Exception:
+                                    pass
+                            if topic_id:
+                                break
+                except Exception:
+                    pass
+
+        # ---------------------------------------------------------------------
+        # 3. Проверяем NotificationsController.openedTopicId
+        # ---------------------------------------------------------------------
+        if not topic_id:
+            try:
+                account = UserConfig.selectedAccount
+                nc = NotificationsController.getInstance(account)
+                if nc is not None:
+                    op_topic = getattr(nc, "openedTopicId", 0) or get_private_field(nc, "openedTopicId")
+                    if op_topic and int(op_topic) > 0:
+                        topic_id = int(op_topic)
+                        _log(f"topic_id from NotificationsController.openedTopicId: {topic_id}")
+            except Exception:
+                pass
+
+        # ---------------------------------------------------------------------
+        # 4. Проверяем контекст ctx
+        # ---------------------------------------------------------------------
+        if not topic_id and ctx is not None:
+            get_fn = getattr(ctx, "get", None)
+            if callable(get_fn):
+                for k in ("topicId", "topic_id", "threadId", "thread_id", "threadMessageId", "topMessageId"):
+                    try:
+                        v = get_fn(k)
+                        if v and int(str(v).strip()) > 0:
+                            topic_id = int(str(v).strip())
+                            _log(f"topic_id from ctx[{k}]: {topic_id}")
+                            break
+                    except Exception:
+                        pass
+
+    except Exception as e_top:
+        _log(f"extract topic err: {e_top}")
+
+    # -------------------------------------------------------------------------
+    # 5. Создание MessageObject топика, если есть topic_id, но нет объекта
+    # -------------------------------------------------------------------------
+    if topic_id > 0 and thread_msg_obj is None:
+        try:
+            account = UserConfig.selectedAccount
+            MessageObject = jclass("org.telegram.messenger.MessageObject")
+            tl_msg = TLRPC.TL_message()
+            tl_msg.id = int(topic_id)
+            if dialog_id < 0:
+                tl_msg.peer_id = TLRPC.TL_peerChannel()
+                tl_msg.peer_id.channel_id = abs(int(dialog_id))
+            else:
+                tl_msg.peer_id = TLRPC.TL_peerUser()
+                tl_msg.peer_id.user_id = int(dialog_id)
+
+            thread_msg_obj = MessageObject(account, tl_msg, False, False)
+            thread_msg_obj.isTopicMainMessage = True
+            _log(f"Создан синтетический MessageObject для топика #{topic_id}")
+        except Exception as ex_syn:
+            _log(f"Ошибка создания MessageObject: {ex_syn}")
+
+    return dialog_id, topic_id, thread_msg_obj
+
+
+class KotProxyPublisherPlugin(BasePlugin):
+    """Персональный плагин Александра v3.3: 100% синие ссылки строго в открытый топик."""
+
+    def __init__(self):
+        super().__init__()
+        self._chat_menu_item = None
+
+    def on_plugin_load(self):
+        _log("Инициализация Kot Proxy Publisher v3.3...")
+
+        # Очищаем кэш старых модулей в Chaquopy
+        for mod in list(sys.modules.keys()):
+            if "kot_proxy" in mod and mod != __name__:
+                try:
+                    del sys.modules[mod]
+                except Exception:
+                    pass
+
+        # 1. Хук быстрых команд (.proxy, .p) в поле ввода
+        try:
+            self.add_on_send_message_hook()
+            _log("Хук быстрых команд (.proxy, .p) подключён.")
+        except Exception as e:
+            _log(f"Ошибка регистрации on_send_message_hook: {e}")
+
+        # 2. Пункт в меню действий чата (3 точки в шапке любого топика/чата)
+        self._sync_chat_menu()
+
+        _log("Kot Proxy Publisher v3.3 готов к работе!")
+
+    def on_plugin_unload(self):
+        _log("Выгрузка Kot Proxy Publisher v3.3...")
+        try:
+            if self._chat_menu_item:
+                self.remove_menu_item("kot_publish_proxy_v33")
+        except Exception:
+            pass
+
+    def _sync_chat_menu(self):
+        """Регистрирует кнопку в меню чата (три точки)."""
+        for old_id in (
+            "kot_publish_proxy_v33",
+            "kot_publish_proxy_v32",
+            "kot_publish_proxy_v31",
+            "kot_publish_proxy_v3",
+            "kot_publish_proxy_v2",
+            "kot_publish_proxy",
+        ):
+            try:
+                self.remove_menu_item(old_id)
+            except Exception:
+                pass
+
+        try:
+            self._chat_menu_item = self.add_menu_item(
+                MenuItemData(
+                    menu_type=MenuItemType.CHAT_ACTION_MENU,
+                    text="📡 Опубликовать мои прокси",
+                    icon="msg_share",
+                    item_id="kot_publish_proxy_v33",
+                    on_click=self._on_chat_action_publish,
+                )
+            )
+            _log("Кнопка 'Опубликовать мои прокси' v3.3 добавлена в меню чата.")
+        except Exception as e:
+            _log(f"Ошибка добавления в CHAT_ACTION_MENU: {e}")
+
+    def collect_live_proxies(self) -> List[Dict[str, Any]]:
+        """Извлекает сохранённые прокси напрямую из SharedConfig Telegram."""
+        proxies = []
+        seen = set()
+
+        try:
+            plist = getattr(SharedConfig, "proxyList", None)
+            if not plist:
+                return proxies
+
+            size = plist.size() if hasattr(plist, "size") else len(plist)
+            for i in range(size):
+                p = plist.get(i) if hasattr(plist, "get") else plist[i]
+                if p is None:
+                    continue
+
+                addr = str(getattr(p, "address", "") or "").strip()
+                try:
+                    port = int(getattr(p, "port", 0) or 0)
+                except Exception:
+                    port = 0
+
+                if not addr or port <= 0:
+                    continue
+
+                key = f"{addr}:{port}"
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                secret = str(getattr(p, "secret", "") or "").strip()
+                user = str(getattr(p, "user", "") or "").strip()
+                pwd = str(getattr(p, "password", "") or "").strip()
+
+                ping_raw = getattr(p, "ping", 0)
+                try:
+                    ping_ms = int(ping_raw)
+                except Exception:
+                    ping_ms = 0
+
+                available = bool(getattr(p, "available", False))
+
+                # MTProto или SOCKS5
+                if secret:
+                    url = f"https://t.me/proxy?server={addr}&port={port}&secret={secret}"
+                    ptype = "MTProto"
+                else:
+                    if user and pwd:
+                        url = f"https://t.me/socks?server={addr}&port={port}&user={user}&pass={pwd}"
+                    elif user:
+                        url = f"https://t.me/socks?server={addr}&port={port}&user={user}"
+                    else:
+                        url = f"https://t.me/socks?server={addr}&port={port}"
+                    ptype = "SOCKS5"
+
+                proxies.append({
+                    "url": url,
+                    "ping": ping_ms,
+                    "available": available,
+                    "type": ptype,
+                    "address": addr,
+                    "port": port,
+                })
+
+        except Exception as exc:
+            _log(f"collect_live_proxies error: {exc}")
+
+        return proxies
+
+    def get_filtered_proxies(self) -> Tuple[List[Dict[str, Any]], str, str, int]:
+        """Возвращает отфильтрованные и отсортированные прокси с метаданными поста."""
+        raw_proxies = self.collect_live_proxies()
+        if not raw_proxies:
+            return [], "", "", 2
+
+        # 1. Фильтрация рабочих
+        filter_working = self.get_setting("filter_working", True)
+        if filter_working:
+            working = [p for p in raw_proxies if p["available"] or p["ping"] > 0]
+            proxies = working if working else raw_proxies
+        else:
+            proxies = raw_proxies
+
+        # 2. Сортировка по пингу
+        if self.get_setting("sort_by_ping", True):
+            proxies.sort(key=lambda x: (0 if x["ping"] > 0 else 1, x["ping"]))
+
+        # 3. Лимит количества
+        max_idx = self.get_setting("max_count_idx", 2)
+        limits = [6, 8, 10, 12, 14, 16, 20, 0]
+        limit = limits[max_idx] if 0 <= max_idx < len(limits) else 10
+        if limit > 0:
+            proxies = proxies[:limit]
+
+        # 4. Статистика пинга
+        valid_pings = [p["ping"] for p in proxies if p["ping"] > 0]
+        if valid_pings:
+            min_p = min(valid_pings)
+            max_p = max(valid_pings)
+            avg_p = sum(valid_pings) // len(valid_pings)
+            ping_info = f"Ping : {min_p} - {max_p} ms ( Avg {avg_p} ms )"
+        else:
+            ping_info = "Status : Online • Ultra Fast"
+
+        # 5. Заголовок
+        header_style = self.get_setting("header_style_idx", 0)
+        if header_style == 0:
+            header_text = "👑 KOT VIP PROXY ⚡️"
+        elif header_style == 1:
+            header_text = "⚡️ TELEGRAM FAST PROXY 🛡"
+        else:
+            header_text = "🐈‍⬛ BUNKER PROXY ⚡️"
+
+        # 6. Колонки
+        col_idx = self.get_setting("columns_idx", 0)
+        cols = 2 if col_idx == 0 else (3 if col_idx == 1 else 1)
+
+        return proxies, header_text, ping_info, cols
+
+    def build_proxy_payloads(self) -> Tuple[str, Any, str]:
+        """
+        Формирует:
+        1. clean_text — чистый текст для отправки
+        2. java_entities — Java ArrayList с точными TLRPC.TL_messageEntityTextUrl
+        3. html_text — HTML разметка с <a href="..."> для универсальной совместимости
+        """
+        proxies, header_text, ping_info, cols = self.get_filtered_proxies()
+        if not proxies:
+            return "", None, ""
+
+        show_footer = self.get_setting("show_footer", True)
+        footer_text = "🚀 Нажми на любой прокси для подключения"
+        divider = "──────────────\n"
+
+        java_entities = jclass("java.util.ArrayList")()
+        current_offset = 0
+
+        # Заголовок (Bold)
+        header_line = header_text + "\n\n"
+        bold_ent = TLRPC.TL_messageEntityBold()
+        bold_ent.offset = int(current_offset)
+        bold_ent.length = int(utf16_len(header_text))
+        java_entities.add(bold_ent)
+        current_offset += utf16_len(header_line)
+
+        # Подзаголовок
+        sub_line = "TG Proxy (Wi-Fi / Mobile)\n" + ping_info + "\n\n"
+        current_offset += utf16_len(sub_line)
+
+        # Разделитель
+        current_offset += utf16_len(divider)
+
+        # Сетка прокси
+        plain_grid_lines = []
+        html_grid_lines = []
+        spacing = "   " if cols == 2 else "  "
+
+        for i in range(0, len(proxies), cols):
+            chunk = proxies[i:i + cols]
+            line_parts_plain = []
+            line_parts_html = []
+            line_start_offset = current_offset
+
+            for j, p in enumerate(chunk):
+                idx = i + j + 1
+                label = f"Proxy #{idx:02d}"
+                prefix = "▫️ "
+
+                already_len = utf16_len(spacing.join(line_parts_plain) + (spacing if line_parts_plain else ""))
+                item_offset = line_start_offset + already_len + utf16_len(prefix)
+
+                # Точная MTProto гиперссылка на Proxy #{idx:02d}
+                url_ent = TLRPC.TL_messageEntityTextUrl()
+                url_ent.offset = int(item_offset)
+                url_ent.length = int(utf16_len(label))
+                url_ent.url = str(p["url"])
+                java_entities.add(url_ent)
+
+                line_parts_plain.append(f"{prefix}{label}")
+                line_parts_html.append(f'{prefix}<a href="{p["url"]}">{label}</a>')
+
+            line_full = spacing.join(line_parts_plain) + "\n"
+            current_offset += utf16_len(line_full)
+            plain_grid_lines.append(line_full)
+            html_grid_lines.append(spacing.join(line_parts_html) + "\n")
+
+        clean_text = header_line + sub_line + divider + "".join(plain_grid_lines)
+
+        # Футер
+        if show_footer:
+            clean_text += divider
+            current_offset += utf16_len(divider)
+
+            italic_ent = TLRPC.TL_messageEntityItalic()
+            italic_ent.offset = int(current_offset)
+            italic_ent.length = int(utf16_len(footer_text))
+            java_entities.add(italic_ent)
+
+            clean_text += footer_text
+
+        # HTML строка
+        html_text = (
+            f"<b>{header_text}</b>\n\n"
+            f"TG Proxy (Wi-Fi / Mobile)\n"
+            f"{ping_info}\n\n"
+            f"{divider}"
+            f"{''.join(html_grid_lines)}"
+        )
+        if show_footer:
+            html_text += f"{divider}<i>{footer_text}</i>"
+
+        return clean_text, java_entities, html_text
+
+    def send_post_direct(
+        self,
+        dialog_id: int,
+        topic_id: int = 0,
+        thread_msg_obj: Any = None,
+        frag: Any = None
+    ) -> bool:
+        """
+        Гарантированная отправка сообщения со 100% синими кликабельными ссылками
+        напрямую через SendMessagesHelper в указанный чат и открытый топик.
+        """
+        clean_text, java_entities, html_text = self.build_proxy_payloads()
+        if not clean_text:
+            return False
+
+        account = UserConfig.selectedAccount
+        _log(
+            f"send_post_direct: dialog_id={dialog_id}, topic_id={topic_id}, "
+            f"thread_msg={'YES' if thread_msg_obj else 'NO'}, "
+            f"entities={java_entities.size() if java_entities else 0}"
+        )
+
+        helper = SendMessagesHelper.getInstance(account)
+
+        # ------------------------------------------------------------------
+        # Вариант A: SendMessageParams.of(...)
+        # ------------------------------------------------------------------
+        try:
+            params = SendMessagesHelper.SendMessageParams.of(
+                clean_text,
+                int(dialog_id),
+                thread_msg_obj,  # replyToMsg
+                thread_msg_obj,  # replyToTopMsg
+                None,            # webPage
+                False,           # searchLinks (отключает карточки превью)
+                java_entities,   # entities со смещениями
+                None,            # replyMarkup
+                None,            # params
+                True,            # notify
+                0,               # scheduleDate
+                0,               # scheduleRepeatPeriod
+                None,            # sendAnimationData
+                False            # updateStickersOrder
+            )
+
+            if frag is not None and hasattr(frag, "getMessageChatSendParams"):
+                try:
+                    params.sendMessageChatArguments = frag.getMessageChatSendParams()
+                except Exception:
+                    pass
+
+            helper.sendMessage(params)
+            _log(f"Успех Вариант A: SendMessageParams.of отправлен в топик #{topic_id}!")
+            return True
+        except Exception as e_of:
+            _log(f"Вариант A err: {e_of}")
+
+        # ------------------------------------------------------------------
+        # Вариант B: Прямая инициализация SendMessageParams
+        # ------------------------------------------------------------------
+        try:
+            params_cls = jclass("org.telegram.messenger.SendMessagesHelper$SendMessageParams")
+            params = params_cls()
+            params.peer = int(dialog_id)
+            params.message = clean_text
+            params.entities = java_entities
+            params.searchLinks = False
+
+            if thread_msg_obj is not None:
+                params.replyToMsg = thread_msg_obj
+                params.replyToTopMsg = thread_msg_obj
+
+            if frag is not None and hasattr(frag, "getMessageChatSendParams"):
+                try:
+                    params.sendMessageChatArguments = frag.getMessageChatSendParams()
+                except Exception:
+                    pass
+
+            helper.sendMessage(params)
+            _log(f"Успех Вариант B: SendMessageParams direct отправлен в топик #{topic_id}!")
+            return True
+        except Exception as e_direct:
+            _log(f"Вариант B err: {e_direct}")
+
+        # ------------------------------------------------------------------
+        # Вариант C: parse_text + SendMessagesHelper
+        # ------------------------------------------------------------------
+        try:
+            from extera_utils.text_formatting import parse_text
+            parsed = parse_text(html_text, parse_mode="HTML")
+            if parsed and isinstance(parsed, dict) and "text" in parsed and "entities" in parsed:
+                params_cls = jclass("org.telegram.messenger.SendMessagesHelper$SendMessageParams")
+                params = params_cls()
+                params.peer = int(dialog_id)
+                params.message = parsed["text"]
+                params.entities = parsed["entities"]
+                params.searchLinks = False
+
+                if thread_msg_obj is not None:
+                    params.replyToMsg = thread_msg_obj
+                    params.replyToTopMsg = thread_msg_obj
+
+                if frag is not None and hasattr(frag, "getMessageChatSendParams"):
+                    try:
+                        params.sendMessageChatArguments = frag.getMessageChatSendParams()
+                    except Exception:
+                        pass
+
+                helper.sendMessage(params)
+                _log("Успех Вариант C: parse_text + SendMessagesHelper отправлен!")
+                return True
+        except Exception as e_c:
+            _log(f"Вариант C err: {e_c}")
+
+        # ------------------------------------------------------------------
+        # Вариант D: client_utils.send_text
+        # ------------------------------------------------------------------
+        try:
+            from client_utils import send_text
+            kwargs = {"parse_mode": "HTML"}
+            if topic_id > 0:
+                kwargs["replyToMsg"] = int(topic_id)
+                kwargs["topicId"] = int(topic_id)
+            send_text(int(dialog_id), html_text, **kwargs)
+            _log("Успех Вариант D: client_utils.send_text!")
+            return True
+        except Exception as e_d:
+            _log(f"Вариант D err: {e_d}")
+
+        return False
+
+    def _on_chat_action_publish(self, ctx: Any):
+        """
+        Мгновенная публикация чистого поста со 100% синими ссылками в 1 клик.
+        Вызывает SendMessagesHelper напрямую, отправляя TLRPC-сущности строго в открытый топик.
+        """
+        try:
+            frag = get_last_fragment()
+            dialog_id, topic_id, thread_msg = extract_context_info(ctx, frag)
+
+            if dialog_id == 0:
+                safe_notify("⚠️ Не удалось определить чат")
+                return
+
+            _log(
+                f"_on_chat_action_publish: dialog_id={dialog_id}, topic_id={topic_id}, "
+                f"thread_msg={'FOUND' if thread_msg else 'NONE'}"
+            )
+
+            success = self.send_post_direct(dialog_id, topic_id, thread_msg, frag)
+            if success:
+                target_desc = f"топик #{topic_id}" if topic_id > 0 else "чат"
+                safe_notify(f"🚀 Пост с прокси опубликован в {target_desc}!")
+            else:
+                clean_text, _, _ = self.build_proxy_payloads()
+                copy_to_clipboard(clean_text)
+                safe_notify("📋 Скопировано в буфер!")
+
+        except Exception as exc:
+            _log(f"Publish error: {exc}")
+            safe_notify(f"Ошибка публикации: {exc}")
+
+    def on_send_message_hook(self, account, params):
+        """
+        Перехват ввода .p или .proxy в чате или топике форума.
+        Подставляет в SendMessageParams чистый текст, синие ссылки и сохраняет топик.
+        """
+        try:
+            if not self.get_setting("enabled", True):
+                return HookResult()
+            if not self.get_setting("cmd_enabled", True):
+                return HookResult()
+            if not hasattr(params, "message") or not isinstance(params.message, str):
+                return HookResult()
+
+            text = params.message.strip()
+            if text in (".p", ".proxy", ".proxies", "!p", "!proxy") or text.startswith(".p ") or text.startswith(".proxy "):
+                clean_text, java_entities, html_text = self.build_proxy_payloads()
+                if not clean_text:
+                    safe_notify("⚠️ Нет рабочих прокси в Telegram")
+                    return HookResult(strategy=HookStrategy.CANCEL)
+
+                # Применяем текст и сущности
+                params.message = clean_text
+                params.entities = java_entities
+                try:
+                    params.searchLinks = False
+                except Exception:
+                    pass
+
+                # Если в params не был привязан топик, страхуем через активный экран
+                if getattr(params, "replyToTopMsg", None) is None:
+                    try:
+                        frag = get_last_fragment()
+                        _, _, thread_msg = extract_context_info(None, frag)
+                        if thread_msg is not None:
+                            params.replyToTopMsg = thread_msg
+                            if getattr(params, "replyToMsg", None) is None:
+                                params.replyToMsg = thread_msg
+                            _log("on_send_message_hook: топик прикреплён к params!")
+                    except Exception as ex_hk:
+                        _log(f"hook topic bind err: {ex_hk}")
+
+                safe_notify("🐾 Пост с прокси отправлен!")
+                return HookResult(strategy=HookStrategy.MODIFY_FINAL)
+
+        except Exception as e:
+            _log(f"on_send_message_hook err: {e}")
+
+        return HookResult()
+
+    def create_settings(self):
+        """Интерактивное меню настроек плагина в интерфейсе Telegram."""
+        return [
+            Header(text="🐾 Настройки Kot Proxy Publisher v3.3"),
+            Switch(
+                key="enabled",
+                text="Включить плагин",
+                default=True,
+                subtext="Активирует функционал мгновенной публикации прокси",
+            ),
+            Switch(
+                key="cmd_enabled",
+                text="Быстрая команда (.p / .proxy)",
+                default=True,
+                subtext="Отправка поста при вводе команды .p или .proxy в поле сообщения",
+            ),
+            Divider(),
+            Header(text="🎨 Внешний вид публикации"),
+            Selector(
+                key="header_style_idx",
+                text="Стиль заголовка",
+                default=0,
+                items=[
+                    "👑 KOT VIP PROXY ⚡️",
+                    "⚡️ TELEGRAM FAST PROXY 🛡",
+                    "🐈‍⬛ BUNKER PROXY ⚡️",
+                ],
+            ),
+            Selector(
+                key="columns_idx",
+                text="Формат сетки ссылок",
+                default=0,
+                items=[
+                    "2 колонки (Компактный VIP: Proxy #01   Proxy #02)",
+                    "3 колонки (Ультра-компакт)",
+                    "1 колонка (Классический список)",
+                ],
+            ),
+            Selector(
+                key="max_count_idx",
+                text="Количество прокси в посте",
+                default=2,
+                items=[
+                    "6 прокси",
+                    "8 прокси",
+                    "10 прокси (Рекомендуется)",
+                    "12 прокси",
+                    "14 прокси",
+                    "16 прокси",
+                    "20 прокси",
+                    "Все рабочие",
+                ],
+            ),
+            Switch(
+                key="show_footer",
+                text="Инструкция внизу поста",
+                default=True,
+                subtext="🚀 Нажми на любой прокси для подключения",
+            ),
+            Divider(),
+            Header(text="⚡️ Фильтрация и проверка"),
+            Switch(
+                key="filter_working",
+                text="Только живые прокси",
+                default=True,
+                subtext="Исключает недоступные серверы и серверы с таймаутом",
+            ),
+            Switch(
+                key="sort_by_ping",
+                text="Сортировка по пингу",
+                default=True,
+                subtext="Самые скоростные серверы ставятся первыми в списке",
+            ),
+            Divider(),
+            Text(
+                text="🐾 Разработано специально для @k0tlux (KOT ANTIDOT)",
+                subtext="Версия 3.3.0 • Гарантированная отправка в открытый топик форума",
+            ),
+        ]
