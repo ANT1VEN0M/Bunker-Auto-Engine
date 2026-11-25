@@ -309,6 +309,20 @@ def generate_subscriptions(alive_nodes: list[dict]):
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
     fast_candidates.sort(key=fast_sort_key)
 
+    # YouTube 4K stream nodes (VLESS, Trojan, Hy2 with deep verification or fast ping)
+    def yt_sort_key(n):
+        is_yt = 0 if n.get("youtube_ok") else 1
+        is_vless = 0 if n.get("proto") == "vless" else 1
+        is_443 = 0 if n.get("port") == 443 else 1
+        ping = n.get("ping_ms", 9999)
+        return (is_yt, is_vless, is_443, ping)
+
+    yt_candidates = [
+        n for n in alive_nodes
+        if n.get("proto") in ("vless", "trojan", "hy2", "vmess") and n.get("country") not in ("RU", "BY", "IR", "CN")
+    ]
+    yt_candidates.sort(key=yt_sort_key)
+
     # Limit lists
     limit_gold = gold_candidates[:25]
     limit_mix = mix_nodes[:250]
@@ -317,6 +331,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     limit_fast = fast_candidates[:50]
     limit_tg = tg_nodes[:60]
     limit_discord = discord_nodes[:75]
+    limit_youtube = yt_candidates[:40]
 
     # Build branded URIs
     gold_uris = []
@@ -394,6 +409,15 @@ def generate_subscriptions(alive_nodes: list[dict]):
         remark = f"🎮 {flag} [{c}] Бункер Discord Voice #{idx:02d} | {p} | ⚡{ping}ms"
         discord_uris.append(build_branded_uri(node, remark))
 
+    youtube_uris = []
+    for idx, node in enumerate(limit_youtube, 1):
+        flag = get_flag_emoji(node.get("country", "UN"))
+        c = node.get("country", "UN")
+        p = node.get("proto", "").upper()
+        ping = node.get("ping_ms", 0)
+        remark = f"📺 {flag} [{c}] Бункер YouTube 4K #{idx:02d} | {p} | ⚡{ping}ms"
+        youtube_uris.append(build_branded_uri(node, remark))
+
     # Generate Cloudflare WARP+ WireGuard & WARP-MASQUE pool
     # Dedicated WARP & MASQUE feeds are generated in sub/warp*
     # AntiNET / NekoBox receive 16 verified live VLESS-Reality nodes in sub/warp_masque_b64.txt
@@ -413,6 +437,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
     write_sub_files("tg", tg_uris)
     write_sub_files("discord", discord_uris)
     write_sub_files("game", discord_uris)
+    write_sub_files("youtube", youtube_uris)
+    write_sub_files("yt", youtube_uris)
 
     # Export gold.json for Sing-box / Hiddify / Amnezia
     try:
@@ -472,6 +498,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
         len(fast_uris),
         len(tg_uris),
         len(discord_uris),
+        len(youtube_uris),
         mtproto_links
     )
 
@@ -484,6 +511,7 @@ def generate_readme(
     fast_count: int,
     tg_count: int,
     discord_count: int,
+    youtube_count: int,
     mtproto_links: list[str]
 ):
     msk_tz = timezone(timedelta(hours=3))
@@ -529,6 +557,7 @@ def generate_readme(
 - 🤍 **Белый список (RU / BY):** `{bs_count}`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `{factory_count}`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `{fast_count}`
+- 📺 **YouTube 4K Ultra (Без буферизации):** `{youtube_count}`
 - 💬 **Пожарный канал для Telegram:** `{tg_count}`
 
 ---
@@ -632,6 +661,26 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 {mtproto_md_buttons}
+
+---
+
+### 8. 📺 YouTube 4K Ultra (Специальный пул без буферизации под ТСПУ)
+Серверы, прошедшие сквозную проверку пробития ТСПУ на видеопотоках YouTube (4K 60fps без зависаний):
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube_b64.txt
+```
+*В открытом виде (список ключей):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/youtube_b64.txt
+```
 
 ---
 

@@ -369,6 +369,20 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
                     verified = dict(c)
                     verified["ping_ms"] = real_ping
                     verified["deep_verified"] = True
+                    
+                    # Dedicated YouTube 4K stream probe
+                    try:
+                        yt_t0 = time.perf_counter()
+                        yt_req = urllib.request.Request("https://www.youtube.com/generate_204", headers={"User-Agent": "Mozilla/5.0"})
+                        yt_resp = opener.open(yt_req, timeout=2.5)
+                        if yt_resp.status in [200, 204]:
+                            verified["youtube_ok"] = True
+                            verified["youtube_ping_ms"] = max(1, int((time.perf_counter() - yt_t0) * 1000))
+                        else:
+                            verified["youtube_ok"] = False
+                    except Exception:
+                        verified["youtube_ok"] = False
+
                     return verified
             except Exception:
                 continue
