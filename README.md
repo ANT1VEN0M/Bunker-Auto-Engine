@@ -11,7 +11,6 @@
 
 * 🍏 **iOS (iPhone/iPad):** автоматическое добавление в приложение **Karing** в 1 клик.
 * 💻 **Windows (ПК):** фирменный клиент **[BunkerVPN для Windows v1.0.8](https://github.com/ANT1VEN0M/BunkerVPN-Windows)** (Game Booster, Full-Cone UDP, Discord Voice & Brawl Stars Fix, TUN, Виджет сервисов ТСПУ, URL Test, Автосортировка по пингу, 1-Click Автообновление).
-* 🛡️ **Прямой обход ТСПУ (Windows):** утилита **[Bunker Anti-DPI v1.0](https://t.me/BUNKER_KOTA/1181)** (Прямой обход без серверов и VPN: YouTube 4K 60fps, Discord Voice & Media, автозапуск тихой службы).
 * 🤖 **Android:** фирменный клиент **[BunkerVPN v1.4.2 Hotfix](https://github.com/ANT1VEN0M/BunkerVPN)** (Hotfix раздельного туннелирования для Android 14–17 / Private Space / Dual Apps, Google Photo Picker для кастомных обоев, адаптивная иконка Pixel Material You, Stealth OLED, WARP+ 880).
 * 📡 **Мониторинг сети:** утилита **[Bunker URL Test v1.1.2 Universal](https://github.com/ANT1VEN0M/Bunker-Url-Test)** (Live Network Monitor доступности сервисов и цензуры ТСПУ для Android: Edge-to-Edge UI, параллельные проверки 4 сервисов, постоянная цифровая подпись до 2054 г.).
 * 👥 **Сообщество Бункера:** **1400+ активных подписчиков** в официальном канале [@BUNKER_KOTA](https://t.me/BUNKER_KOTA).
@@ -20,16 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-25 19:29:31 МСК` (`2026-11-25 16:29:31 UTC`)
-- 🟢 **Всего активных проверенных нод:** `82`
-- 👑 **Золотая выборка (TOP-25 VIP):** `1`
+- 🕒 **Последнее авто-обновление:** `2026-11-25 22:17:34 МСК` (`2026-11-25 19:17:34 UTC`)
+- 🟢 **Всего активных проверенных нод:** `70`
+- 👑 **Золотая выборка (TOP-25 VIP):** `0`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `22`
-- 🌍 **Мировой Микс (YouTube / DPI):** `82`
-- 🤍 **Белый список (RU / BY):** `23`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `23`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `24`
+- 🌍 **Мировой Микс (YouTube / DPI):** `70`
+- 🤍 **Белый список (RU / BY):** `25`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `25`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
-- 💬 **Пожарный канал для Telegram:** `22`
+- 📺 **YouTube 4K Ultra (Без буферизации):** `40`
+- 💬 **Пожарный канал для Telegram:** `24`
 
 ---
 
@@ -131,10 +131,30 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=1.arizo.org&port=443&secret=ee1603010200010001fc030386e24c3add6d656469612e737465616d706f77657265642e636f6d)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.234.147.19&port=443&secret=00000000000000000000000000000000)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=my.silvpn.su&port=443&secret=eeea7a1978e167c0842ce31a16749038da6d792e6e657763646e2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=w1.hiesen-proxy.ru&port=443&secret=ee19f35317df4dff3cab0202fa96ee51de676f6f676c652e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
 
+
+---
+
+### 8. 📺 YouTube 4K Ultra (Специальный пул без буферизации под ТСПУ)
+Серверы, прошедшие сквозную проверку пробития ТСПУ на видеопотоках YouTube (4K 60fps без зависаний):
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube_b64.txt
+```
+*Зеркало для РФ без блокировок (ghfast.top):*
+```text
+https://ghfast.top/https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube_b64.txt
+```
+*В открытом виде (список ключей):*
+```text
+https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/youtube.txt
+```
+*Зеркало jsDelivr:*
+```text
+https://cdn.jsdelivr.net/gh/ANT1VEN0M/Bunker-Auto-Engine@latest/sub/youtube_b64.txt
+```
 
 ---
 
