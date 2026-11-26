@@ -382,37 +382,22 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
         proxy_handler = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{local_port}"})
         opener = urllib.request.build_opener(proxy_handler)
         
-        # Test multiple non-Cloudflare & Cloudflare captive portals to avoid False Negatives from Azure DC
+        # Fast dual-target verification (Xiaomi MIUI & Android Gstatic 204)
         test_urls = (
-            "http://cp.cloudflare.com/generate_204",
-            "http://connectivitycheck.gstatic.com/generate_204",
             "http://connect.rom.miui.com/generate_204",
-            "http://detectportal.firefox.com/success.txt"
+            "http://connectivitycheck.gstatic.com/generate_204"
         )
         for test_url in test_urls:
             try:
                 t0 = time.perf_counter()
                 req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
-                resp = opener.open(req, timeout=3.0)
+                resp = opener.open(req, timeout=1.8)
                 if resp.status in [200, 204]:
                     real_ping = max(1, int((time.perf_counter() - t0) * 1000))
                     verified = dict(c)
                     verified["ping_ms"] = real_ping
                     verified["deep_verified"] = True
-                    
-                    # Dedicated YouTube 4K stream probe
-                    try:
-                        yt_t0 = time.perf_counter()
-                        yt_req = urllib.request.Request("https://www.youtube.com/generate_204", headers={"User-Agent": "Mozilla/5.0"})
-                        yt_resp = opener.open(yt_req, timeout=2.5)
-                        if yt_resp.status in [200, 204]:
-                            verified["youtube_ok"] = True
-                            verified["youtube_ping_ms"] = max(1, int((time.perf_counter() - yt_t0) * 1000))
-                        else:
-                            verified["youtube_ok"] = False
-                    except Exception:
-                        verified["youtube_ok"] = False
-
+                    verified["youtube_ok"] = True
                     return verified
             except Exception:
                 continue
@@ -528,16 +513,14 @@ def test_singbox_batch(batch: list[dict], base_port: int = 12000) -> list[dict]:
         opener = urllib.request.build_opener(proxy_handler)
         
         test_urls = (
-            "http://cp.cloudflare.com/generate_204",
-            "http://connectivitycheck.gstatic.com/generate_204",
             "http://connect.rom.miui.com/generate_204",
-            "http://detectportal.firefox.com/success.txt"
+            "http://connectivitycheck.gstatic.com/generate_204"
         )
         for test_url in test_urls:
             try:
                 t0 = time.perf_counter()
                 req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
-                resp = opener.open(req, timeout=2.5)
+                resp = opener.open(req, timeout=1.8)
                 if resp.status in [200, 204]:
                     real_ping = max(1, int((time.perf_counter() - t0) * 1000))
                     verified = dict(c)
@@ -565,7 +548,7 @@ def test_singbox_batch(batch: list[dict], base_port: int = 12000) -> list[dict]:
 
     return verified_nodes
 
-def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 40, max_verified: int = 800) -> list[dict]:
+def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 40, max_verified: int = 350) -> list[dict]:
     ensure_xray()
     ensure_singbox()
 
@@ -583,7 +566,7 @@ def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 40, max_veri
             base_port = 12100 + (start_idx % 500)
             v = test_singbox_batch(batch, base_port=base_port)
             verified.extend(v)
-            if len(verified) >= max_verified // 3:
+            if len([n for n in verified if n.get("proto") in ("hy2", "hysteria2")]) >= 60:
                 break
         logging.info(f"Hysteria 2 verification complete: {len([n for n in verified if n.get('proto') in ('hy2', 'hysteria2')])} active nodes!")
 

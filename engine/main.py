@@ -15,7 +15,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-def select_balanced_nodes(unique_configs: list[dict], max_total: int = 10000) -> list[dict]:
+def select_balanced_nodes(unique_configs: list[dict], max_total: int = 3500) -> list[dict]:
     # Group by protocol to guarantee balanced representation without starving any protocol
     by_proto = collections.defaultdict(list)
     for c in unique_configs:
@@ -38,13 +38,13 @@ def select_balanced_nodes(unique_configs: list[dict], max_total: int = 10000) ->
             by_proto["other"].append(c)
 
     selected = []
-    # Anti-censorship quotas
-    selected.extend(by_proto["hy2"][:2000])
-    selected.extend(by_proto["vless_reality"][:3500])
-    selected.extend(by_proto["trojan"][:2000])
-    selected.extend(by_proto["vless_tls"][:2000])
-    selected.extend(by_proto["vmess"][:1000])
-    selected.extend(by_proto["ss"][:500])
+    # Anti-censorship balanced quotas
+    selected.extend(by_proto["hy2"][:600])
+    selected.extend(by_proto["vless_reality"][:1500])
+    selected.extend(by_proto["trojan"][:600])
+    selected.extend(by_proto["vless_tls"][:500])
+    selected.extend(by_proto["vmess"][:300])
+    selected.extend(by_proto["ss"][:150])
 
     if len(selected) < max_total:
         seen = set(id(x) for x in selected)
@@ -86,7 +86,7 @@ def run_pipeline():
     init_geo()
 
     # 5. Balanced node selection (balancing Hy2, VLESS-Reality, Trojan, VLESS-TLS, VMess, SS)
-    nodes_to_check = select_balanced_nodes(unique, max_total=8000)
+    nodes_to_check = select_balanced_nodes(unique, max_total=3500)
     logging.info(f"Selected {len(nodes_to_check)} balanced nodes for health check.")
 
     # 6. Pre-Filter Health & Ping (TCP / UDP level)
@@ -144,7 +144,7 @@ def run_pipeline():
 
     # 7. DEEP XRAY & SING-BOX CORE VERIFICATION (Real HTTP 204 Traffic Test)
     # Tests candidates through actual Xray Core & Sing-box to guarantee 100% working proxies
-    real_working = deep_check_nodes(alive, batch_size=40, max_verified=800)
+    real_working = deep_check_nodes(alive, batch_size=40, max_verified=350)
 
     if not real_working:
         logging.warning("No nodes passed deep HTTP 204 check, falling back to top TCP/UDP alive.")
