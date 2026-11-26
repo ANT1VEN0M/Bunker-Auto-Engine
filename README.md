@@ -1,7 +1,7 @@
 # 🐈‍⬛ BUNKER AUTO-ENGINE | АВТОПИЛОТ ПОДПИСОК
 
 > **Автоматический генератор подписок для BunkerVPN, Karing, Streisand, v2rayNG, Happ, NekoBox, Shadowrocket, Hiddify и v2rayN.**  
-> Обновляется каждый час на GitHub Actions. **81 проверенный источник** (включая Pozor Bond LexaVercelbot матрицы), глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880) & WARP-MASQUE (HTTP/3)**.
+> Обновляется каждый час на GitHub Actions. **89 проверенных источников** (включая Pozor Bond LexaVercelbot матрицы), глубокая фильтрация через реальное ядро **Xray Core (HTTP 204 real traffic)**, дедупликация и встроенный **Cloudflare WARP+ (порт 880) & WARP-MASQUE (HTTP/3)**.
 
 ---
 
@@ -19,17 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-26 02:15:55 МСК` (`2026-11-25 23:15:55 UTC`)
-- 🟢 **Всего активных проверенных нод:** `165`
-- 👑 **Золотая выборка (TOP-25 VIP):** `5`
+- 🕒 **Последнее авто-обновление:** `2026-11-26 09:46:20 МСК` (`2026-11-26 06:46:20 UTC`)
+- 🟢 **Всего активных проверенных нод:** `63`
+- 👑 **Золотая выборка (TOP-25 VIP):** `1`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `32`
-- 🌍 **Мировой Микс (YouTube / DPI):** `165`
-- 🤍 **Белый список (RU / BY):** `36`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `36`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `27`
+- 🌍 **Мировой Микс (YouTube / DPI):** `63`
+- 🤍 **Белый список (RU / BY):** `29`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `29`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
-- 📺 **YouTube 4K Ultra (Без буферизации):** `40`
-- 💬 **Пожарный канал для Telegram:** `30`
+- 📺 **YouTube 4K Ultra (Без буферизации):** `39`
+- 💬 **Пожарный канал для Telegram:** `27`
 
 ---
 
@@ -131,9 +131,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=w1.hiesen-proxy.ru&port=443&secret=ee19f35317df4dff3cab0202fa96ee51de676f6f676c652e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=91.221.191.138&port=443&secret=dd104462821249bd7ac519130220c25d09)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=objectpeak.org&port=443&secret=ee15d9244d7aa802e81b1736133fe059c5686f66662e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275)
 
 
 ---
