@@ -234,6 +234,18 @@ def clean_source_url(url: str) -> str:
     """Strips invisible zero-width unicode characters and spaces."""
     return url.strip().strip(_ZERO_WIDTH).strip()
 
+# Dynamically load verified community sources from community_sources.txt
+COMMUNITY_SOURCES_FILE = Path(__file__).resolve().parent / "community_sources.txt"
+if COMMUNITY_SOURCES_FILE.exists():
+    try:
+        with open(COMMUNITY_SOURCES_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                c_url = clean_source_url(line)
+                if c_url and not c_url.startswith("#") and c_url not in SOURCES:
+                    SOURCES.append(c_url)
+    except Exception as e:
+        pass
+
 def fix_github_raw_url(url: str) -> str:
     """Auto-fixes GitHub raw URLs with commit hashes, replacing sha with main."""
     m = _GH_HASH_RE.match(url)
@@ -724,7 +736,7 @@ def scrape_telegram_public_channels() -> list[str]:
 def scrape_all_sources() -> list[str]:
     all_configs = []
     logging.info(f"Starting scraping from {len(SOURCES)} sources in parallel...")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=28) as executor:
         future_to_url = {executor.submit(fetch_single_source, url): url for url in SOURCES}
         for future in concurrent.futures.as_completed(future_to_url):
             configs = future.result()
