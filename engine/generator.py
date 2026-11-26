@@ -44,11 +44,11 @@ def fetch_mtproto_proxies() -> list[str]:
                     continue
                 # Clean URL without trailing dots
                 tg_url = f"tg://proxy?server={server}&port={port}&secret={sec}"
-                    # Prioritize EE Fake-TLS proxies (secret starting with ee) which bypass Russian TSPU
-                    if sec.startswith("ee"):
-                        mtproto_links.insert(0, tg_url)
-                    else:
-                        mtproto_links.append(tg_url)
+                # Prioritize EE Fake-TLS proxies (secret starting with ee) which bypass Russian TSPU
+                if sec.startswith("ee"):
+                    mtproto_links.insert(0, tg_url)
+                else:
+                    mtproto_links.append(tg_url)
     except Exception:
         pass
 
