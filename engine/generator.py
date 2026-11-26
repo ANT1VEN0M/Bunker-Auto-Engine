@@ -61,7 +61,7 @@ def fetch_mtproto_proxies() -> list[str]:
 
 DISPOSABLE_VPN_DOMAINS = (
     ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
-    "workers.dev", "pages.dev"
+    "workers.dev", "pages.dev", "liuzedong.ltd", "x-fx.io", "darknetlk.com", ".cfd", ".buzz", ".icu"
 )
 
 def is_russia_safe(node: dict) -> bool:
@@ -309,13 +309,18 @@ def generate_subscriptions(alive_nodes: list[dict]):
     fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
     fast_candidates.sort(key=fast_sort_key)
 
-    # YouTube 4K stream nodes (VLESS, Trojan, Hy2 with deep verification or fast ping)
+    # YouTube 4K stream nodes (Prioritize VLESS-Reality and ban slow Cloudflare worker proxies)
     def yt_sort_key(n):
+        raw = n.get("raw", "").lower()
+        sni = (n.get("sni") or "").lower()
+        host = (n.get("host") or "").lower()
+        is_cf_slow = 1 if ("cloudflare" in raw or "liuzedong" in raw or "cdn." in sni or "x-fx.io" in raw) else 0
+        is_reality = 0 if ("security=reality" in raw or n.get("is_reality", False) or "pbk=" in raw) else 1
         is_yt = 0 if n.get("youtube_ok") else 1
         is_vless = 0 if n.get("proto") == "vless" else 1
-        is_443 = 0 if n.get("port") == 443 else 1
+        is_std_port = 0 if n.get("port") in (443, 8443) else 1
         ping = n.get("ping_ms", 9999)
-        return (is_yt, is_vless, is_443, ping)
+        return (is_cf_slow, is_reality, is_yt, is_vless, is_std_port, ping)
 
     yt_candidates = [
         n for n in alive_nodes
