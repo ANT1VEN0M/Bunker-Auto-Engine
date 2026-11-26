@@ -37,9 +37,13 @@ def fetch_mtproto_proxies() -> list[str]:
         with urllib.request.urlopen(req, timeout=6) as r:
             nexus_data = json.loads(r.read().decode("utf-8"))
             for item in nexus_data:
-                tg_url = item.get("tg_url")
-                sec = item.get("secret", "")
-                if tg_url and tg_url.startswith("tg://proxy?"):
+                server = item.get("server", "").strip().rstrip(".")
+                port = item.get("port")
+                sec = item.get("secret", "").strip()
+                if not server or not port or not sec:
+                    continue
+                # Clean URL without trailing dots
+                tg_url = f"tg://proxy?server={server}&port={port}&secret={sec}"
                     # Prioritize EE Fake-TLS proxies (secret starting with ee) which bypass Russian TSPU
                     if sec.startswith("ee"):
                         mtproto_links.insert(0, tg_url)
