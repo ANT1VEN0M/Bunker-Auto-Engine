@@ -19,17 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-26 09:46:20 МСК` (`2026-11-26 06:46:20 UTC`)
-- 🟢 **Всего активных проверенных нод:** `63`
+- 🕒 **Последнее авто-обновление:** `2026-11-26 18:16:56 МСК` (`2026-11-26 15:16:56 UTC`)
+- 🟢 **Всего активных проверенных нод:** `66`
 - 👑 **Золотая выборка (TOP-25 VIP):** `1`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `27`
-- 🌍 **Мировой Микс (YouTube / DPI):** `63`
-- 🤍 **Белый список (RU / BY):** `29`
-- 🏭 **Завод / Проходная (443 & 53 DNS):** `29`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `31`
+- 🌍 **Мировой Микс (YouTube / DPI):** `66`
+- 🤍 **Белый список (RU / BY):** `33`
+- 🏭 **Завод / Проходная (443 & 53 DNS):** `33`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `50`
-- 📺 **YouTube 4K Ultra (Без буферизации):** `39`
-- 💬 **Пожарный канал для Telegram:** `27`
+- 📺 **YouTube 4K Ultra (Без буферизации):** `40`
+- 💬 **Пожарный канал для Telegram:** `28`
 
 ---
 
@@ -132,8 +132,8 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
 - [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=objectpeak.org&port=443&secret=ee15d9244d7aa802e81b1736133fe059c5686f66662e7275)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=nyakawai.shop&port=443&secret=eeec15a78c3842e866c302c8526175a68c7975672d6c696e6b2e7275)
 
 
 ---
