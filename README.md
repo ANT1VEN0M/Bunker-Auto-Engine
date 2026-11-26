@@ -19,17 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-26 22:10:45 МСК` (`2026-11-26 19:10:45 UTC`)
-- 🟢 **Всего активных проверенных нод:** `344`
+- 🕒 **Последнее авто-обновление:** `2026-11-27 02:53:55 МСК` (`2026-11-26 23:53:55 UTC`)
+- 🟢 **Всего активных проверенных нод:** `345`
 - 👑 **Золотая выборка (TOP-25 VIP):** `40`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
 - 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `100`
-- 🌍 **Мировой Микс (YouTube / DPI):** `304`
-- 🤍 **Белый список (RU / BY):** `107`
+- 🌍 **Мировой Микс (YouTube / DPI):** `299`
+- 🤍 **Белый список (RU / BY):** `119`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `100`
 - ⚡ **Турбо-серверы (Минимальный пинг):** `150`
 - 📺 **YouTube 4K Ultra (Без буферизации):** `60`
-- 💬 **Пожарный канал для Telegram:** `63`
+- 💬 **Пожарный канал для Telegram:** `69`
 
 ---
 
@@ -131,9 +131,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=nyakawai.shop&port=443&secret=eeec15a78c3842e866c302c8526175a68c7975672d6c696e6b2e7275)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=cdnbarrel.org&port=443&secret=ee7e417407b715ff26d9fafff34e31a33b686f66662e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=cdncove.com&port=443&secret=eea9bf6807ab1fccfb24817bcb05189bf3686f66662e7275)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
 
 
 ---
