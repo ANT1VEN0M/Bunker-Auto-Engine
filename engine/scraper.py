@@ -201,7 +201,33 @@ SOURCES = [
     # 82. st0rer Clash Matrix (Hysteria 2 / VLESS)
     "https://gist.github.com/st0rer/52759ee3f68c3d4b2f2d53c307867471/raw/clash.yaml",
     # 83. skysph-dev V2Ray Aggregator (Trojan / VLESS)
-    "https://gist.github.com/skysph-dev/5b55986287442543485b30468db3eb65/raw/v2ray.txt"
+    "https://gist.github.com/skysph-dev/5b55986287442543485b30468db3eb65/raw/v2ray.txt",
+    # 84. liketolivefree Kobabi All Subs (21k+ configs, 9k+ Reality)
+    "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub_all.txt",
+    # 85. kort0881 Russian VLESS / Reality Dedicated Pool
+    "https://raw.githubusercontent.com/kort0881/vpn-vless-configs-russia/main/output/vless.txt",
+    # 86. mermeroo Loon All Nodes Matrix
+    "https://raw.githubusercontent.com/mermeroo/Loon/refs/heads/main/all.nodes.txt",
+    # 87. barry-far V2Ray Mega Aggregator (8.8k configs, 2.9k Reality)
+    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/All_Configs_Sub.txt",
+    # 88. kasesm Free Configs
+    "https://raw.githubusercontent.com/kasesm/Free-Config/main/all_raw.txt",
+    # 89. sakha1370 OpenRay VLESS Matrix (4k configs, 2.1k Reality)
+    "https://raw.githubusercontent.com/sakha1370/OpenRay/main/output/kind/vless.txt",
+    # 90. Surfboardv2ray TGParse VLESS (5.5k configs, 2.9k Reality)
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/vless",
+    # 91. R3ZARAHIMI Telegram V2Ray & Hy2 Weekly Matrix
+    "https://raw.githubusercontent.com/R3ZARAHIMI/tg-v2ray-configs-every2h/main/conf-week.txt",
+    # 92. noahclanman Free Xray GCP Verified Pool
+    "https://raw.githubusercontent.com/noahclanman/free-xray-gcp/main/output/all/configs.txt",
+    # 93. cbusifabcap Daily Free Hysteria2 & VLESS
+    "https://cdn.jsdelivr.net/gh/cbusifabcap/daily_free_vpn@main/Z.txt",
+    # 94. Mr-Meshky Vify VLESS
+    "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt",
+    # 95. NamazVPN Community Sub
+    "https://sub.namazvpn.workers.dev",
+    # 96. Irys DPDNS Auto Sub
+    "https://sub.irys.dpdns.org/auto"
 ]
 
 def clean_source_url(url: str) -> str:
