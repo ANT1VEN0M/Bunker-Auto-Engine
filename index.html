@@ -488,7 +488,7 @@
 
     <div class="header">
       <div class="badge">
-        <span class="dot"></span> 👥 1400+ Подписчиков • 81 источник • WARP-MASQUE &amp; WireGuard 880
+        <span class="dot"></span> 👥 1400+ Подписчиков • 1600+ Серверов • Hysteria 2, Reality &amp; WireGuard 880
       </div>
       <div class="winter-badge" onclick="toggleSnow()">
         ❄️ <b>ЗИМНИЙ БУНКЕР 2027</b> • До Нового Года: <span id="ny-countdown">36 дней</span> 🎄 <span id="snow-status-label" style="opacity:0.8; font-size:10px;">[Снег: ВКЛ]</span>
@@ -509,8 +509,14 @@
         <button class="feed-pill" style="border-color:rgba(239,68,68,0.4); color:#f87171;" onclick="selectFeed('youtube', this)">
           📺 YouTube 4K Ultra
         </button>
+        <button class="feed-pill" style="border-color:rgba(16,185,129,0.4); color:#10b981;" onclick="selectFeed('all', this)">
+          🔥 Все ноды (1200+)
+        </button>
+        <button class="feed-pill" onclick="selectFeed('fast', this)">
+          ⚡ Турбо (150)
+        </button>
         <button class="feed-pill" onclick="selectFeed('mix', this)">
-          🌍 Мировой Микс
+          🌍 Мировой Микс (300+)
         </button>
         <button class="feed-pill discord-pill" onclick="selectFeed('discord', this)">
           🎮 Game Booster &amp; Discord
@@ -520,9 +526,6 @@
         </button>
         <button class="feed-pill" onclick="selectFeed('factory', this)">
           🏭 Завод 443/53
-        </button>
-        <button class="feed-pill" onclick="selectFeed('fast', this)">
-          ⚡ Турбо
         </button>
         <button class="feed-pill" onclick="selectFeed('tg', this)">
           💬 Telegram SOS
@@ -535,7 +538,7 @@
       <button onclick="scrollToPing()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(56,189,248,0.3);">
         ⚡ Пинг
       </button>
-      <a href="https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d" onclick="connectMTProto(event)" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
+      <a href="https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d" onclick="connectMTProto(event)" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(0,136,204,0.3); color:#38bdf8;">
         💬 TG Прокси
       </a>
       <button onclick="scrollToRouters()" class="btn btn-secondary" style="font-size:11px; padding:9px 4px; flex:1; border-color:rgba(16,185,129,0.3); color:#10b981;">
@@ -628,24 +631,37 @@
     </div>
 
     <!-- 3. Android Client -->
-    <div class="card" id="card-android">
+    <div class="card" id="card-android" style="border-color: rgba(56, 189, 248, 0.45); background: linear-gradient(145deg, rgba(13, 18, 28, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);">
       <div class="card-title">
-        <span>🤖 Android</span>
-        <span class="tag">v1.4.4 WireGuard & Split-Tunnel</span>
+        <span>🤖 Bunker VPN для Android</span>
+        <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">v1.4.7 • Свежий релиз</span>
       </div>
 
-      <div style="display:flex; gap:8px;">
-        <a href="https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN/releases/download/v1.4.4/BunkerVPN-arm64-v8a.apk" class="btn btn-primary" style="flex:1.2; text-align:center;" onclick="triggerHaptic('impact')">
-          ⬇️ Скачать VPN v1.4.4 (APK)
-        </a>
-        <a href="https://ghfast.top/https://github.com/ANT1VEN0M/Bunker-Url-Test/releases/download/v1.1.2/Bunker-Url-Test-v1.1.2-universal.apk" class="btn btn-secondary" style="flex:1; text-align:center;" onclick="triggerHaptic('impact')">
-          📡 URL Test v1.1.2
-        </a>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:8px;">
+          <a href="https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN/releases/download/v1.4.7/BunkerVPN-arm64-v8a.apk" class="btn btn-primary" style="flex:1.4; text-align:center; font-weight:700;" onclick="triggerHaptic('impact')">
+            ⬇️ Скачать ARM64 (v1.4.7)
+          </a>
+          <a href="https://ghfast.top/https://github.com/ANT1VEN0M/BunkerVPN/releases/download/v1.4.7/BunkerVPN-universal.apk" class="btn btn-secondary" style="flex:1; text-align:center; font-size:12px;" onclick="triggerHaptic('impact')">
+            📦 Universal APK
+          </a>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a href="https://github.com/ANT1VEN0M/BunkerVPN/releases/tag/v1.4.7" target="_blank" class="btn btn-secondary" style="flex:1; text-align:center; font-size:11.5px; border-color:rgba(56,189,248,0.3); color:#38bdf8;">
+            ⭐ Релиз v1.4.7 на GitHub
+          </a>
+          <a href="https://ghfast.top/https://github.com/ANT1VEN0M/Bunker-Url-Test/releases/download/v1.1.2/Bunker-Url-Test-v1.1.2-universal.apk" class="btn btn-secondary" style="flex:1; text-align:center; font-size:11.5px;">
+            📡 URL Test v1.1.2
+          </a>
+        </div>
       </div>
 
-      <p style="font-size:11.5px; color:var(--text-muted); line-height:1.4; margin-top:8px;">
-        <b>BunkerVPN v1.4.4:</b> Прямой импорт .conf файлов WireGuard, Hotfix раздельного туннелирования (Android 14–17 / Private Space / Dual Apps), Themed Icon Pixel, Кастомные обои, Stealth OLED Black.<br>
-        <b>Bunker URL Test v1.1.2:</b> Live Network Monitor цензуры ТСПУ, параллельная проверка 4 сервисов, Edge-to-Edge UI.
+      <p style="font-size:11.5px; color:var(--text-muted); line-height:1.45; margin-top:10px;">
+        ⚡ <b>Что нового в v1.4.7:</b><br>
+        • <b>Фикс Firefox & Chromium в Root:</b> TCP MSS Clamping устраняет зависание страниц на TLS 1.3 и перехват DNS/DoT (853).<br>
+        • <b>Анти-детект VPN:</b> сетевой интерфейс <code>bkr0</code> скрыт от антифрода (AppsFlyer, 2GIS, банки не видят VPN).<br>
+        • <b>YouTube 4K из коробки:</b> отдельный каталог с разблокировкой 60fps и защитой от буферизации QUIC.<br>
+        • <b>База 1 600+ серверов:</b> автовыбор по пингу, улучшенный спидтест без сбоев.
       </p>
     </div>
 
@@ -1118,9 +1134,9 @@
     const FEEDS = {
       gold: {
         name: "Bunker VPN | Золотая Выборка",
-        label: "👑 Золотая Выборка (TOP-25 VIP)",
+        label: "👑 Золотая Выборка (TOP-40 Gold VIP)",
         file: "gold_b64.txt",
-        desc: "Элитный пул из ТОП-25 самых быстрых серверов (Германия, Нидерланды, Финляндия, Швеция, США) с минимальным пингом и 100% Reality/Hysteria2."
+        desc: "Элитный пул из ТОП-40 самых стабильных серверов (Германия, Нидерланды, Финляндия, Швеция, США) с минимальным пингом и 100% Reality/Hysteria 2."
       },
       youtube: {
         name: "Bunker VPN | YouTube 4K Ultra",
@@ -1128,11 +1144,23 @@
         file: "youtube_b64.txt",
         desc: "Специальный пул серверов, прошедших сквозной тест пробития ТСПУ на видеопотоках YouTube (4K 60fps без зависаний)."
       },
+      all: {
+        name: "Bunker VPN | Полная проверенная база",
+        label: "🔥 Все серверы (1 200+ нод)",
+        file: "verified_keys_b64.txt",
+        desc: "Максимальный пул из 1 200+ проверенных рабочих серверов всех протоколов (VLESS, Trojan, Hy2, SS) в единой подписке."
+      },
+      fast: {
+        name: "Bunker VPN | Турбо",
+        label: "⚡ Турбо (150 низкопинговых серверов)",
+        file: "fast_b64.txt",
+        desc: "Серверы с ультранизким пингом для онлайн-игр и чувствительного к задержкам трафика."
+      },
       mix: {
         name: "Bunker VPN | Микс",
-        label: "Мировой Микс",
+        label: "🌍 Мировой Микс (300+ нод)",
         file: "mix_b64.txt",
-        desc: "Универсальный пул серверов для YouTube 4K, Instagram, X (Twitter) и обхода любых блокировок ТСПУ."
+        desc: "Универсальный сбалансированный пул серверов для YouTube 4K, Instagram, X (Twitter) и обхода любых блокировок ТСПУ."
       },
       discord: {
         name: "Bunker VPN | Game Booster & Discord",
@@ -1152,12 +1180,6 @@
         file: "factory_b64.txt",
         desc: "Серверы на портах 443 (HTTPS) и 53 (DNS) для пробива жестких корпоративных сетей и публичных Wi-Fi."
       },
-      fast: {
-        name: "Bunker VPN | Турбо",
-        label: "Турбо (Минимум пинг)",
-        file: "fast_b64.txt",
-        desc: "Серверы с ультранизким пингом для онлайн-игр и чувствительного к задержкам трафика."
-      },
       tg: {
         name: "Bunker VPN | Telegram SOS",
         label: "Telegram SOS",
@@ -1168,11 +1190,11 @@
 
     // Top Verified FakeTLS MTProto Proxy (t.me/proxy format for Telegram WebApp)
     const MTPROTO_PROXIES = [
-      "https://t.me/proxy?server=exp.proxy.digitalresistance.dog&port=443&secret=eed41d8cd98f00b204e9800998ecf8322e7777772e676f6f676c652e636f6d",
-      "https://t.me/proxy?server=45.95.42.23&port=8443&secret=eecb57182154aa2419fd85f568d20cbb837777772e636c6f7564666c6172652e636f6d",
-      "https://t.me/proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70",
-      "https://t.me/proxy?server=217.138.215.102&port=443&secret=ee8357954a3df5c26e32a7b8a7978c3f107777772e636974696c696e6b2e7275",
-      "https://t.me/proxy?server=193.26.115.138&port=443&secret=eef200b7138424bb9f8fef33d1b56fba407275747562652e7275"
+      "https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d",
+      "https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275",
+      "https://t.me/proxy?server=nyakawai.shop&port=443&secret=eeec15a78c3842e866c302c8526175a68c7975672d6c696e6b2e7275",
+      "https://t.me/proxy?server=objectpeak.org&port=443&secret=ee15d9244d7aa802e81b1736133fe059c5686f66662e7275",
+      "https://t.me/proxy?server=logapo72.kelpmoor.xyz&port=443&secret=ee2ad112aa3c927eb2ebec44fd1733cc496f7a6f6e2e7275"
     ];
     let proxyIdx = 0;
 
