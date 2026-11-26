@@ -30,6 +30,24 @@ def write_sub_files(filename_base: str, uris: list[str]):
 
 def fetch_mtproto_proxies() -> list[str]:
     mtproto_links = []
+    # 1. MTProtoNexus by itsyebekhe (Real-time auto-tested MTProto TLS proxies updated every 15m)
+    try:
+        nexus_url = "https://raw.githubusercontent.com/itsyebekhe/MTProtoNexus/gh-pages/extracted_proxies.json"
+        req = urllib.request.Request(nexus_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            nexus_data = json.loads(r.read().decode("utf-8"))
+            for item in nexus_data:
+                tg_url = item.get("tg_url")
+                sec = item.get("secret", "")
+                if tg_url and tg_url.startswith("tg://proxy?"):
+                    # Prioritize EE Fake-TLS proxies (secret starting with ee) which bypass Russian TSPU
+                    if sec.startswith("ee"):
+                        mtproto_links.insert(0, tg_url)
+                    else:
+                        mtproto_links.append(tg_url)
+    except Exception:
+        pass
+
     try:
         url = "https://raw.githubusercontent.com/0xRadikal/Free-Telegram-Proxy/main/top100.txt"
         req = urllib.request.Request(url, headers={"User-Agent": "curl/7.88.1"})
