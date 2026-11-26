@@ -299,3 +299,4 @@ https://subscription.monkeyvillage.pro/rQJRBFW-zFQXnCMx/custom-json
 https://vflex.ru/YG0_VgD92BCos5qC
 https://sub.pad-sservice.lat/JU89BqLqDvHrv8Y0
 https://p.kfwl.lol/ua=happ/os=android/https://sub.aska.lol/Ux7lmK0xkIl2
+https://raw.githubusercontent.com/GooseDev72/netherite-parser/refs/heads/main/sub/default
