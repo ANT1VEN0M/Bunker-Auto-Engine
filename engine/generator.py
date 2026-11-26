@@ -87,8 +87,8 @@ DISPOSABLE_VPN_DOMAINS = (
 )
 
 def is_russia_safe(node: dict) -> bool:
-    proto = node.get("proto", "")
-    if proto == "wireguard":
+    proto = node.get("proto", "").lower()
+    if proto in ("wireguard", "hy2", "hysteria2"):
         return True
     
     raw = node.get("raw", "")
@@ -154,7 +154,9 @@ def generate_subscriptions(alive_nodes: list[dict]):
     for node in alive_nodes:
         c = node.get("country", "UN")
         port = node.get("port", 0)
-        proto = node.get("proto", "unknown")
+        proto = node.get("proto", "unknown").lower()
+        if proto in ("hy2", "hysteria2"):
+            proto = "hy2"
         ping = node.get("ping_ms", 9999)
         raw_l = node.get("raw", "").lower()
         is_reality = "security=reality" in raw_l or node.get("is_reality", False)
@@ -261,14 +263,32 @@ def generate_subscriptions(alive_nodes: list[dict]):
         priority = 0 if p == "hy2" else (1 if is_reality else 2)
         return (priority, node.get("ping_ms", 9999))
     
-    # Sort Gold Matrix: Tier-1 anti-censorship nodes (NL, DE, FI, SE, AT, NO, PL, US, CH, FR, GB)
+    # Helper: deduplicate nodes by physical endpoint to prevent identical VPS filling the list
+    def deduplicate_by_endpoint(node_list: list[dict]) -> list[dict]:
+        seen = set()
+        res = []
+        for n in node_list:
+            h = n.get("host", "").lower()
+            ip = n.get("ip", h)
+            p = n.get("port", 0)
+            proto = n.get("proto", "")
+            ep = f"{proto}:{ip}:{p}"
+            if ep not in seen:
+                seen.add(ep)
+                res.append(n)
+        return res
+
+    # Sort Gold Matrix: Tier-1 anti-censorship nodes
     # STRICT FILTER:
     # 1. ONLY pure VLESS-Reality (with pbk=) or Hysteria 2 (hy2) - zero plain TLS, zero WS, zero VMess
     # 2. Absolutely NO xHTTP (type=xhttp / mode=packet-up breaks standard clients like v2rayNG/Streisand/Karing)
     # 3. Absolutely NO Iranian (.ir), honeypot, or local loopback domains
-    # 4. Strictly enforce ping: 0 < ping <= 500ms
+    # 4. Strictly enforce ping: 0 < ping <= 750ms
     # 5. Deduplicate host:port to prevent duplicate servers
-    gold_tier_countries = ["NL", "DE", "FI", "SE", "AT", "NO", "PL", "US", "GB", "FR", "CH"]
+    gold_tier_countries = [
+        "NL", "DE", "FI", "SE", "AT", "NO", "PL", "US", "GB", "FR", "CH",
+        "CZ", "ES", "IT", "EE", "LV", "LT", "RO", "BG", "TR", "KZ", "JP", "SG", "HK"
+    ]
     gold_candidates = []
     seen_gold_eps = set()
 
@@ -282,7 +302,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
         # Must be Reality (with pbk) or Hysteria 2
         is_reality = ("security=reality" in raw_l) and ("pbk=" in raw_l)
-        is_hy2 = (p == "hy2")
+        is_hy2 = (p in ("hy2", "hysteria2"))
         if not (is_reality or is_hy2):
             continue
 
@@ -297,7 +317,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
             continue
 
         # Strictly enforce ping
-        if ping <= 0 or ping > 500:
+        if ping <= 0 or ping > 750:
             continue
 
         # Strictly check country
@@ -328,7 +348,7 @@ def generate_subscriptions(alive_nodes: list[dict]):
     tg_nodes.sort(key=tg_sort_key)
     discord_nodes.sort(key=discord_sort_key)
 
-    fast_candidates = [n for n in alive_nodes if n.get("proto") != "ss"]
+    fast_candidates = [n for n in alive_nodes if n.get("proto") not in ("ss", "shadowsocks")]
     fast_candidates.sort(key=fast_sort_key)
 
     # YouTube 4K stream nodes (Prioritize VLESS-Reality and ban slow Cloudflare worker proxies)
@@ -346,19 +366,19 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     yt_candidates = [
         n for n in alive_nodes
-        if n.get("proto") in ("vless", "trojan", "hy2", "vmess") and n.get("country") not in ("RU", "BY", "IR", "CN")
+        if n.get("proto") in ("vless", "trojan", "hy2", "hysteria2", "vmess") and n.get("country") not in ("RU", "BY", "IR", "CN")
     ]
     yt_candidates.sort(key=yt_sort_key)
 
-    # Limit lists
-    limit_gold = gold_candidates[:25]
-    limit_mix = mix_nodes[:250]
-    limit_bs = bs_nodes[:120]
-    limit_factory = factory_nodes[:80]
-    limit_fast = fast_candidates[:50]
-    limit_tg = tg_nodes[:60]
-    limit_discord = discord_nodes[:75]
-    limit_youtube = yt_candidates[:40]
+    # Limit lists with endpoint deduplication
+    limit_gold = gold_candidates[:40]
+    limit_mix = deduplicate_by_endpoint(mix_nodes)[:350]
+    limit_bs = deduplicate_by_endpoint(bs_nodes)[:150]
+    limit_factory = deduplicate_by_endpoint(factory_nodes)[:100]
+    limit_fast = deduplicate_by_endpoint(fast_candidates)[:150]
+    limit_tg = deduplicate_by_endpoint(tg_nodes)[:80]
+    limit_discord = deduplicate_by_endpoint(discord_nodes)[:100]
+    limit_youtube = deduplicate_by_endpoint(yt_candidates)[:60]
 
     # Build branded URIs
     gold_uris = []
@@ -499,7 +519,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
     os.makedirs(PROTO_DIR, exist_ok=True)
     for p, p_nodes in proto_nodes.items():
         p_uris = []
-        for idx, node in enumerate(p_nodes[:150], 1):
+        unique_p_nodes = deduplicate_by_endpoint(p_nodes)[:150]
+        for idx, node in enumerate(unique_p_nodes, 1):
             flag = get_flag_emoji(node.get("country", "UN"))
             c = node.get("country", "UN")
             ping = node.get("ping_ms", 0)

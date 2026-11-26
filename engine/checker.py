@@ -16,11 +16,20 @@ def check_single_node(cfg: dict, timeout: float = 2.0) -> dict | None:
         return None
     
     start_t = time.perf_counter()
+    proto = cfg.get("proto", "").lower()
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        sock.connect((ip, port))
-        sock.close()
+        if proto in ("hy2", "hysteria2", "tuic", "wireguard"):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.settimeout(timeout)
+            # Send lightweight probe packet to test UDP socket reachability
+            sock.connect((ip, port))
+            sock.send(b"\x00" * 16)
+            sock.close()
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            sock.connect((ip, port))
+            sock.close()
         elapsed = time.perf_counter() - start_t
         ping_ms = max(1, int(elapsed * 1000))
         

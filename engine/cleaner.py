@@ -21,8 +21,8 @@ from urllib.parse import unquote, quote
 import uuid as uuidlib
 
 # Protocol registries
-ACCEPTED = {"vless", "vmess", "ss", "trojan", "hysteria2"}
-SCHEME_ALIAS = {"hy2": "hysteria2", "shadowsocks": "ss"}
+ACCEPTED = {"vless", "vmess", "ss", "trojan", "hy2", "hysteria2"}
+SCHEME_ALIAS = {"hysteria2": "hy2", "hy2": "hy2", "shadowsocks": "ss"}
 
 # Modern Xray-core 26 supported networks (http, h2, quic were removed in Xray 26)
 NETS = {"tcp", "ws", "grpc", "httpupgrade", "xhttp"}
@@ -783,6 +783,7 @@ PARSERS = {
     "trojan": parse_trojan,
     "vmess": parse_vmess,
     "ss": parse_ss,
+    "hy2": parse_hy2,
     "hysteria2": parse_hy2
 }
 
@@ -947,16 +948,15 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         node = PARSERS[proto](s)
 
         # Anti-TSPU / Russia DPI Filtering:
-        # 1. Cloudflare Workers / Pages & disposable spam domains are 100% blocked by RKN TSPU
+        # 1. Cloudflare Workers / Pages & confirmed scam/honeypot domains blocked by RKN TSPU
         host_l = (node.host or "").lower()
         sni_l = (node.sni or "").lower()
         raw_l = s.lower()
 
         DISPOSABLE_DOMAINS = (
-            ".click", ".monster", ".website", ".baby", ".online", ".fun", ".gay", ".sbs", ".rest", ".store", ".site",
-            ".top", ".xyz", ".buzz", ".shop", ".me", "workers.dev", "pages.dev", "free.hr", "freesocks.work",
-            "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party", "kadrhub.tech", "galioncc.com", "bachidze.com",
-            ".cloud", ".mom", ".uk", "fade.cloud", "my-fade.cloud", "fade.mom", "ferrin.uk"
+            "workers.dev", "pages.dev", "free.hr", "freesocks.work",
+            "yohototo.top", "save-node.com", "connectsuite.org", "bankai.party",
+            "kadrhub.tech", "galioncc.com", "bachidze.com"
         )
         for bad in DISPOSABLE_DOMAINS:
             if bad in host_l or bad in sni_l or (bad + "/") in raw_l or (bad + ":") in raw_l or (bad + "?") in raw_l or (bad + "&") in raw_l:
@@ -966,20 +966,14 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         if proto in ("vless", "vmess") and node.sec == "none":
             return None
 
-        # 3. For Reality nodes, verify camouflage SNI is a proven Russian anti-DPI domain
-        if node.sec == "reality":
-            PROVEN_RUSSIA_SNIS = (
-                "videodolina.", "videobereg.", "mediaroshcha.", "mediatropa.", "setevoypriliv.",
-                "steamstatic.", "steamcommunity.", "rbc.ru", "wb.ru", "vk.com", "okcdn.", "yandex.",
-                "nvidia.", "pinemetrics.", "telemetryapi.", "opendns.stream", "champmoney.", "olvento.",
-                "nemnogogo.com", "dualarrow.net", "ddnsfree.com", "freeddns.org", "pc-club.app", "questlobby.com",
-                "cloudehouse24.ru", "sbrf-cdn", "gosuslugi.", "mos.ru", "tinkoff.", "sberbank.", "mail.ru",
-                "2ch.hk", "habr.com", "deepl.com"
-            )
-            if not any(c in sni_l for c in PROVEN_RUSSIA_SNIS):
-                # Also allow clean Russian domains
-                if not (sni_l.endswith(".ru") or sni_l.endswith(".su")):
-                    return None
+        # 3. Reject loopback, honeypot and known blocked propaganda/adult hosts on SNI
+        BANNED_SNIS = (
+            "127.0.0.1", "localhost", "0.0.0.0", "::1",
+            "navalny.com", "meduza.io", "instagram.com", "facebook.com", "pornhub.com"
+        )
+        for bad in BANNED_SNIS:
+            if bad in sni_l or bad in host_l:
+                return None
 
         canon_uri = build_canonical_uri(node, remark)
         fp = node_fingerprint(node, "nekobox")

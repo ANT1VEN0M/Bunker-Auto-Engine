@@ -15,30 +15,50 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-def select_balanced_nodes(unique_configs: list[dict], max_total: int = 1500) -> list[dict]:
-    # Prioritize anti-censorship protocols for Russia (VLESS Reality, Trojan, Hysteria2)
-    # Deprioritize plain Shadowsocks as it is blocked by Russian TSPU
-    def node_priority(cfg):
-        proto = cfg.get("proto", "")
-        port = cfg.get("port", 0)
-        
-        # Priority 0: VLESS Reality / TLS on 443
-        if proto == "vless" and port == 443:
-            return 0
-        # Priority 1: Hysteria 2 / Trojan on 443
-        if proto in ("hy2", "trojan") and port == 443:
-            return 1
-        # Priority 2: VLESS / Trojan / Hy2 on standard/TLS ports (53, 8443, 2053, 2083)
-        if proto in ("vless", "trojan", "hy2") and port in (53, 8443, 2053, 2083, 2087, 2096):
-            return 2
-        # Priority 3: Other VLESS / Trojan / VMess
-        if proto in ("vless", "trojan", "vmess"):
-            return 3
-        # Priority 4: Plain Shadowsocks (lowest priority)
-        return 4
+def select_balanced_nodes(unique_configs: list[dict], max_total: int = 10000) -> list[dict]:
+    # Group by protocol to guarantee balanced representation without starving any protocol
+    by_proto = collections.defaultdict(list)
+    for c in unique_configs:
+        proto = c.get("proto", "").lower()
+        raw_l = c.get("raw", "").lower()
+        if proto in ("hy2", "hysteria2"):
+            by_proto["hy2"].append(c)
+        elif proto == "vless":
+            if "security=reality" in raw_l:
+                by_proto["vless_reality"].append(c)
+            else:
+                by_proto["vless_tls"].append(c)
+        elif proto == "trojan":
+            by_proto["trojan"].append(c)
+        elif proto == "vmess":
+            by_proto["vmess"].append(c)
+        elif proto in ("ss", "shadowsocks"):
+            by_proto["ss"].append(c)
+        else:
+            by_proto["other"].append(c)
 
-    sorted_configs = sorted(unique_configs, key=node_priority)
-    return sorted_configs[:max_total]
+    selected = []
+    # Anti-censorship quotas
+    selected.extend(by_proto["hy2"][:2000])
+    selected.extend(by_proto["vless_reality"][:3500])
+    selected.extend(by_proto["trojan"][:2000])
+    selected.extend(by_proto["vless_tls"][:2000])
+    selected.extend(by_proto["vmess"][:1000])
+    selected.extend(by_proto["ss"][:500])
+
+    if len(selected) < max_total:
+        seen = set(id(x) for x in selected)
+        for cat, nodes in by_proto.items():
+            for n in nodes:
+                if id(n) not in seen:
+                    selected.append(n)
+                    seen.add(id(n))
+                    if len(selected) >= max_total:
+                        break
+            if len(selected) >= max_total:
+                break
+
+    return selected[:max_total]
 
 def run_pipeline():
     logging.info("=== STARTING BUNKER AUTO-ENGINE PIPELINE ===")
@@ -65,22 +85,22 @@ def run_pipeline():
     # 4. Initialize GeoIP database
     init_geo()
 
-    # 5. Balanced node selection (prioritizing 443 & 53, balancing VLESS, VMess, Trojan, SS, HY2)
-    nodes_to_check = select_balanced_nodes(unique, max_total=3000)
+    # 5. Balanced node selection (balancing Hy2, VLESS-Reality, Trojan, VLESS-TLS, VMess, SS)
+    nodes_to_check = select_balanced_nodes(unique, max_total=8000)
     logging.info(f"Selected {len(nodes_to_check)} balanced nodes for health check.")
 
-    # 6. Pre-Filter Health & Ping (TCP level)
-    alive = check_all_nodes(nodes_to_check, max_workers=140, timeout=2.5)
+    # 6. Pre-Filter Health & Ping (TCP / UDP level)
+    alive = check_all_nodes(nodes_to_check, max_workers=160, timeout=2.0)
 
     if not alive:
         logging.warning("No alive nodes detected during ping check!")
         return
 
-    # Sort alive nodes so that high-potential anti-censorship nodes are tested by Xray first
+    # Sort alive nodes so that high-potential anti-censorship nodes are tested first
     def deep_candidate_priority(cfg):
         is_wl = cfg.get("is_wl_hosting", False)
         p = cfg.get("port", 0)
-        proto = cfg.get("proto", "")
+        proto = cfg.get("proto", "").lower()
         raw = cfg.get("raw", "")
         raw_l = raw.lower()
 
@@ -90,8 +110,8 @@ def run_pipeline():
         # Priority 0: Clean VLESS Reality on 443 (pure TCP/Vision anti-censorship)
         if is_reality and not is_xhttp and p == 443:
             return 0
-        # Priority 1: Hysteria 2 (UDP anti-censorship)
-        if proto == "hy2":
+        # Priority 1: Hysteria 2 (native UDP anti-censorship)
+        if proto in ("hy2", "hysteria2"):
             return 1
         # Priority 2: Russian Whitelist Hostings on 443/53
         if is_wl and p in (443, 53):
@@ -108,27 +128,27 @@ def run_pipeline():
         # Priority 6: Trojan on port 443 or 8443
         if proto == "trojan" and p in (443, 8443):
             return 6
-        # Priority 7: VLESS / Trojan / VMess on standard TLS ports
+        # Priority 7: VLESS / Trojan on standard TLS ports
         if proto in ("vless", "trojan") and p in (53, 8443, 2053, 2083, 2087, 2096):
             return 7
-        # Priority 8: Any other VLESS / Trojan
-        if proto in ("vless", "trojan"):
+        # Priority 8: VMess on standard TLS ports
+        if proto == "vmess" and p in (443, 8443):
             return 8
-        # Priority 9: VMess
-        if proto == "vmess":
+        # Priority 9: Any other VLESS / Trojan / VMess
+        if proto in ("vless", "trojan", "vmess"):
             return 9
         return 10
 
     alive.sort(key=deep_candidate_priority)
-    logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep Xray testing.")
+    logging.info(f"Sorted {len(alive)} alive nodes by Russian bypass priority for deep verification.")
 
-    # 7. DEEP XRAY CORE VERIFICATION (Real HTTP 204 Traffic Test)
-    # Tests candidates through actual Xray Core to guarantee 100% working proxies
-    real_working = deep_check_nodes(alive, batch_size=30, max_verified=300)
+    # 7. DEEP XRAY & SING-BOX CORE VERIFICATION (Real HTTP 204 Traffic Test)
+    # Tests candidates through actual Xray Core & Sing-box to guarantee 100% working proxies
+    real_working = deep_check_nodes(alive, batch_size=40, max_verified=800)
 
     if not real_working:
-        logging.warning("No nodes passed deep HTTP 204 check, falling back to top TCP alive.")
-        real_working = alive[:100]
+        logging.warning("No nodes passed deep HTTP 204 check, falling back to top TCP/UDP alive.")
+        real_working = alive[:150]
 
     # 8. Generate subscriptions and dashboard
     logging.info(f"Generating subscription files from {len(real_working)} GUARANTEED WORKING NODES...")

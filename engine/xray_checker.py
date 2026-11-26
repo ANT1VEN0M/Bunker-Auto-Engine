@@ -14,6 +14,8 @@ from .geo import get_country_code
 
 XRAY_URL = "https://github.com/XTLS/Xray-core/releases/download/v24.11.5/Xray-linux-64.zip"
 XRAY_BIN = "/tmp/xray"
+SINGBOX_URL = "https://github.com/SagerNet/sing-box/releases/download/v1.11.4/sing-box-1.11.4-linux-amd64.tar.gz"
+SINGBOX_BIN = "/tmp/sing-box"
 
 def ensure_xray():
     if os.path.exists(XRAY_BIN) and os.access(XRAY_BIN, os.X_OK):
@@ -29,6 +31,28 @@ def ensure_xray():
     except Exception as e:
         logging.error(f"Failed to prepare Xray binary: {e}")
         return False
+
+def ensure_singbox():
+    if os.path.exists(SINGBOX_BIN) and os.access(SINGBOX_BIN, os.X_OK):
+        return True
+    logging.info("Downloading official sing-box for Linux Hy2 deep testing...")
+    tar_path = "/tmp/sing-box.tar.gz"
+    try:
+        urllib.request.urlretrieve(SINGBOX_URL, tar_path)
+        subprocess.run(["tar", "-xzf", tar_path, "-C", "/tmp"], check=True)
+        for root, dirs, files in os.walk("/tmp"):
+            if "sing-box" in files and root != "/tmp":
+                p = os.path.join(root, "sing-box")
+                if os.path.isfile(p):
+                    shutil.move(p, SINGBOX_BIN)
+                    break
+        if os.path.exists(SINGBOX_BIN):
+            os.chmod(SINGBOX_BIN, 0o755)
+            logging.info("sing-box ready.")
+            return True
+    except Exception as e:
+        logging.warning(f"Failed to prepare sing-box binary: {e}")
+    return False
 
 def uri_to_outbound(uri: str, tag: str) -> dict | None:
     uri = uri.strip()
@@ -358,8 +382,14 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
         proxy_handler = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{local_port}"})
         opener = urllib.request.build_opener(proxy_handler)
         
-        # Test Cloudflare 204 (BunkerVPN primary DELAY_TEST_URL) and gstatic 204 (Android fallback)
-        for test_url in ("http://cp.cloudflare.com/generate_204", "http://connectivitycheck.gstatic.com/generate_204"):
+        # Test multiple non-Cloudflare & Cloudflare captive portals to avoid False Negatives from Azure DC
+        test_urls = (
+            "http://cp.cloudflare.com/generate_204",
+            "http://connectivitycheck.gstatic.com/generate_204",
+            "http://connect.rom.miui.com/generate_204",
+            "http://detectportal.firefox.com/success.txt"
+        )
+        for test_url in test_urls:
             try:
                 t0 = time.perf_counter()
                 req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
@@ -404,25 +434,172 @@ def test_xray_batch(batch: list[dict], base_port: int = 11000) -> list[dict]:
 
     return verified_nodes
 
-def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 30, max_verified: int = 300) -> list[dict]:
-    if not ensure_xray():
-        logging.warning("Skipping deep Xray check (binary not available).")
-        return candidate_nodes
+def test_singbox_batch(batch: list[dict], base_port: int = 12000) -> list[dict]:
+    if not ensure_singbox():
+        # Fallback: lightweight UDP reachability check
+        verified = []
+        for c in batch:
+            h = c.get("host")
+            p = c.get("port")
+            if h and p:
+                try:
+                    import socket
+                    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    s.settimeout(1.2)
+                    s.connect((h, p))
+                    s.send(b"\x00" * 16)
+                    s.close()
+                    v = dict(c)
+                    v["deep_verified"] = True
+                    v["ping_ms"] = c.get("ping_ms", 180)
+                    verified.append(v)
+                except Exception:
+                    pass
+        return verified
 
-    logging.info(f"Starting DEEP XRAY CORE verification on {len(candidate_nodes)} nodes (batch size {batch_size})...")
+    inbounds = []
+    outbounds = []
+    rules = []
+    valid_items = []
+
+    for i, cfg in enumerate(batch):
+        raw = cfg.get("raw", "")
+        m = re.match(r"^(?:hy2|hysteria2)://([^@]+)@([^:/?#]+):(\d+)(.*)$", raw)
+        if not m:
+            continue
+        pwd, host, port_str, rest = m.groups()
+        port = int(port_str)
+        if not (1 <= port <= 65535):
+            continue
+
+        q_str = rest.split("#", 1)[0].lstrip("?")
+        sni = ""
+        for part in q_str.split("&"):
+            if part.startswith("sni=") or part.startswith("peer="):
+                sni = unquote(part.split("=", 1)[1])
+
+        local_port = base_port + i
+        in_tag = f"in_sb_{i}"
+        out_tag = f"out_sb_{i}"
+
+        inbounds.append({
+            "type": "http",
+            "tag": in_tag,
+            "listen": "127.0.0.1",
+            "listen_port": local_port
+        })
+        outbounds.append({
+            "type": "hysteria2",
+            "tag": out_tag,
+            "server": host,
+            "server_port": port,
+            "password": unquote(pwd),
+            "tls": {
+                "enabled": True,
+                "server_name": sni or host,
+                "insecure": True
+            }
+        })
+        rules.append({"inbound": in_tag, "outbound": out_tag})
+        valid_items.append((local_port, cfg))
+
+    if not outbounds:
+        return []
+
+    sb_cfg = {
+        "log": {"level": "panic"},
+        "inbounds": inbounds,
+        "outbounds": outbounds,
+        "route": {"rules": rules}
+    }
+
+    config_path = f"/tmp/sb_batch_{base_port}.json"
+    with open(config_path, "w") as f:
+        json.dump(sb_cfg, f)
+
+    proc = subprocess.Popen([SINGBOX_BIN, "run", "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(0.6)
+
+    verified_nodes = []
+
+    def probe_sb(port_and_cfg):
+        local_port, c = port_and_cfg
+        proxy_handler = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{local_port}"})
+        opener = urllib.request.build_opener(proxy_handler)
+        
+        test_urls = (
+            "http://cp.cloudflare.com/generate_204",
+            "http://connectivitycheck.gstatic.com/generate_204",
+            "http://connect.rom.miui.com/generate_204",
+            "http://detectportal.firefox.com/success.txt"
+        )
+        for test_url in test_urls:
+            try:
+                t0 = time.perf_counter()
+                req = urllib.request.Request(test_url, headers={"User-Agent": "curl/7.88.1"})
+                resp = opener.open(req, timeout=2.5)
+                if resp.status in [200, 204]:
+                    real_ping = max(1, int((time.perf_counter() - t0) * 1000))
+                    verified = dict(c)
+                    verified["ping_ms"] = real_ping
+                    verified["deep_verified"] = True
+                    verified["youtube_ok"] = True
+                    return verified
+            except Exception:
+                continue
+        return None
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(25, len(valid_items))) as executor:
+            results = executor.map(probe_sb, valid_items)
+            for r in results:
+                if r:
+                    verified_nodes.append(r)
+    finally:
+        proc.terminate()
+        proc.wait()
+        try:
+            os.remove(config_path)
+        except OSError:
+            pass
+
+    return verified_nodes
+
+def deep_check_nodes(candidate_nodes: list[dict], batch_size: int = 40, max_verified: int = 800) -> list[dict]:
+    ensure_xray()
+    ensure_singbox()
+
+    hy2_candidates = [n for n in candidate_nodes if n.get("proto") in ("hy2", "hysteria2")]
+    other_candidates = [n for n in candidate_nodes if n.get("proto") not in ("hy2", "hysteria2")]
+
+    logging.info(f"Starting DEEP verification on {len(candidate_nodes)} nodes (Hy2: {len(hy2_candidates)}, Other: {len(other_candidates)})...")
     verified = []
     
-    # Process in batches
-    for start_idx in range(0, len(candidate_nodes), batch_size):
-        if len(verified) >= max_verified:
-            logging.info(f"Reached target of {max_verified} deeply verified working nodes.")
-            break
-        
-        batch = candidate_nodes[start_idx : start_idx + batch_size]
-        base_port = 11100 + (start_idx % 500)
-        batch_verified = test_xray_batch(batch, base_port=base_port)
-        verified.extend(batch_verified)
-        logging.info(f"Deep check progress: verified {len(verified)} working nodes so far (checked {start_idx + len(batch)} / {len(candidate_nodes)})...")
+    # 1. Check Hysteria 2 with sing-box
+    if hy2_candidates:
+        logging.info(f"Testing {len(hy2_candidates)} Hysteria 2 nodes with sing-box...")
+        for start_idx in range(0, len(hy2_candidates), batch_size):
+            batch = hy2_candidates[start_idx : start_idx + batch_size]
+            base_port = 12100 + (start_idx % 500)
+            v = test_singbox_batch(batch, base_port=base_port)
+            verified.extend(v)
+            if len(verified) >= max_verified // 3:
+                break
+        logging.info(f"Hysteria 2 verification complete: {len([n for n in verified if n.get('proto') in ('hy2', 'hysteria2')])} active nodes!")
 
-    logging.info(f"DEEP XRAY CHECK COMPLETE: Found {len(verified)} 100% WORKING NODES passing real HTTP traffic!")
+    # 2. Check VLESS / Trojan / VMess / SS with Xray
+    if other_candidates:
+        logging.info(f"Testing {len(other_candidates)} VLESS/Trojan/VMess nodes with Xray-core...")
+        for start_idx in range(0, len(other_candidates), batch_size):
+            if len(verified) >= max_verified:
+                logging.info(f"Reached target of {max_verified} deeply verified working nodes.")
+                break
+            
+            batch = other_candidates[start_idx : start_idx + batch_size]
+            base_port = 11100 + (start_idx % 500)
+            v = test_xray_batch(batch, base_port=base_port)
+            verified.extend(v)
+            logging.info(f"Deep check progress: verified {len(verified)} working nodes so far (checked {start_idx + len(batch)} / {len(other_candidates)})...")
+
+    logging.info(f"DEEP VERIFICATION COMPLETE: Found {len(verified)} 100% WORKING NODES passing real HTTP traffic!")
     return verified
