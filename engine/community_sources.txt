@@ -1,4 +1,5 @@
 # Bunker Auto-Engine Community Sources Pool
+https://github.com/ANT1VEN0M/BunkerVPN/releases/tag/v1.4.9
 # Auto-verified working sources: 298
 
 https://s3c3.001.gpucloud.ru/wlr/merged.txt

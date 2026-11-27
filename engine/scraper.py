@@ -50,6 +50,8 @@ ANDROID_MODELS = (
 )
 
 SOURCES = [
+    # Bunker VPN Official Release Feed
+    "https://github.com/ANT1VEN0M/BunkerVPN/releases/tag/v1.4.9",
     # 1. Igareck Russian Anti-Censorship (White Lists for Mobile & Restrictive Firewalls)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     # 2. Igareck Russian Anti-Censorship (Black Lists for Wireline ISPs: Rostelecom, etc.)
