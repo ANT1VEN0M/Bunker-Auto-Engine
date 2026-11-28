@@ -62,21 +62,35 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEIJpk2cLzYwcbGjb3YEmYqPJaHcgfOgtrZ6dfpLKU8d42oAoGCCqGSM49AwEHoUQDQgAEtWeimKwuWNn9e+jeYieCq/D1rVtm4IZpQf0db1ZrAFKrGWaJhHfjHJLmBjzByjwb1hSMvMitq+XStIhaFQZa3Q==",
+            "privateKey": "MHcCAQEEIABrcdpIUuLq7PNTpu34YO7qVAWa3aLLHCxMKAC40kDUoAoGCCqGSM49AwEHoUQDQgAEqSC4SZxptxfsaBzAF90eMnUdwfxDqIpKFR8C+LBwx01hrHJWRvNrPwsgkHKBKTtHTs6Wd9GkYBNNtSmNVMJ4Ig==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
             "address": [
               "172.16.0.2/32",
-              "2606:4700:110:8b98:dc34:710b:a900:c6d9/128"
+              "2606:4700:110:8eb8:2a56:3217:e691:a232/128"
             ]
           }
         },
         "security": "tls",
         "tlsSettings": {
-          "serverName": "vk.com",
+          "serverName": "store.steampowered.com",
           "alpn": [
             "h3"
-          ],
-          "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+          ]
+        },
+        "finalmask": {
+          "udp": [
+            {
+              "type": "noise",
+              "settings": {
+                "noise": [
+                  {
+                    "rand": "10-20",
+                    "delay": "10-16"
+                  }
+                ]
+              }
+            }
+          ]
         }
       }
     },
@@ -91,21 +105,36 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEIJpk2cLzYwcbGjb3YEmYqPJaHcgfOgtrZ6dfpLKU8d42oAoGCCqGSM49AwEHoUQDQgAEtWeimKwuWNn9e+jeYieCq/D1rVtm4IZpQf0db1ZrAFKrGWaJhHfjHJLmBjzByjwb1hSMvMitq+XStIhaFQZa3Q==",
+            "privateKey": "MHcCAQEEIABrcdpIUuLq7PNTpu34YO7qVAWa3aLLHCxMKAC40kDUoAoGCCqGSM49AwEHoUQDQgAEqSC4SZxptxfsaBzAF90eMnUdwfxDqIpKFR8C+LBwx01hrHJWRvNrPwsgkHKBKTtHTs6Wd9GkYBNNtSmNVMJ4Ig==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
             "address": [
               "172.16.0.2/32",
-              "2606:4700:110:8b98:dc34:710b:a900:c6d9/128"
+              "2606:4700:110:8eb8:2a56:3217:e691:a232/128"
             ]
           }
         },
         "security": "tls",
         "tlsSettings": {
-          "serverName": "vk.com",
+          "serverName": "store.steampowered.com",
           "alpn": [
             "h2"
-          ],
-          "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+          ]
+        },
+        "finalmask": {
+          "tcp": [
+            {
+              "type": "fragment",
+              "settings": {
+                "packets": "tlshello",
+                "lengths": [
+                  "100-200"
+                ],
+                "delays": [
+                  "10-20"
+                ]
+              }
+            }
+          ]
         }
       }
     },
