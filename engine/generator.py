@@ -180,10 +180,11 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
         is_ru_ver = node.get("is_ru_verified", False)
 
-        # White list (Russian domestic hostings or RU/BY on standard ports, or clean Russian Reality)
-        if (is_ru_ver or is_wl_host or (port in [443, 80, 53, 8443] and (c in ["RU", "BY"] or is_reality))) and proto in ["vless", "trojan", "vmess", "hy2"]:
+        # Белый список (РФ / Банки): СТРОГО только российские / белорусские IP или подтвержденные хостинги РФ
+        is_ru_ip = (c in ["RU", "BY"]) or is_wl_host
+        if is_ru_ip and proto in ["vless", "trojan", "vmess", "hy2"] and port in [443, 80, 53, 8443, 2053]:
             bs_nodes.append(node)
-            if port in [443, 53] or is_wl_host or is_ru_ver:
+            if port in [443, 53] or is_wl_host:
                 factory_nodes.append(node)
         
         mix_nodes.append(node)

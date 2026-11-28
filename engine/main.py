@@ -158,6 +158,15 @@ def run_pipeline():
 
     # Guarantee all 100% verified Russian-tested nodes are included at the very top
     ru_verified = [n for n in unique if n.get("is_ru_verified")]
+    from .geo import get_country_code, is_russian_wl_hosting
+    for n in ru_verified:
+        host = n.get("host", "")
+        n["country"] = get_country_code(host)
+        wl, name = is_russian_wl_hosting(host)
+        n["is_wl_hosting"] = wl
+        n["wl_hosting"] = name
+        n["deep_verified"] = True
+
     seen_eps = {f"{n.get('host')}:{n.get('port')}" for n in real_working}
     for n in reversed(ru_verified):
         ep = f"{n.get('host')}:{n.get('port')}"
