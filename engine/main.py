@@ -38,6 +38,10 @@ def select_balanced_nodes(unique_configs: list[dict], max_total: int = 3500) -> 
             by_proto["other"].append(c)
 
     selected = []
+    # Anti-censorship: prioritize 100% Russian-verified seed nodes
+    verified_ru = [c for c in unique_configs if c.get("is_ru_verified")]
+    selected.extend(verified_ru)
+
     # Anti-censorship balanced quotas
     selected.extend(by_proto["hy2"][:600])
     selected.extend(by_proto["vless_reality"][:1500])
@@ -98,6 +102,8 @@ def run_pipeline():
 
     # Sort alive nodes so that high-potential anti-censorship nodes are tested first
     def deep_candidate_priority(cfg):
+        if cfg.get("is_ru_verified"):
+            return -1
         is_wl = cfg.get("is_wl_hosting", False)
         p = cfg.get("port", 0)
         proto = cfg.get("proto", "").lower()
@@ -149,6 +155,19 @@ def run_pipeline():
     if not real_working:
         logging.warning("No nodes passed deep HTTP 204 check, falling back to top TCP/UDP alive.")
         real_working = alive[:150]
+
+    # Guarantee all 100% verified Russian-tested nodes are included at the very top
+    ru_verified = [n for n in unique if n.get("is_ru_verified")]
+    seen_eps = {f"{n.get('host')}:{n.get('port')}" for n in real_working}
+    for n in reversed(ru_verified):
+        ep = f"{n.get('host')}:{n.get('port')}"
+        if ep not in seen_eps:
+            seen_eps.add(ep)
+            real_working.insert(0, n)
+        else:
+            # Move to front
+            real_working = [x for x in real_working if f"{x.get('host')}:{x.get('port')}" != ep]
+            real_working.insert(0, n)
 
     # 8. Generate subscriptions and dashboard
     logging.info(f"Generating subscription files from {len(real_working)} GUARANTEED WORKING NODES...")

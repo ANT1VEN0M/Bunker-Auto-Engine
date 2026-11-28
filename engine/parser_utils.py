@@ -1,11 +1,32 @@
 import json
 import base64
 import re
+from pathlib import Path
 from urllib.parse import urlparse, unquote, quote
 from .cleaner import clean_and_parse_uri, build_canonical_uri
 
 BLOCKED_PORTS = {445, 135, 137, 138, 139, 25, 23}
 DUMMY_HOSTS = {"127.0.0.1", "localhost", "0.0.0.0", "::1"}
+
+_VERIFIED_RU_SET = set()
+def _init_verified_ru_set():
+    global _VERIFIED_RU_SET
+    if _VERIFIED_RU_SET:
+        return
+    vf_path = Path(__file__).resolve().parent / "verified_ru_nodes.txt"
+    if vf_path.exists():
+        try:
+            with open(vf_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        base = line.split("#", 1)[0].strip()
+                        _VERIFIED_RU_SET.add(base)
+                        m = re.search(r"@([^:/?#]+):(\d+)", line)
+                        if m:
+                            _VERIFIED_RU_SET.add(f"{m.group(1)}:{m.group(2)}")
+        except Exception:
+            pass
 
 def parse_config(uri: str) -> dict | None:
     uri = uri.strip()
@@ -52,8 +73,14 @@ def parse_config(uri: str) -> dict | None:
                 }
 
         # 3. Standard & Modern Proxies via Cleaner (VLESS, VMess, Trojan, SS, Hysteria2)
+        _init_verified_ru_set()
         cleaned = clean_and_parse_uri(uri)
         if cleaned:
+            base = uri.split("#", 1)[0].strip()
+            ep = f"{cleaned.get('host')}:{cleaned.get('port')}"
+            if base in _VERIFIED_RU_SET or ep in _VERIFIED_RU_SET:
+                cleaned["is_ru_verified"] = True
+                cleaned["deep_verified"] = True
             return cleaned
 
     except Exception:

@@ -763,5 +763,16 @@ def scrape_all_sources() -> list[str]:
         except Exception as e:
             logging.warning(f"Failed to read user_contrib.txt: {e}")
 
+    # Load 100% Russian-tested verified nodes (TSPU bypass seed)
+    verified_ru_path = Path(__file__).resolve().parent / "verified_ru_nodes.txt"
+    if verified_ru_path.exists():
+        try:
+            with open(verified_ru_path, "r", encoding="utf-8") as f:
+                v_lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+                all_configs.extend(v_lines)
+                logging.info(f"Loaded {len(v_lines)} Russian-verified seed nodes from {verified_ru_path.name}")
+        except Exception as e:
+            logging.warning(f"Failed to read verified_ru_nodes.txt: {e}")
+
     logging.info(f"Scraped total {len(all_configs)} raw configs.")
     return all_configs

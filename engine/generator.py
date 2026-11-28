@@ -87,38 +87,54 @@ DISPOSABLE_VPN_DOMAINS = (
 )
 
 def is_russia_safe(node: dict) -> bool:
-    proto = node.get("proto", "").lower()
-    if proto in ("wireguard", "hy2", "hysteria2"):
+    if node.get("is_ru_verified"):
         return True
-    
+
     raw = node.get("raw", "")
+    proto = node.get("proto", "").lower()
     sni = (node.get("sni") or "").lower()
     host = (node.get("host") or "").lower()
     raw_l = raw.lower()
-    
-    # 1. Cloudflare Workers / Pages are 100% blocked by RKN TSPU in Russia
-    for bad in ("workers.dev", "pages.dev"):
+    port = node.get("port", 0)
+
+    # 1. Reject blocked/scraped dead ports and invalid ranges
+    if port in (23576, 42848, 54706) or port < 1 or port > 65535:
+        return False
+
+    # 2. Reject fake / provocative SNIs, honey pots, and blocked propaganda
+    for bad in ("fuck.rkn", ".rkn", "rkn.", "fuck", "porno", "workers.dev", "pages.dev", "navalny.com", "meduza.io"):
         if bad in raw_l or bad in sni or bad in host:
             return False
-            
-    # 2. Blocked / vulnerable protocols in Russia
+
+    # 3. Reject Iranian domains (.ir)
+    if host.endswith(".ir") or sni.endswith(".ir") or ".ir/" in raw_l or ".ir:" in raw_l:
+        return False
+
+    # 4. WireGuard passes
+    if proto == "wireguard":
+        return True
+
+    # 5. Hysteria 2 passes once sanitized above
+    if proto in ("hy2", "hysteria2"):
+        return True
+
+    # 6. Blocked / vulnerable plain protocols in Russia
     if proto in ("ss", "shadowsocks"):
         return False
     if proto in ("vless", "vmess") and "security=none" in raw_l:
         return False
-        
-    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
-    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
-    
-    # 3. Reality & XHTTP bypass TSPU
-    if is_reality or is_xhttp:
-        return True
-        
-    # 4. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
+
+    # 7. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
     for bad in DISPOSABLE_VPN_DOMAINS:
         if bad in raw_l or bad in sni or bad in host:
             return False
-            
+
+    # 8. Reality & XHTTP bypass TSPU once sanitized
+    is_reality = "security=reality" in raw_l or node.get("is_reality", False)
+    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
+    if is_reality or is_xhttp:
+        return True
+
     return True
 
 def generate_subscriptions(alive_nodes: list[dict]):
@@ -162,27 +178,31 @@ def generate_subscriptions(alive_nodes: list[dict]):
         is_reality = "security=reality" in raw_l or node.get("is_reality", False)
         is_wl_host = node.get("is_wl_hosting", False)
 
+        is_ru_ver = node.get("is_ru_verified", False)
+
         # White list (Russian domestic hostings or RU/BY on standard ports, or clean Russian Reality)
-        if (is_wl_host or (port in [443, 80, 53, 8443] and (c in ["RU", "BY"] or is_reality))) and proto in ["vless", "trojan", "vmess", "hy2"]:
+        if (is_ru_ver or is_wl_host or (port in [443, 80, 53, 8443] and (c in ["RU", "BY"] or is_reality))) and proto in ["vless", "trojan", "vmess", "hy2"]:
             bs_nodes.append(node)
-            if port in [443, 53] or is_wl_host:
+            if port in [443, 53] or is_wl_host or is_ru_ver:
                 factory_nodes.append(node)
         
         mix_nodes.append(node)
             
         # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
-        if (is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) and port in [443, 80, 53]:
+        if (is_ru_ver or is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) and (port in [443, 80, 53] or is_ru_ver):
             tg_nodes.append(node)
 
         # Discord Voice & Gaming (Full-Cone UDP, Hysteria 2, Low Latency Reality on 443/UDP)
-        if (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (is_reality or is_wl_host)):
+        if is_ru_ver or (proto == "hy2") or (proto in ["vless", "trojan"] and port in [443, 8443, 2053, 2083, 2087, 2096] and (is_reality or is_wl_host)):
             discord_nodes.append(node)
 
         if proto in proto_nodes:
             proto_nodes[proto].append(node)
 
-    # Sort BS nodes: Russian WL hostings on 443/53 first, then Reality on 443, then by ping
+    # Sort BS nodes: Russian-verified nodes first (-1), Russian WL hostings on 443/53, then Reality on 443, then by ping
     def bs_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         is_wl = node.get("is_wl_hosting", False)
         p = node.get("port", 0)
         raw_l = node.get("raw", "").lower()
@@ -199,8 +219,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
             priority = 4
         return (priority, node.get("ping_ms", 9999))
     
-    # Sort Mix nodes: Russian WL hostings & clean Reality first, then by ping
+    # Sort Mix nodes: Russian-verified nodes first (-1), Russian WL hostings & clean Reality, then by ping
     def mix_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         is_wl = node.get("is_wl_hosting", False)
         p = node.get("port", 0)
         raw_l = node.get("raw", "").lower()
@@ -220,8 +242,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
             priority = 5
         return (priority, node.get("ping_ms", 9999))
 
-    # Sort Turbo nodes: lowest ping among Russian Hostings & Reality
+    # Sort Turbo nodes: Russian-verified nodes first (-1), lowest ping among Russian Hostings & Reality
     def fast_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         is_wl = node.get("is_wl_hosting", False)
         raw_l = node.get("raw", "").lower()
         is_reality = "security=reality" in raw_l
@@ -238,8 +262,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
             priority = 4
         return (priority, ping)
 
-    # Sort TG SOS nodes: proximity to Telegram DCs with Reality / Russian Hostings
+    # Sort TG SOS nodes: Russian-verified nodes first (-1), proximity to Telegram DCs with Reality / Russian Hostings
     def tg_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         is_wl = node.get("is_wl_hosting", False)
         c = node.get("country", "UN")
         raw_l = node.get("raw", "").lower()
@@ -255,8 +281,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
             priority = 3
         return (priority, ping)
 
-    # Sort Discord Voice nodes: Hysteria 2 (native UDP) first, then Reality, then lowest ping
+    # Sort Discord Voice nodes: Russian-verified nodes first (-1), Hysteria 2 (native UDP), then Reality, then lowest ping
     def discord_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         p = node.get("proto", "")
         raw_l = node.get("raw", "").lower()
         is_reality = "security=reality" in raw_l
@@ -299,6 +327,15 @@ def generate_subscriptions(alive_nodes: list[dict]):
         ping = n.get("ping_ms", 9999)
         host = n.get("host", "").lower()
         port = n.get("port", 0)
+        is_ru_ver = n.get("is_ru_verified", False)
+
+        # Directly accept Russian-verified working nodes into Gold Matrix
+        if is_ru_ver:
+            ep = f"{host}:{port}"
+            if ep not in seen_gold_eps:
+                seen_gold_eps.add(ep)
+                gold_candidates.append(n)
+            continue
 
         # Must be Reality (with pbk) or Hysteria 2
         is_reality = ("security=reality" in raw_l) and ("pbk=" in raw_l)
@@ -332,8 +369,10 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
         gold_candidates.append(n)
 
-    # Sort strictly: Tier 1 European countries first (NL, DE, FI, SE, AT, NO, PL), then lowest ping
+    # Sort strictly: Russian-verified nodes first (-1), then Tier 1 European countries (NL, DE, FI, SE, AT, NO, PL), then lowest ping
     def gold_sort_key(node):
+        if node.get("is_ru_verified"):
+            return (-1, node.get("ping_ms", 9999))
         c = node.get("country", "UN")
         ping = node.get("ping_ms", 9999)
         tier1 = c in ["NL", "DE", "FI", "SE", "AT", "NO", "PL"]
@@ -353,6 +392,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
 
     # YouTube 4K stream nodes (Prioritize VLESS-Reality and ban slow Cloudflare worker proxies)
     def yt_sort_key(n):
+        if n.get("is_ru_verified"):
+            return (-1, 0, 0, 0, 0, n.get("ping_ms", 9999))
         raw = n.get("raw", "").lower()
         sni = (n.get("sni") or "").lower()
         host = (n.get("host") or "").lower()
@@ -478,6 +519,8 @@ def generate_subscriptions(alive_nodes: list[dict]):
     # Write files
     write_sub_files("gold", gold_uris)
     write_sub_files("mix", mix_uris)
+    write_sub_files("verified_keys", mix_uris)
+    write_sub_files("all_keys", mix_uris)
     write_sub_files("bs", bs_uris)
     write_sub_files("factory", factory_uris)
     write_sub_files("fast", fast_uris)

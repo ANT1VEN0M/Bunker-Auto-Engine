@@ -966,14 +966,23 @@ def clean_and_parse_uri(uri: str) -> dict | None:
         if proto in ("vless", "vmess") and node.sec == "none":
             return None
 
-        # 3. Reject loopback, honeypot and known blocked propaganda/adult hosts on SNI
+        # 3. Reject loopback, honeypot, fake/provocative SNIs (e.g. fuck.rkn) and adult hosts
         BANNED_SNIS = (
             "127.0.0.1", "localhost", "0.0.0.0", "::1",
-            "navalny.com", "meduza.io", "instagram.com", "facebook.com", "pornhub.com"
+            "navalny.com", "meduza.io", "instagram.com", "facebook.com", "pornhub.com",
+            "fuck.rkn", ".rkn", "rkn.", "fuck", "porno"
         )
         for bad in BANNED_SNIS:
             if bad in sni_l or bad in host_l:
                 return None
+
+        # 4. Reject bad ports (e.g., 23576 mass dead scraper flood) and invalid ports
+        if node.port in (23576, 42848, 54706) or node.port > 65535 or node.port < 1:
+            return None
+
+        # 5. Reject Iranian domains (.ir)
+        if host_l.endswith(".ir") or sni_l.endswith(".ir") or ".ir/" in raw_l:
+            return None
 
         canon_uri = build_canonical_uri(node, remark)
         fp = node_fingerprint(node, "nekobox")
