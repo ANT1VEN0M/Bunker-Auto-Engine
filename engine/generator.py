@@ -204,13 +204,16 @@ def generate_subscriptions(alive_nodes: list[dict]):
         is_ru_ver = node.get("is_ru_verified", False)
 
         # Белый список (РФ / Банки): СТРОГО только российские / белорусские IP или подтвержденные хостинги РФ
+        # СТРОГИЙ ЗАПРЕТ xHTTP: xhttp ломает клиенты на ПК (v2rayN/Nekoray) и мобилках
+        is_xhttp = ("type=xhttp" in raw_l or node.get("net") == "xhttp" or "mode=packet-up" in raw_l)
         is_ru_ip = (c in ["RU", "BY"]) or is_wl_host or is_ru_ver
-        if is_ru_ip and proto in ["vless", "trojan", "vmess", "hy2"] and (port in [443, 80, 53, 8443, 2053, 5443] or is_ru_ver):
+        if not is_xhttp and is_ru_ip and proto in ["vless", "trojan", "vmess", "hy2"] and (port in [443, 80, 53, 8443, 2053, 5443] or is_ru_ver):
             bs_nodes.append(node)
             if port in [443, 53, 5443] or is_wl_host:
                 factory_nodes.append(node)
         
-        mix_nodes.append(node)
+        if not is_xhttp:
+            mix_nodes.append(node)
             
         # Telegram SOS (closest to Telegram DCs in Europe: NL, DE, FI, SE, GB, PL, or RU/BY on 443/53)
         if (is_ru_ver or is_wl_host or (c in ["NL", "DE", "FI", "SE", "GB", "PL", "RU", "BY"] and (is_reality or is_wl_host))) and (port in [443, 80, 53] or is_ru_ver):
