@@ -62,11 +62,11 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEILzXP0dCxG3I+h2O3ndosS+zVx79RVErGgGGNU8bR4nsoAoGCCqGSM49AwEHoUQDQgAEQOmiwGqACVOD4nI0L8buYawsussMWroqSEiBitex4jUUo5iTmcvj55aUeXYStEorousfO6USdo3qyG4g7EMzcQ==",
+            "privateKey": "MHcCAQEEIHAPCDqm8+1p+ZFCGNFyi/uF0toP9nQWjqENBFAHab/KoAoGCCqGSM49AwEHoUQDQgAEtKWyfW9pNizz4vOj5ebCZxZvWTKPZu3ezNJlC8x0Emf+Ax3Izudh9v6V0mScbTK3sQncBn00Zh7JXM+tvOwWMA==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
             "address": [
               "172.16.0.2/32",
-              "2606:4700:110:85a8:4f31:b602:72a1:5a6c/128"
+              "2606:4700:110:8714:b0b2:4dcc:1c29:cd2d/128"
             ]
           }
         },
@@ -91,11 +91,11 @@
         "network": "masque",
         "masqueSettings": {
           "warp": {
-            "privateKey": "MHcCAQEEILzXP0dCxG3I+h2O3ndosS+zVx79RVErGgGGNU8bR4nsoAoGCCqGSM49AwEHoUQDQgAEQOmiwGqACVOD4nI0L8buYawsussMWroqSEiBitex4jUUo5iTmcvj55aUeXYStEorousfO6USdo3qyG4g7EMzcQ==",
+            "privateKey": "MHcCAQEEIHAPCDqm8+1p+ZFCGNFyi/uF0toP9nQWjqENBFAHab/KoAoGCCqGSM49AwEHoUQDQgAEtKWyfW9pNizz4vOj5ebCZxZvWTKPZu3ezNJlC8x0Emf+Ax3Izudh9v6V0mScbTK3sQncBn00Zh7JXM+tvOwWMA==",
             "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==",
             "address": [
               "172.16.0.2/32",
-              "2606:4700:110:85a8:4f31:b602:72a1:5a6c/128"
+              "2606:4700:110:8714:b0b2:4dcc:1c29:cd2d/128"
             ]
           }
         },
