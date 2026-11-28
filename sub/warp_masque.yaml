@@ -49,10 +49,10 @@ tun:
 # ==============================================================================
 shared_masque: &masque_base
   type: masque
-  private-key: "MHcCAQEEILZhhRbv3vmLrN8Idwqy8FYP1ArPYPIhzJJ69K9/ohxQoAoGCCqGSM49AwEHoUQDQgAEEgIG+gxN+qbx+alKyv9hT7tlyoNRA1GBPwGj1vnaFfA0/GBazEOx6ofltdM7IKcNb02Z35UIqJEF6UfFH4lTmA=="
+  private-key: "MHcCAQEEID9zVy/TU29PlGsW79lFoZLy/7/TGFPGX94qOpQ5qaUloAoGCCqGSM49AwEHoUQDQgAESJzpa3vdfqJ/9Ve2tBfe7kHbfwUgn79JHr3afPxK8Mycsq61rkRM11SzrAwFZBHWRjU0d8rxCOotspKbQ6uPYw=="
   public-key: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w=="
   ip: 172.16.0.2/32
-  ipv6: 2606:4700:110:8d31:9563:3fc7:9fb4:4d70/128
+  ipv6: 2606:4700:110:864a:9642:1be2:23c8:5d26/128
   mtu: 1280
   udp: true
   skip-cert-verify: true

@@ -97,45 +97,65 @@ def is_russia_safe(node: dict) -> bool:
     raw_l = raw.lower()
     port = node.get("port", 0)
 
-    # 1. Reject blocked/scraped dead ports and invalid ranges
-    if port in (23576, 42848, 54706) or port < 1 or port > 65535:
+    # 1. Reject non-standard ports (strictly allow only standard TLS/proxy ports: 443, 8443, 28418)
+    if port not in (443, 8443, 28418):
         return False
 
-    # 2. Reject fake / provocative SNIs, honey pots, and blocked propaganda
-    for bad in ("fuck.rkn", ".rkn", "rkn.", "fuck", "porno", "workers.dev", "pages.dev", "navalny.com", "meduza.io"):
+    # 2. Reject fake / provocative SNIs, honey pots, disposable TLDs and blocked propaganda
+    banned_patterns = (
+        "fuck", "rkn", "workers.dev", "pages.dev", "navalny.com", "meduza.io",
+        "absolute-disaster", "comparecar", "nemnogogo", "daugava", "oncloudnine",
+        "ggssstreaming", "comp-mir", ".fyi", ".party", ".monster", ".cfd", ".buzz",
+        ".sbs", ".rest", ".store", ".site", ".online", ".fun", ".baby", ".click",
+        "rugerm", "ruit", "mother-earth", "porno"
+    )
+    for bad in banned_patterns:
         if bad in raw_l or bad in sni or bad in host:
             return False
 
-    # 3. Reject Iranian domains (.ir)
+    # 3. Reject Cloudflare and Apple fake SNIs (TSPU detects domain-fronting to non-matching ASNs)
+    if "cloudflare.com" in sni or "apple.com" in sni or "icloud.com" in sni:
+        return False
+
+    # 4. Reject Iranian domains (.ir)
     if host.endswith(".ir") or sni.endswith(".ir") or ".ir/" in raw_l or ".ir:" in raw_l:
         return False
 
-    # 4. WireGuard passes
+    # 5. WireGuard passes
     if proto == "wireguard":
         return True
 
-    # 5. Hysteria 2 passes once sanitized above
-    if proto in ("hy2", "hysteria2"):
+    # 6. Hysteria 2 on standard port passes once sanitized
+    if proto in ("hy2", "hysteria2") and port == 443:
         return True
 
-    # 6. Blocked / vulnerable plain protocols in Russia
+    # 7. Blocked / vulnerable plain protocols in Russia
     if proto in ("ss", "shadowsocks"):
         return False
     if proto in ("vless", "vmess") and "security=none" in raw_l:
         return False
 
-    # 7. For standard TLS: reject mass disposable VPN domains that TSPU blocks on SNI
-    for bad in DISPOSABLE_VPN_DOMAINS:
-        if bad in raw_l or bad in sni or bad in host:
-            return False
-
-    # 8. Reality & XHTTP bypass TSPU once sanitized
+    # 8. Strict Reality whitelist: ONLY verified unblocked SNIs that survive Russian TSPU
     is_reality = "security=reality" in raw_l or node.get("is_reality", False)
     is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
     if is_reality or is_xhttp:
-        return True
+        legit_snis = (
+            "worldoftanks", "videobereg.cc", "schoolpizorbz.xyz", "glenharbor.xyz",
+            "alcors.net", "op.gg", "rtkdvbr.cc", "899themes.pro", "farlantern.xyz",
+            "cindermoss.xyz", "h1clayd.click"
+        )
+        if any(w in sni or w in host for w in legit_snis):
+            return True
+        if "servicename=neurex" in raw_l:
+            return True
+        return False
 
-    return True
+    # 9. Clean TLS with proven Russian or foreign whitelist SNIs
+    if proto in ("vless", "trojan", "vmess") and ("security=tls" in raw_l or "tls=tls" in raw_l):
+        if "rtkdvbr.cc" in sni or "rtkdvbr.cc" in host or "alcors.net" in sni or "3dns.vip" in sni:
+            return True
+
+    return False
 
 def generate_subscriptions(alive_nodes: list[dict]):
     # Enforce strict verification invariant: only deeply verified nodes (passing real Xray HTTP 204 traffic)
