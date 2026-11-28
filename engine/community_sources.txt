@@ -301,3 +301,9 @@ https://vflex.ru/YG0_VgD92BCos5qC
 https://sub.pad-sservice.lat/JU89BqLqDvHrv8Y0
 https://p.kfwl.lol/ua=happ/os=android/https://sub.aska.lol/Ux7lmK0xkIl2
 https://raw.githubusercontent.com/GooseDev72/netherite-parser/refs/heads/main/sub/default
+https://raw.githubusercontent.com/pog7x/vpn-configs/refs/heads/master/githubmirror/1.txt
+https://raw.githubusercontent.com/pog7x/vpn-configs/refs/heads/master/githubmirror/2.txt
+https://raw.githubusercontent.com/pog7x/vpn-configs/refs/heads/master/githubmirror/3.txt
+https://raw.githubusercontent.com/pog7x/vpn-configs/refs/heads/master/githubmirror/4.txt
+https://raw.githubusercontent.com/pog7x/vpn-configs/refs/heads/master/githubmirror/5.txt
+https://raw.githubusercontent.com/korol5028/korol-vpn/main/Pohyu.txt
