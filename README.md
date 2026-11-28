@@ -19,17 +19,17 @@
 ---
 
 ### 📊 Статус системы (Real-Time)
-- 🕒 **Последнее авто-обновление:** `2026-11-28 13:24:53 МСК` (`2026-11-28 10:24:53 UTC`)
-- 🟢 **Всего активных проверенных нод:** `96`
+- 🕒 **Последнее авто-обновление:** `2026-11-28 15:21:13 МСК` (`2026-11-28 12:21:13 UTC`)
+- 🟢 **Всего активных проверенных нод:** `100`
 - 👑 **Золотая выборка (TOP-25 VIP):** `40`
 - ⚡ **WARP-MASQUE (HTTP/3) & WARP+ (880):** Активные профили с client_id и CONNECT-IP в топе фидов
-- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `82`
-- 🌍 **Мировой Микс (YouTube / DPI):** `83`
+- 🎮 **Discord Voice & Gaming (Full-Cone UDP):** `87`
+- 🌍 **Мировой Микс (YouTube / DPI):** `88`
 - 🤍 **Белый список (RU / BY):** `48`
 - 🏭 **Завод / Проходная (443 & 53 DNS):** `41`
-- ⚡ **Турбо-серверы (Минимальный пинг):** `82`
+- ⚡ **Турбо-серверы (Минимальный пинг):** `87`
 - 📺 **YouTube 4K Ultra (Без буферизации):** `60`
-- 💬 **Пожарный канал для Telegram:** `59`
+- 💬 **Пожарный канал для Telegram:** `63`
 
 ---
 
@@ -131,9 +131,9 @@ https://raw.githubusercontent.com/ANT1VEN0M/Bunker-Auto-Engine/main/sub/tg_b64.t
 ```
 
 #### 🚀 Прямые MTProto-прокси (работают внутри самого Telegram без VPN):
-- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=edgespindle.org&port=443&secret=eebec6acb2a5464709485d7cbeedd8612b686f66662e7275)
-- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=opeenhostings.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
-- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=freeconnect.lol&port=443&secret=eeec15a78c3842e866c302c8526175a68c7975672d6c696e6b2e7275)
+- [🔗 Подключить MTProto Прокси #1 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=freeconnect.lol&port=443&secret=eeec15a78c3842e866c302c8526175a68c7975672d6c696e6b2e7275)
+- [🔗 Подключить MTProto Прокси #2 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=Speed-speed.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
+- [🔗 Подключить MTProto Прокси #3 (в 1 клик прямо в Telegram)](https://t.me/proxy?server=Rudmoain.co.uk&port=443&secret=eef0eeb0bd9adc4fd4a93994ee3b2a216b63646e2e79656b74616e65742e636f6d)
 
 
 ---
