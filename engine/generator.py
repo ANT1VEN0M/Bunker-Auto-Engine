@@ -136,9 +136,12 @@ def is_russia_safe(node: dict) -> bool:
         return False
 
     # 8. Strict Reality whitelist: ONLY verified unblocked SNIs that survive Russian TSPU
+    # Reject xhttp (breaks older/standard PC & Mobile clients with parse errors or silent drops)
+    if "type=xhttp" in raw_l or node.get("net") == "xhttp" or "mode=packet-up" in raw_l:
+        return False
+
     is_reality = "security=reality" in raw_l or node.get("is_reality", False)
-    is_xhttp = "type=xhttp" in raw_l or node.get("net") == "xhttp"
-    if is_reality or is_xhttp:
+    if is_reality:
         legit_snis = (
             "worldoftanks", "videobereg.cc", "schoolpizorbz.xyz", "glenharbor.xyz",
             "alcors.net", "op.gg", "rtkdvbr.cc", "899themes.pro", "farlantern.xyz",

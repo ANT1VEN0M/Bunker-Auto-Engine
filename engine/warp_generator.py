@@ -51,6 +51,49 @@ DEFAULT_FINALMASK_STR = json.dumps(DEFAULT_FINALMASK_OBJ, separators=(',', ':'))
 DEFAULT_FINALMASK_PARAM = urllib.parse.quote(DEFAULT_FINALMASK_STR)
 
 
+
+WORKER_APIS = [
+    "https://masque.configwireguard.workers.dev/",
+    "https://masque.configwireguard2.workers.dev/",
+    "https://masque.configwireguard3.workers.dev/",
+    "https://masque.configwireguard4.workers.dev/"
+]
+
+def fetch_worker_key(server_ip: str = "162.159.198.2", server_port: int = 8095) -> dict | None:
+    for api in WORKER_APIS:
+        try:
+            req = urllib.request.Request(api, headers={"User-Agent": "Mozilla/5.0 (Bunker-Auto-Engine)"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                if data and "private_key" in data:
+                    priv = data["private_key"]
+                    pub = data.get("endpoint_pub_key", "")
+                    pub_clean = pub.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replace("\n", "").strip()
+                    priv_clean = priv.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replace("-----BEGIN EC PRIVATE KEY-----", "").replace("-----END EC PRIVATE KEY-----", "").replace("\n", "").strip()
+                    v4 = data.get("ipv4", "172.16.0.2")
+                    v6 = data.get("ipv6", "")
+                    local_address = f"{v4}/32"
+                    if v6:
+                        local_address += f",{v6}/128"
+                    return {
+                        "private_key": priv_clean,
+                        "public_key": pub_clean,
+                        "server": server_ip,
+                        "server_port": server_port,
+                        "local_address": local_address,
+                        "ipv4_cidr": f"{v4}/32",
+                        "ipv6_cidr": f"{v6}/128" if v6 else "2606:4700:110::2/128",
+                        "reserved": "0,0,0",
+                        "client_id": "",
+                        "device_id": data.get("id", ""),
+                        "token": data.get("access_token", ""),
+                        "mtu": 1280,
+                        "remote_dns": "1.1.1.1,8.8.8.8"
+                    }
+        except Exception:
+            continue
+    return None
+
 def generate_single_warp_profile(server_ip: str, server_port: int = 880) -> dict | None:
     try:
         pem_priv = subprocess.check_output(['openssl', 'genpkey', '-algorithm', 'X25519'])
@@ -114,7 +157,11 @@ def generate_single_warp_profile(server_ip: str, server_port: int = 880) -> dict
                 'remote_dns': '77.88.8.8,1.1.1.1'
             }
     except Exception as e:
-        print(f"Failed to generate WARP profile for {server_ip}: {e}")
+        print(f"Failed direct WARP registration for {server_ip} ({e}), falling back to Worker API pool...")
+        fallback = fetch_worker_key(server_ip, server_port)
+        if fallback:
+            print(f"[+] Fallback WARP profile fetched successfully from Worker API for {server_ip}:{server_port}")
+            return fallback
         return None
 
 
@@ -191,7 +238,11 @@ def enroll_masque_profile(device_id: str, token: str, v4: str = "172.16.0.2", v6
             'local_address': f"{v4_addr}/32" + (f",{v6_addr}/128" if v6_addr else "")
         }
     except Exception as e:
-        print(f"Failed to enroll MASQUE key: {e}")
+        print(f"Failed to enroll MASQUE key via Cloudflare API: {e}, falling back to Worker API pool...")
+        fallback = fetch_worker_key()
+        if fallback:
+            print("[+] Fallback MASQUE key fetched from Worker API pool.")
+            return fallback
         return None
 
 
@@ -423,9 +474,14 @@ def build_warp_masque_xray(profile: dict) -> dict:
             },
             "security": "tls",
             "tlsSettings": {
-              "serverName": "vk.com",
-              "alpn": ["h3"],
-              "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+              "serverName": "store.steampowered.com",
+              "alpn": ["h3"]
+            },
+            "finalmask": {
+              "udp": [{
+                "type": "noise",
+                "settings": {"noise": [{"rand": "10-20", "delay": "10-16"}]}
+              }]
             }
           }
         },
@@ -447,9 +503,14 @@ def build_warp_masque_xray(profile: dict) -> dict:
             },
             "security": "tls",
             "tlsSettings": {
-              "serverName": "vk.com",
-              "alpn": ["h2"],
-              "pinnedPeerCertSha256": "06e713be526c4eb81d1044df72748d4b18913cb2add84dc003ac2b97dd123792"
+              "serverName": "store.steampowered.com",
+              "alpn": ["h2"]
+            },
+            "finalmask": {
+              "tcp": [{
+                "type": "fragment",
+                "settings": {"packets": "tlshello", "lengths": ["100-200"], "delays": ["10-20"]}
+              }]
             }
           }
         },
